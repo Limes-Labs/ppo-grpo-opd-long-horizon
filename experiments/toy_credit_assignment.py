@@ -28,6 +28,7 @@ import math
 import random
 from collections import defaultdict
 from dataclasses import asdict, dataclass
+from functools import lru_cache
 from pathlib import Path
 from statistics import fmean
 from typing import Callable, Iterable
@@ -286,6 +287,7 @@ def terminal_reward(threshold: int, score: int) -> float:
     return 1.0 if score >= threshold else 0.0
 
 
+@lru_cache(maxsize=None)
 def exact_value(
     threshold: int,
     score: int,
@@ -294,32 +296,18 @@ def exact_value(
 ) -> float:
     """Expected future return under the behavior policy from a known state."""
 
-    cache: dict[tuple[int, int, int], float] = {}
+    if remaining == 0:
+        return terminal_reward(threshold, score)
 
-    def solve(state_threshold: int, state_score: int, state_remaining: int) -> float:
-        key = (state_threshold, state_score, state_remaining)
-        if key in cache:
-            return cache[key]
-        if state_remaining == 0:
-            value = terminal_reward(state_threshold, state_score)
-        else:
-            value = 0.0
-            probs = action_probabilities(
-                state_threshold,
-                state_score,
-                state_remaining,
-                scenario,
-            )
-            for action, probability in probs.items():
-                score_after = next_score(state_score, action)
-                value += probability * (
-                    -scenario.token_cost
-                    + solve(state_threshold, score_after, state_remaining - 1)
-                )
-        cache[key] = value
-        return value
-
-    return solve(threshold, score, remaining)
+    value = 0.0
+    probs = action_probabilities(threshold, score, remaining, scenario)
+    for action, probability in probs.items():
+        score_after = next_score(score, action)
+        value += probability * (
+            -scenario.token_cost
+            + exact_value(threshold, score_after, remaining - 1, scenario)
+        )
+    return value
 
 
 def simulate_trajectory(

@@ -24,13 +24,14 @@ on student-visited trajectories, but they are not the same objective as reward
 optimization.
 
 We contribute a taxonomy, cost-accounting checklist, failure-mode table, and a
-dependency-free toy experiment. In a six-case deterministic toy sweep, a
-critic-style TD estimator is closer to the oracle advantage in five regimes with
-adequate state information, while a group-relative estimator wins in a
-counterexample where the critic is blind and undercovered. The result supports a
-conditional thesis: critic methods are promising for long heterogeneous
-rollouts, but GRPO remains scientifically plausible and often cheaper when
-reward contrast is reliable and value modeling is weak.
+dependency-free toy experiment. In a 20-seed, 18-case matrix with known oracle
+advantages, a critic-style TD estimator has higher mean oracle-advantage
+correlation in 17 regimes. A confidence-interval reading makes that 16 clear
+critic-favorable cases, 1 near tie, and 1 clear group-favorable counterexample
+where the critic is blind and undercovered. The result supports a conditional
+thesis: critic methods are promising for long heterogeneous rollouts, but GRPO
+remains scientifically plausible and often cheaper when reward contrast is
+reliable and value modeling is weak.
 
 ## 1. Contributions
 
@@ -43,8 +44,8 @@ reward contrast is reliable and value modeling is weak.
 3. **Cost accounting.** We list the model, rollout, verifier, teacher, and
    storage costs that should be charged before comparing methods.
 4. **Toy evidence.** We provide a fast CPU experiment with a known oracle
-   advantage and a six-case scenario sweep that includes both critic-favorable
-   and group-favorable regimes.
+   advantage, a six-case smoke sweep, and a 20-seed matrix that includes both
+   critic-favorable and group-favorable regimes.
 5. **Research protocol.** We define testable predictions for future Limes Labs
    work in `limes-autoresearch`, `limes-nanogpt`, EuroBench, and Parameter Golf.
 
@@ -88,8 +89,8 @@ PPO optimizes a clipped policy-gradient surrogate [1]:
 L^{PPO}(\theta) =
 E_t \left[
   \min \left(
-    r_t(\theta) A_t,
-    \operatorname{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t
+    \rho_t(\theta) A_t,
+    \operatorname{clip}(\rho_t(\theta), 1-\epsilon, 1+\epsilon) A_t
   \right)
 \right],
 ```
@@ -97,14 +98,14 @@ E_t \left[
 where
 
 ```math
-r_t(\theta) =
+\rho_t(\theta) =
 \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{old}}(a_t | s_t)}.
 ```
 
 In actor-critic use, the advantage can be estimated from a value model:
 
 ```math
-\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
+\delta_t = \mathcal{r}_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
 ```
 
 or with generalized advantage estimation [2]:
@@ -195,6 +196,17 @@ DAPO-style dynamic sampling and clipping changes [9], U-statistic theory [10],
 and stabilized variants for low-dispersion or constrained reward settings
 [11, 17, 18].
 
+Z.ai's GLM-5.2 report is useful as an industry case study, not as independent
+causal evidence [19]. The report describes long-horizon coding-agent rollouts
+with compaction into variable numbers of sub-traces and says the training setup
+moved from group-wise optimization to critic-based PPO with token-level
+advantages for individual rollouts. This matches the failure mode studied here:
+once rollouts have variable length and different internal token roles, a
+response-level group scalar becomes less directly aligned with token credit.
+The same report also describes OPD infrastructure, including parallel OPD
+training to merge multiple expert models, so it should not be read as "PPO
+replaces OPD." It is better evidence for a hybrid training stack.
+
 OPD and OPSD form a neighboring but distinct branch. Generalized Knowledge
 Distillation trains on student-generated outputs with teacher feedback [12].
 OPSD uses privileged self-teacher contexts over student rollouts [13].
@@ -214,6 +226,8 @@ A fair comparison must charge more than final benchmark score:
 - teacher/self-teacher logits or hidden states for OPD/OPSD
 - generated tokens, failed rollouts, retries, and overlong traces
 - trajectory storage, KV cache, and tool/environment state
+- anti-hacking filters, LLM judges, sandboxing, blocked-call handling, and
+  dummy observations when invalid tool calls are intercepted
 - human or synthetic process-label cost
 - engineering complexity and debugging cost
 
@@ -273,35 +287,64 @@ The report tracks:
 - zero-variance group fraction
 - critic exact-state hit rate
 
-### 7.4 Scenario Sweep
+### 7.4 Smoke Sweep And Deep Matrix
 
-The deterministic sweep in `results/toy_sweep_seed11.md` runs six regimes:
+The deterministic smoke sweep in `results/toy_sweep_seed11.md` runs six regimes
+to keep CI fast. The canonical analysis for the paper is the 20-seed matrix in
+`results/deep_matrix_20seed.md` and `results/deep_matrix_20seed.csv`. It runs
+18 fixed cases across horizon length, group size, critic budget, observability,
+a designed counterexample, and sparse-reward conditions.
 
-| Case | Winner | Group r | Critic r | Group MSE | Critic MSE | Critic hit |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| short_dense_full_critic | critic | 0.442 | 0.974 | 0.04193 | 0.00271 | 1.00 |
-| baseline_full_critic | critic | 0.353 | 0.898 | 0.03329 | 0.00737 | 1.00 |
-| long_wait_full_critic | critic | 0.286 | 0.908 | 0.02060 | 0.00392 | 1.00 |
-| sparse_hard_full_critic | critic | 0.310 | 0.916 | 0.02240 | 0.00398 | 1.00 |
-| coarse_critic_partial_state | critic | 0.356 | 0.736 | 0.02268 | 0.01191 | 1.00 |
-| blind_critic_counterexample | group | 0.525 | 0.503 | 0.04634 | 0.04777 | 0.68 |
+The table reports mean Pearson correlation with the oracle token-level
+advantage. Delta is `critic r - group r`; the confidence interval is an
+across-seed 95% interval for that delta. "Mean winner" reports the sign of the
+mean delta; "CI read" reports whether that delta is clearly positive, clearly
+negative, or crosses zero.
 
-The critic-style estimator wins in five cases where the value model has enough
-state information. The group-relative estimator wins when the critic is blind
-and undercovered. That counterexample is important: it prevents the paper from
-claiming that critics are intrinsically superior.
+| Case | Axis | Mean winner | CI read | Group r | Critic r | Delta r | 95% CI | Critic hit |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| horizon_04_baseline | horizon | critic | critic_clear | 0.495 | 0.977 | 0.482 | +/- 0.011 | 1.00 |
+| horizon_08_baseline | horizon | critic | critic_clear | 0.390 | 0.925 | 0.535 | +/- 0.015 | 1.00 |
+| horizon_12_baseline | horizon | critic | critic_clear | 0.335 | 0.866 | 0.531 | +/- 0.012 | 0.99 |
+| horizon_16_long_wait | horizon | critic | critic_clear | 0.293 | 0.865 | 0.571 | +/- 0.013 | 1.00 |
+| group_size_02_long_wait | group_size | critic | critic_clear | 0.213 | 0.771 | 0.557 | +/- 0.022 | 0.99 |
+| group_size_04_long_wait | group_size | critic | critic_clear | 0.301 | 0.851 | 0.550 | +/- 0.014 | 0.99 |
+| group_size_08_long_wait | group_size | critic | critic_clear | 0.346 | 0.910 | 0.564 | +/- 0.011 | 1.00 |
+| group_size_12_long_wait | group_size | critic | critic_clear | 0.358 | 0.940 | 0.582 | +/- 0.007 | 1.00 |
+| critic_budget_002_full | critic_budget | critic | near_tie | 0.352 | 0.367 | 0.015 | +/- 0.027 | 0.48 |
+| critic_budget_008_full | critic_budget | critic | critic_clear | 0.352 | 0.459 | 0.107 | +/- 0.027 | 0.88 |
+| critic_budget_032_full | critic_budget | critic | critic_clear | 0.352 | 0.735 | 0.383 | +/- 0.021 | 0.98 |
+| critic_budget_128_full | critic_budget | critic | critic_clear | 0.352 | 0.906 | 0.554 | +/- 0.017 | 1.00 |
+| observability_full | observability | critic | critic_clear | 0.352 | 0.864 | 0.513 | +/- 0.020 | 0.99 |
+| observability_coarse | observability | critic | critic_clear | 0.356 | 0.738 | 0.382 | +/- 0.015 | 1.00 |
+| observability_blind | observability | critic | critic_clear | 0.353 | 0.482 | 0.129 | +/- 0.017 | 1.00 |
+| blind_undercovered_counterexample | counterexample | group | group_clear | 0.510 | 0.455 | -0.055 | +/- 0.015 | 0.69 |
+| sparse_hard_group04 | sparse_reward | critic | critic_clear | 0.283 | 0.846 | 0.563 | +/- 0.014 | 0.99 |
+| sparse_hard_group08 | sparse_reward | critic | critic_clear | 0.310 | 0.910 | 0.600 | +/- 0.008 | 1.00 |
+
+Across the 18 cases, critic-style TD has the higher mean correlation in 17
+cases, group-relative estimation wins by mean in one counterexample, and the
+mean critic-minus-group correlation is 0.420. The confidence-interval reading is
+more cautious: 16 clear critic-favorable cases, 1 near tie, and 1 clear
+group-favorable case. The weakest critic-favorable case is
+`critic_budget_002_full`, where the delta is only 0.015 +/- 0.027 and the exact
+state hit rate is 0.48. Scientifically, this is close enough that the correct
+reading is "coverage-limited critic roughly ties group-relative," not "PPO
+dominates."
 
 ### 7.5 Interpretation
 
-The toy supports three mechanism-level claims:
+The toy supports four mechanism-level claims:
 
 1. **Long heterogeneous traces punish scalar broadcast.** As wait-heavy traces
    grow, response-level group advantages correlate less with token-level oracle
    credit.
 2. **Value estimates help when state is informative.** Full and coarse critics
    recover temporal structure because the state contains progress information.
-3. **Critics fail when observability or coverage fails.** A blind, undercovered
-   critic can lose to group-relative terminal outcome information.
+3. **Coverage is the hinge.** Better critic coverage turns small or ambiguous
+   advantages into large positive deltas; poor coverage can erase the benefit.
+4. **Critics fail when observability or coverage fails.** A blind,
+   undercovered critic can lose to group-relative terminal outcome information.
 
 ## 8. What Is Better, And Why?
 
@@ -402,8 +445,34 @@ python3 -m experiments.scenario_sweep \
   --output-md results/toy_sweep_seed11.md
 ```
 
-The code has no external Python dependencies. The published numbers are
-deterministic for the committed code and Python's `random.Random` behavior.
+Regenerate the 20-seed matrix and SVG figures:
+
+```bash
+python3 -m experiments.deep_matrix \
+  --output-json results/deep_matrix_20seed.json \
+  --output-csv results/deep_matrix_20seed.csv \
+  --output-md results/deep_matrix_20seed.md \
+  --figures-dir results/figures
+```
+
+Regenerate the public PDF and DOCX artifacts:
+
+```bash
+python3 scripts/build_public_artifacts.py \
+  --matrix-json results/deep_matrix_20seed.json \
+  --public-dir public
+```
+
+The core experiment code has no external Python dependencies. The PDF/DOCX
+builder requires `reportlab`, `python-docx`, and `Pillow`. The published
+numbers are deterministic for the committed code and Python's `random.Random`
+behavior.
+
+The rendered PDF and DOCX are abridged public report artifacts derived from the
+canonical matrix, not a full export of this `PAPER.md` manuscript. The PDF was
+rendered to PNG pages and visually inspected in the local environment. The DOCX
+is structurally checked for text, tables, and embedded chart images; a visual
+DOCX render was not run because LibreOffice/`soffice` is unavailable locally.
 
 ## 12. Limitations
 
@@ -418,6 +487,11 @@ The GRPO baseline is intentionally simple. Future work should compare
 leave-one-out baselines, length-normalized variants, DAPO/Dr. GRPO-style
 corrections, process rewards, and dynamic sampling before making stronger
 claims.
+
+The GLM-5.2 discussion is based on a public vendor report and local text
+snapshot, not on independent reproduction of its training stack. We use it as a
+case study for problem structure, not as proof that PPO caused the reported
+performance.
 
 ## 13. Safety and Ethics
 
@@ -504,3 +578,5 @@ Language Models." 2025. <https://arxiv.org/abs/2511.00066>
 [18] Roger Girgis et al. "Constrained Group Relative Policy Optimization." 2026.
 <https://arxiv.org/abs/2602.05863>
 
+[19] Z.ai. "GLM-5.2: Built for Long-Horizon Tasks." 2026.
+<https://z.ai/blog/glm-5.2>

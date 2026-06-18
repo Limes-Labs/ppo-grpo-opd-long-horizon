@@ -25,9 +25,22 @@ drop-in replacements for policy optimization.
   on variable-length trajectories.
 - `experiments/scenario_sweep.py` - deterministic multi-scenario sweep covering
   critic-favorable regimes and a group-favorable counterexample.
+- `experiments/deep_matrix.py` - 20-seed, 18-case matrix over horizon length,
+  group size, critic budget, observability, and sparse rewards.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
+- `results/deep_matrix_20seed.md` - canonical multi-seed result table used for
+  the public PDF/DOCX paper artifacts.
+- `public/ppo_grpo_opd_long_horizon.pdf` and
+  `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
+  artifacts with charts and result tables. `PAPER.md` remains the full
+  manuscript draft.
+- `public/artifact_manifest.json` - SHA-256 manifest for the rendered
+  artifacts and source experiment JSON.
 - `tests/` - unit tests for the toy experiment and CLI artifact.
 - `scripts/run_smoke.sh` - one-command smoke runner.
+- `scripts/build_public_artifacts.py` - PDF/DOCX/chart builder. The core
+  experiments are dependency-free; artifact generation uses `reportlab`,
+  `python-docx`, and `Pillow`.
 - `docs/research-roadmap.md` - integration plan for Limes AutoResearch,
   nanoGPT, EuroBench, and Parameter Golf.
 
@@ -72,28 +85,57 @@ python3 -m experiments.scenario_sweep \
   --output-md results/toy_sweep_seed11.md
 ```
 
+Regenerate the canonical 20-seed matrix:
+
+```bash
+python3 -m experiments.deep_matrix \
+  --output-json results/deep_matrix_20seed.json \
+  --output-csv results/deep_matrix_20seed.csv \
+  --output-md results/deep_matrix_20seed.md \
+  --figures-dir results/figures
+```
+
+Regenerate PDF/DOCX paper artifacts with a Python environment that includes
+`reportlab`, `python-docx`, and `Pillow`:
+
+```bash
+python3 scripts/build_public_artifacts.py \
+  --matrix-json results/deep_matrix_20seed.json \
+  --public-dir public
+```
+
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
 credit-assignment mechanism, not model quality.
 
-## Current Toy Result
+## Current Experiment Result
 
-The committed seed-11 sweep runs six regimes. The critic-style estimator wins in
-five regimes with informative state coverage. A group-relative estimator wins in
-one counterexample where the critic is blind and undercovered:
+The canonical 20-seed matrix runs 18 fixed regimes. The critic-style estimator
+wins by mean oracle-advantage correlation in 17 regimes, but one of those is a
+near tie whose 95% confidence interval crosses zero. The more careful reading is
+16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable
+counterexample where the critic is blind and undercovered:
 
 | Regime | Winner | Group r | Critic r |
 | --- | --- | ---: | ---: |
-| short dense | critic | 0.442 | 0.974 |
-| baseline | critic | 0.353 | 0.898 |
-| long wait-heavy | critic | 0.286 | 0.908 |
-| sparse hard | critic | 0.310 | 0.916 |
-| coarse critic | critic | 0.356 | 0.736 |
-| blind undercovered critic | group | 0.525 | 0.503 |
+| horizon 4 baseline | critic | 0.495 | 0.977 |
+| horizon 16 long wait | critic | 0.293 | 0.865 |
+| critic budget 2 full-state | near tie by CI | 0.352 | 0.367 |
+| critic budget 128 full-state | critic | 0.352 | 0.906 |
+| observability blind | critic | 0.353 | 0.482 |
+| blind undercovered counterexample | group | 0.510 | 0.455 |
+| sparse hard, group size 8 | critic | 0.310 | 0.910 |
 
 Read this as mechanism evidence, not a leaderboard: value information helps when
 it is observable and covered; group-relative terminal rewards can be more useful
-when the critic is weak or unavailable.
+when the critic is weak or unavailable. The committed matrix includes raw
+per-seed rows and 95% confidence intervals in `results/deep_matrix_20seed.csv`
+and `results/deep_matrix_20seed.md`.
+
+The PDF was rendered and visually inspected through PNG page renders. The DOCX
+is structurally checked for tables, text, and embedded charts; a full visual
+DOCX render was not run because LibreOffice/`soffice` is unavailable in the
+current local environment.
 
 ## Working Thesis
 
@@ -134,6 +176,8 @@ Primary and near-primary sources covered in the first outline include:
   <https://arxiv.org/abs/2603.01162>
 - Stabilized GRPO variants: Salmani-Zarchi et al., 2026,
   <https://arxiv.org/abs/2606.06058>
+- GLM-5.2 as a vendor case study for critic-based PPO returning in compacted
+  long-horizon agentic RL: Z.ai, 2026, <https://z.ai/blog/glm-5.2>
 
 ## Non-Claims
 

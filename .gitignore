@@ -8,4 +8,7 @@ __pycache__/
 runs/*.json
 runs/*.jsonl
 !runs/.gitkeep
-
+tmp/
+results/deep_matrix_seed*.json
+results/deep_matrix_seed*.csv
+results/deep_matrix_seed*.md
