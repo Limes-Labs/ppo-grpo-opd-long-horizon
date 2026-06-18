@@ -20,6 +20,8 @@ drop-in replacements for policy optimization.
 
 - `PAPER.md` - full public draft with formal setup, equations, taxonomy,
   cost accounting, toy results, limitations, and references.
+- `paper/main.tex` and `paper/references.bib` - LaTeX manuscript source for
+  the real paper-formatted artifact.
 - `experiments/toy_credit_assignment.py` - CPU-only toy experiment comparing a
   GRPO-style group-relative advantage with a learned critic-style TD estimator
   on variable-length trajectories.
@@ -34,6 +36,9 @@ drop-in replacements for policy optimization.
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
   artifacts with charts and result tables. `PAPER.md` remains the full
   manuscript draft.
+- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full LaTeX-built paper.
+- `public/latex_artifact_manifest.json` - SHA-256 manifest for the full LaTeX
+  paper artifact.
 - `public/artifact_manifest.json` - SHA-256 manifest for the rendered
   artifacts and source experiment JSON.
 - `tests/` - unit tests for the toy experiment and CLI artifact.
@@ -102,6 +107,12 @@ Regenerate PDF/DOCX paper artifacts with a Python environment that includes
 python3 scripts/build_public_artifacts.py \
   --matrix-json results/deep_matrix_20seed.json \
   --public-dir public
+```
+
+Build the full LaTeX paper:
+
+```bash
+./scripts/build_latex_paper.sh
 ```
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage

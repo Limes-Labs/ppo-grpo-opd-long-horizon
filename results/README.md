@@ -36,4 +36,6 @@ python3 -m experiments.deep_matrix \
 ```
 
 Rendered public paper artifacts live under `public/` and are tracked with
-`public/artifact_manifest.json`.
+`public/artifact_manifest.json`. The full paper-formatted LaTeX artifact is
+`public/ppo_grpo_opd_long_horizon_latex.pdf`, with its own manifest at
+`public/latex_artifact_manifest.json`.

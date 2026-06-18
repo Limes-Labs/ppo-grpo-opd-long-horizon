@@ -1,0 +1,50 @@
+{
+  "artifact_scope": "full LaTeX paper artifact",
+  "checks": {
+    "pdf_generated": true,
+    "pdf_header": "%PDF",
+    "result_source": "results/deep_matrix_20seed.json"
+  },
+  "generated_at_utc": "2026-06-18T09:51:22.464541+00:00",
+  "generator": "scripts/build_latex_paper.sh",
+  "git_commit": "a6408aa4d8366b4006d6721fccf46056dfd63f5c",
+  "git_context_note": "The manifest records the worktree at generation time. When the LaTeX source, PDF, and manifest are committed together, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
+  "git_status_short": "M .gitignore\n M README.md\n M results/README.md\n?? paper/\n?? public/latex_artifact_manifest.json\n?? public/ppo_grpo_opd_long_horizon_latex.pdf\n?? scripts/build_latex_inputs.py\n?? scripts/build_latex_manifest.py\n?? scripts/build_latex_paper.sh\n?? tests/test_latex_paper.py",
+  "inputs": {
+    "paper/generated/deep_matrix_table.tex": {
+      "bytes": 756,
+      "sha256": "90c2bac842d1635ae00f74f82f09d0cceb08812a38e70eb088d1e6db84b1a14c"
+    },
+    "paper/generated/result_macros.tex": {
+      "bytes": 360,
+      "sha256": "4a58f8948b27039be11ab3b986f80cff37b691591847fdb8420e8434d442aee3"
+    },
+    "paper/main.tex": {
+      "bytes": 15218,
+      "sha256": "d567164adbdb000bbd54526e6322669b462c686f7ccd2cfa195bb933fa51f5f3"
+    },
+    "paper/references.bib": {
+      "bytes": 4643,
+      "sha256": "1f3d099cf185040f870ecd3af764fbea13c1184793a6070a20ebc8469a21bcae"
+    },
+    "public/figures/deep_matrix_coverage.png": {
+      "bytes": 26739,
+      "sha256": "421e358548118b00be8d341fe89fd17056bebfd32674b1a3fb4c372fb60013d9"
+    },
+    "public/figures/deep_matrix_delta.png": {
+      "bytes": 79640,
+      "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
+    },
+    "results/deep_matrix_20seed.json": {
+      "bytes": 231192,
+      "sha256": "9effd3b0fc704b019e601749cb1708a074520efdec1d0c7240a3079580af7c5e"
+    }
+  },
+  "outputs": {
+    "public/ppo_grpo_opd_long_horizon_latex.pdf": {
+      "bytes": 180794,
+      "sha256": "f98ed30e9916a187c1653792db9df2d1c256e4723e558ad1f7198a087f3034ec"
+    }
+  },
+  "tex_engine": "Tectonic 0.16.9"
+}
