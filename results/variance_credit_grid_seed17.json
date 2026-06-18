@@ -1,0 +1,221 @@
+{
+  "config": {
+    "branches_per_state": 32,
+    "critic_observation": "full",
+    "eval_groups": 48,
+    "group_size": 6,
+    "max_steps": 14,
+    "scenario_description": "Long successful traces often contain uninformative wait tokens.",
+    "scenario_name": "long_wait",
+    "seed": 17,
+    "token_cost": 0.02,
+    "train_groups": 160
+  },
+  "estimators": [
+    {
+      "cost_note": "single rollout, no baseline",
+      "credit_assignment": "trajectory",
+      "label": "REINFORCE return",
+      "metrics": {
+        "calibrated_mse": 0.020823752617080738,
+        "estimate_mean": 0.5359286646367986,
+        "estimate_second_moment": 0.4741054371465855,
+        "estimate_variance": 0.18688590356720333,
+        "mean_abs_active_tokens": 0.5778422484134179,
+        "mean_abs_wait_tokens": 0.6685785953177258,
+        "pearson_correlation": 0.356871586660625,
+        "raw_mse": 0.45064867202893555,
+        "sign_accuracy": 0.642691415313225,
+        "wait_to_active_abs_ratio": 1.1570261557604047,
+        "within_trajectory_variance": 6.847750913376838e-34
+      },
+      "name": "reinforce_return",
+      "variance_reduction": "none"
+    },
+    {
+      "cost_note": "single rollout plus global return tracker",
+      "credit_assignment": "trajectory",
+      "label": "Global baseline",
+      "metrics": {
+        "calibrated_mse": 0.020823752617080738,
+        "estimate_mean": 0.040866164636798596,
+        "estimate_second_moment": 0.18855594697932523,
+        "estimate_variance": 0.18688590356720333,
+        "mean_abs_active_tokens": 0.4274832842248414,
+        "mean_abs_wait_tokens": 0.37385911371237457,
+        "pearson_correlation": 0.356871586660625,
+        "raw_mse": 0.1647810605225504,
+        "sign_accuracy": 0.642691415313225,
+        "wait_to_active_abs_ratio": 0.8745584389113509,
+        "within_trajectory_variance": 1.925929944387236e-34
+      },
+      "name": "global_baseline",
+      "variance_reduction": "global/running"
+    },
+    {
+      "cost_note": "multiple comparable rollouts per prompt",
+      "credit_assignment": "trajectory",
+      "label": "Sibling group norm",
+      "metrics": {
+        "calibrated_mse": 0.021440510884725466,
+        "estimate_mean": 0.02025216379982564,
+        "estimate_second_moment": 0.898071764260111,
+        "estimate_variance": 0.8976616141215362,
+        "mean_abs_active_tokens": 0.8844849272774719,
+        "mean_abs_wait_tokens": 0.7559119449168855,
+        "pearson_correlation": 0.31860851142165564,
+        "raw_mse": 0.828685691417976,
+        "sign_accuracy": 0.6310904872389791,
+        "wait_to_active_abs_ratio": 0.8546351911769191,
+        "within_trajectory_variance": 1.4952706096006457e-33
+      },
+      "name": "sibling_group_norm",
+      "variance_reduction": "sibling group"
+    },
+    {
+      "cost_note": "multiple comparable rollouts per prompt",
+      "credit_assignment": "trajectory",
+      "label": "Leave-one-out",
+      "metrics": {
+        "calibrated_mse": 0.021229918823919936,
+        "estimate_mean": 0.0254354066985646,
+        "estimate_second_moment": 0.21546644628099174,
+        "estimate_variance": 0.21481948636707038,
+        "mean_abs_active_tokens": 0.4253599274705349,
+        "mean_abs_wait_tokens": 0.3396989966555184,
+        "pearson_correlation": 0.3321693538949736,
+        "raw_mse": 0.19178073869182724,
+        "sign_accuracy": 0.6310904872389791,
+        "wait_to_active_abs_ratio": 0.7986154188890999,
+        "within_trajectory_variance": 6.640445954085157e-34
+      },
+      "name": "leave_one_out",
+      "variance_reduction": "sibling group"
+    },
+    {
+      "cost_note": "requires process signal or progress verifier",
+      "credit_assignment": "step",
+      "label": "Dense progress reward",
+      "metrics": {
+        "calibrated_mse": 0.013034299887797765,
+        "estimate_mean": 0.21096128751631144,
+        "estimate_second_moment": 0.4797738147020444,
+        "estimate_variance": 0.43526914987150456,
+        "mean_abs_active_tokens": 1.0,
+        "mean_abs_wait_tokens": 0.0,
+        "pearson_correlation": 0.673634224307302,
+        "raw_mse": 0.36646481127326264,
+        "sign_accuracy": 0.46867749419953597,
+        "wait_to_active_abs_ratio": 0.0,
+        "within_trajectory_variance": 0.41634001673089177
+      },
+      "name": "dense_progress_reward",
+      "variance_reduction": "external dense signal"
+    },
+    {
+      "cost_note": "requires repeated state-action anchors",
+      "credit_assignment": "step",
+      "label": "Anchor action contrast",
+      "metrics": {
+        "calibrated_mse": 0.011663271418341106,
+        "estimate_mean": 0.0017409409694380228,
+        "estimate_second_moment": 0.044546108507766906,
+        "estimate_variance": 0.04454307763230783,
+        "mean_abs_active_tokens": 0.1746013562320551,
+        "mean_abs_wait_tokens": 0.07656273967649159,
+        "pearson_correlation": 0.7150087771264526,
+        "raw_mse": 0.021787994535106704,
+        "sign_accuracy": 0.5921113689095128,
+        "wait_to_active_abs_ratio": 0.43850025755089417,
+        "within_trajectory_variance": 0.04227125905425286
+      },
+      "name": "anchor_action_contrast",
+      "variance_reduction": "anchor state group"
+    },
+    {
+      "cost_note": "requires fitted value model",
+      "credit_assignment": "step",
+      "label": "Learned critic TD",
+      "metrics": {
+        "calibrated_mse": 0.005811302755544819,
+        "estimate_mean": -3.125697835439245e-05,
+        "estimate_second_moment": 0.030535720857351335,
+        "estimate_variance": 0.030535719880352637,
+        "mean_abs_active_tokens": 0.15724199459829719,
+        "mean_abs_wait_tokens": 0.05604297094050016,
+        "pearson_correlation": 0.8697533276011461,
+        "raw_mse": 0.007442628497918478,
+        "sign_accuracy": 0.722969837587007,
+        "wait_to_active_abs_ratio": 0.3564122363346507,
+        "within_trajectory_variance": 0.030613628849009873
+      },
+      "name": "critic_td",
+      "variance_reduction": "learned critic V(s)"
+    },
+    {
+      "cost_note": "requires branch rollouts from states",
+      "credit_assignment": "step",
+      "label": "Sampled MC value",
+      "metrics": {
+        "calibrated_mse": 0.006652531800794445,
+        "estimate_mean": -0.0018350369725967978,
+        "estimate_second_moment": 0.03311689525337103,
+        "estimate_variance": 0.03311352789268023,
+        "mean_abs_active_tokens": 0.15715661831368993,
+        "mean_abs_wait_tokens": 0.08841973244147157,
+        "pearson_correlation": 0.8492456686808518,
+        "raw_mse": 0.009233744003494464,
+        "sign_accuracy": 0.6649651972157773,
+        "wait_to_active_abs_ratio": 0.5626217552288049,
+        "within_trajectory_variance": 0.03448543967114634
+      },
+      "name": "sampled_mc_td",
+      "variance_reduction": "sampled value"
+    },
+    {
+      "cost_note": "not available in real training",
+      "credit_assignment": "step",
+      "label": "Oracle advantage ceiling",
+      "metrics": {
+        "calibrated_mse": 0.0,
+        "estimate_mean": -0.0003212941185454913,
+        "estimate_second_moment": 0.02386296636717143,
+        "estimate_variance": 0.02386286313726082,
+        "mean_abs_active_tokens": 0.1429548316232531,
+        "mean_abs_wait_tokens": 0.03567521429274732,
+        "pearson_correlation": 1.0,
+        "raw_mse": 0.0,
+        "sign_accuracy": 1.0,
+        "wait_to_active_abs_ratio": 0.249555848428871,
+        "within_trajectory_variance": 0.025018008725100963
+      },
+      "name": "oracle_advantage",
+      "variance_reduction": "oracle value"
+    }
+  ],
+  "sample_counts": {
+    "anchor_action": {
+      "supported_step_fraction": 0.9517181383210092,
+      "unique_anchor_actions": 446.0,
+      "unique_anchor_states": 202.0
+    },
+    "eval_tokens": 2299,
+    "eval_trajectories": 288,
+    "sampled_mc": {
+      "branches_per_state": 32,
+      "sampled_value_rollouts": 7104,
+      "unique_states_sampled": 222
+    },
+    "success_rate": 0.6631944444444444,
+    "train_return_mean": 0.4950625,
+    "train_trajectories": 960,
+    "wait_token_fraction": 0.5202261852979556
+  },
+  "summary": {
+    "best_non_oracle_by_correlation": "critic_td",
+    "best_step_by_correlation": "critic_td",
+    "best_trajectory_by_correlation": "reinforce_return",
+    "global_minus_reinforce_second_moment": -0.2855494901672603,
+    "step_minus_trajectory_best_correlation": 0.5128817409405211
+  }
+}

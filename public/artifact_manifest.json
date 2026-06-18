@@ -1,0 +1,74 @@
+{
+  "artifact_scope": "abridged public PDF/DOCX report derived from the canonical matrix, not a full PAPER.md export",
+  "generated_at_utc": "2026-06-18T12:44:28.240990+00:00",
+  "generator": "scripts/build_public_artifacts.py",
+  "git_commit": "ae9c5ef9d3e1eb8badb15c8e21bae6dd2fbcc971",
+  "git_context_note": "The manifest records the worktree at generation time. When generated artifacts are committed together with this manifest, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
+  "git_status_short": "M PAPER.md\n M README.md\n M paper/README.md\n M paper/main.tex\n M public/artifact_manifest.json\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon.docx\n M public/ppo_grpo_opd_long_horizon.pdf\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M scripts/build_public_artifacts.py\n M tests/test_latex_paper.py",
+  "inputs": {
+    "results/deep_matrix_20seed.json": "9effd3b0fc704b019e601749cb1708a074520efdec1d0c7240a3079580af7c5e"
+  },
+  "outputs": {
+    "public/figures/deep_matrix_coverage.png": {
+      "bytes": 26739,
+      "sha256": "421e358548118b00be8d341fe89fd17056bebfd32674b1a3fb4c372fb60013d9"
+    },
+    "public/figures/deep_matrix_delta.png": {
+      "bytes": 79640,
+      "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
+    },
+    "public/ppo_grpo_opd_long_horizon.docx": {
+      "bytes": 125437,
+      "sha256": "b74eb4e975f87ca1847d755cdfa0e614e41deeadbf3c33c46fafc50e9d62bde5"
+    },
+    "public/ppo_grpo_opd_long_horizon.pdf": {
+      "bytes": 125726,
+      "sha256": "6754df9a6a19f8fbcd931d956ae56e03e87a9f8c1aa9bcf1b55783d977d47e6f"
+    }
+  },
+  "render_checks": {
+    "docx": {
+      "bytes": 125437,
+      "generated": true,
+      "inline_shape_count": 2,
+      "media_count": 2,
+      "paragraph_count": 26,
+      "table_count": 2,
+      "text_check": {
+        "character_count": 3124,
+        "missing_phrases": [],
+        "required_phrases": [
+          "Trajectory Rewards",
+          "PPO-style",
+          "GRPO-style",
+          "16 clear",
+          "near tie",
+          "Z.ai",
+          "not independent causal evidence"
+        ]
+      },
+      "visual_render": "not_run_soffice_unavailable"
+    },
+    "pdf": {
+      "bytes": 125726,
+      "generated": true,
+      "page_count": 4,
+      "text_check": {
+        "character_count": 5241,
+        "missing_phrases": [],
+        "required_phrases": [
+          "Trajectory Rewards",
+          "PPO-style",
+          "GRPO-style",
+          "16 clear",
+          "near tie",
+          "Z.ai",
+          "not independent causal evidence"
+        ]
+      }
+    }
+  },
+  "source_urls": {
+    "z_ai_glm_5_2": "https://z.ai/blog/glm-5.2"
+  }
+}

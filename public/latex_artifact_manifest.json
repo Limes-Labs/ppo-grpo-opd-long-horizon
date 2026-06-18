@@ -1,0 +1,119 @@
+{
+  "artifact_scope": "full LaTeX paper artifact",
+  "checks": {
+    "anchor_coverage_source": "results/anchor_coverage_audit_seedset.json",
+    "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
+    "closed_loop_source": "results/closed_loop_credit_training_10seed.json",
+    "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
+    "min_pages": 30,
+    "page_count": 36,
+    "page_count_ok": true,
+    "pdf_generated": true,
+    "pdf_header": "%PDF",
+    "result_source": "results/deep_matrix_20seed.json",
+    "token_cost_source": "results/token_cost_sensitivity_20seed.json",
+    "variance_credit_source": "results/variance_credit_grid_seed17.json"
+  },
+  "generated_at_utc": "2026-06-18T12:43:01.398372+00:00",
+  "generator": "scripts/build_latex_paper.sh",
+  "git_commit": "ae9c5ef9d3e1eb8badb15c8e21bae6dd2fbcc971",
+  "git_context_note": "The manifest records the worktree at generation time. When the LaTeX source, PDF, and manifest are committed together, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
+  "git_status_short": "M PAPER.md\n M README.md\n M paper/README.md\n M paper/main.tex\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M scripts/build_public_artifacts.py\n M tests/test_latex_paper.py",
+  "inputs": {
+    "paper/generated/anchor_coverage_table.tex": {
+      "bytes": 593,
+      "sha256": "21e943309c7abb54d8fcb60eb9f1fccb164976bd3c127231727bfa6767a6734b"
+    },
+    "paper/generated/axis_summary_table.tex": {
+      "bytes": 571,
+      "sha256": "ef0fbd3f37860b05695906bc2347950dd698305d5110706f9cb4905f67469ee2"
+    },
+    "paper/generated/closed_loop_training_table.tex": {
+      "bytes": 742,
+      "sha256": "c6ce3225d8014d6111cb6b39a2a7a1d9f8e7d485c9f65bf01ba58713f7edcec3"
+    },
+    "paper/generated/deep_matrix_table.tex": {
+      "bytes": 756,
+      "sha256": "90c2bac842d1635ae00f74f82f09d0cceb08812a38e70eb088d1e6db84b1a14c"
+    },
+    "paper/generated/full_case_table.tex": {
+      "bytes": 2233,
+      "sha256": "98a2121f4e1c351649301314c0ac02ee221963263ac0c82615cfb4bc0f542498"
+    },
+    "paper/generated/length_imbalance_table.tex": {
+      "bytes": 550,
+      "sha256": "d84f75ed41cc78646b9ead064f628a5a1990d875d3ef2f78cf2dee73572fc44f"
+    },
+    "paper/generated/raw_error_table.tex": {
+      "bytes": 27672,
+      "sha256": "d11ed5dad3701ac4bb071893729f62a5c528710d7b890a1ab37b4ddee3a179bf"
+    },
+    "paper/generated/raw_seed_table.tex": {
+      "bytes": 27357,
+      "sha256": "73857bbc839b07ba19b6be23a71db4e8e920d329cc42f416893d14dd984c6a58"
+    },
+    "paper/generated/result_macros.tex": {
+      "bytes": 360,
+      "sha256": "4a58f8948b27039be11ab3b986f80cff37b691591847fdb8420e8434d442aee3"
+    },
+    "paper/generated/token_cost_table.tex": {
+      "bytes": 729,
+      "sha256": "c6ac710d65f96b2dc317d6942c37031d6131a262eea1cd82e11249cff5ff10d9"
+    },
+    "paper/generated/variance_credit_table.tex": {
+      "bytes": 690,
+      "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
+    },
+    "paper/main.tex": {
+      "bytes": 55911,
+      "sha256": "c4430e534c83cdfabdcaf7fcb4cd0b36274be204af36a99bfd428f98d49a1ca5"
+    },
+    "paper/references.bib": {
+      "bytes": 10404,
+      "sha256": "ae08969c53c10c224d12c2112fb7b968ede26e7ef1915d9344d4db8e8cbd3f65"
+    },
+    "public/figures/deep_matrix_coverage.png": {
+      "bytes": 26739,
+      "sha256": "421e358548118b00be8d341fe89fd17056bebfd32674b1a3fb4c372fb60013d9"
+    },
+    "public/figures/deep_matrix_delta.png": {
+      "bytes": 79640,
+      "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
+    },
+    "results/anchor_coverage_audit_seedset.json": {
+      "bytes": 25140,
+      "sha256": "d5b9643139af1db8affc96b86f2c67a658527d5e356504bfbc56d83c999a654b"
+    },
+    "results/closed_loop_credit_training_10seed.json": {
+      "bytes": 182302,
+      "sha256": "99b0adbca46d8832438c68c010284f5aa0d5bcdc034e25a162a64be75d2463de"
+    },
+    "results/closed_loop_credit_training_low_coverage_10seed.json": {
+      "bytes": 155781,
+      "sha256": "e556e6631f3df9e8ff69065f53c5f087ab9909276988dbc85e758c666bb636ff"
+    },
+    "results/deep_matrix_20seed.json": {
+      "bytes": 231192,
+      "sha256": "9effd3b0fc704b019e601749cb1708a074520efdec1d0c7240a3079580af7c5e"
+    },
+    "results/length_imbalance_audit_seedset.json": {
+      "bytes": 284699,
+      "sha256": "a2ba91feae09bf039e930d06a60f67198af6e55b76acf8f07435352107e987be"
+    },
+    "results/token_cost_sensitivity_20seed.json": {
+      "bytes": 111284,
+      "sha256": "7b1803ee0bc281e76f00f470cd4a36f2100570858e5690fc2df81b46b91d1119"
+    },
+    "results/variance_credit_grid_seed17.json": {
+      "bytes": 8382,
+      "sha256": "2809667a98198337c8aefc2f16a312eed6baf699e6359b73e5c5c7e99fc7929f"
+    }
+  },
+  "outputs": {
+    "public/ppo_grpo_opd_long_horizon_latex.pdf": {
+      "bytes": 272898,
+      "sha256": "812890b98d52185eeb57701083147d6a4d84de2db5d023b1e53d7edae04fe7b8"
+    }
+  },
+  "tex_engine": "Tectonic 0.16.9"
+}

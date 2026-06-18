@@ -1,0 +1,1128 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{placeins}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!45!black,
+  citecolor=blue!45!black,
+  urlcolor=blue!55!black
+]{hyperref}
+
+\graphicspath{{../public/figures/}{../results/figures/}}
+
+\title{\vspace{-1.0cm}Trajectory Rewards Are Not Token Credit: Advantage Estimator Fidelity for Long-Horizon Post-Training}
+\author{Limes Labs Research Workstream}
+\date{Public draft v0.7, June 18, 2026}
+
+\newcommand{\grpo}{\textsc{GRPO}}
+\newcommand{\opd}{\textsc{OPD}}
+\newcommand{\opsd}{\textsc{OPSD}}
+\newcommand{\ppo}{\textsc{PPO}}
+\newcommand{\GRPOm}{\mathrm{GRPO}}
+\newcommand{\OPDm}{\mathrm{OPD}}
+\newcommand{\PPOm}{\mathrm{PPO}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\Ahat}{\widehat{A}}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\input{generated/result_macros.tex}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Critic-free reinforcement learning, especially Group Relative Policy
+Optimization (\grpo), is attractive for reasoning-model post-training because
+it removes the learned value model and reduces memory pressure. This paper asks
+where that trade changes in long-horizon, variable-length, tool-using
+trajectories. Our working hypothesis is conditional: critic-based \ppo\ is a
+better candidate when token- or state-level temporal credit is observable and
+covered, while \grpo\ remains compelling when group reward contrast is reliable
+and value modeling is weak or too expensive. \opd\ and \opsd\ are treated as
+complementary on-policy distillation objectives. The paper contributes a
+variance-reduction/credit-assignment taxonomy, a CPU-only estimator-fidelity
+testbed with known oracle advantages, a structural critic-free anchor-action
+contrast baseline, an exploratory coverage-gated credit estimator, and a
+tabular closed-loop training audit. Across a \DeepSeedCount-seed,
+\DeepCaseCount-case matrix, critic-style temporal-difference advantages have
+higher mean oracle-advantage correlation in \DeepMeanCriticWins\ cases; a
+confidence-interval reading gives \DeepClearCriticCases\ clear critic-favorable
+cases, \DeepNearTieCases\ near tie, and \DeepClearGroupCases\ clear
+group-favorable counterexample. Closed-loop tabular policy training shows the
+same ordering direction but smaller downstream gaps. The result is mechanism
+evidence, not a frontier-model leaderboard claim.
+\end{abstract}
+
+\paragraph{Keywords.}
+post-training; reinforcement learning from verifiable rewards; PPO; GRPO;
+on-policy distillation; credit assignment; long-horizon agents.
+
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+
+Long-horizon post-training for language-model agents is not merely long-context
+language modeling. A trajectory may include partial plans, tool calls,
+retrievals, edits, failed attempts, retries, compacted summaries, and final
+verifier feedback. In such traces, the question ``did the rollout succeed?''
+is not the same as ``which token or action helped?'' A scalar terminal reward
+can be useful for ranking responses, but it can also broadcast the same update
+over helpful subgoals, harmful detours, and no-op padding.
+
+This paper is a public Limes Labs workstream on the method question:
+\emph{for variable-length, multi-step, tool-heavy trajectories, when does a
+critic/value-model setup recover useful temporal credit that a group-relative
+setup discards or blurs?} We deliberately avoid centering the work on one base
+model. Z.ai's GLM-5.2 report is discussed only as an industry case study: it
+describes compacted, variable-length long-horizon rollouts and a move from
+group-wise optimization to critic-based \ppo\ with token-level advantages
+\citep{zai2026glm52}. That is not independent causal evidence that \ppo\ beats
+\grpo; it is a motivating example of the problem structure studied here.
+
+\paragraph{Contributions.}
+We make five contributions. First, we separate reward optimization methods such
+as \ppo\ and \grpo\ from on-policy distillation methods such as \opd\ and
+\opsd, then classify them by variance reduction, credit granularity, and
+extra-model cost. Second, we give a cost and failure-mode checklist for fair
+long-horizon post-training comparisons. Third, we introduce a deterministic toy
+environment with known oracle advantages and use it for a multi-seed
+estimator-fidelity matrix. Fourth, we add two baselines beyond trajectory
+broadcasts: anchor-action contrast, a critic-free structural control, and
+coverage-gated credit, an adaptive estimator. Fifth, we run robustness audits
+and a tabular closed-loop training sanity check, showing that alignment gains
+survive downstream optimization only modestly.
+
+\paragraph{Scope discipline.}
+The paper makes a narrow claim about credit-assignment mechanisms. It does not
+claim that \ppo\ is universally better than \grpo, that \opd\ is weaker than RL,
+or that a finite-state toy predicts frontier-model behavior. We use the toy
+because the oracle advantage is known, which lets us ask a question that is
+usually hidden in language-model training: whether an estimator is aligned with
+the token-level causal structure of a trajectory. This distinction matters for
+public research. A method can improve a benchmark for reasons unrelated to the
+mechanism under discussion, and a method can be mechanistically promising while
+still losing under a particular compute budget, implementation, reward model,
+or data mixture.
+
+\paragraph{Paper organization.}
+Section 2 defines the methods and separates optimization from distillation.
+Section 3 reviews related work. Section 4 gives cost accounting. Sections 5--7
+define the toy environment, experimental protocol, and results. Sections 8--10
+interpret the mechanism evidence, compare method regimes, and state failure
+modes. The appendices provide implementation details, case design, full summary
+tables, and raw per-seed rows generated directly from the canonical JSON result
+artifact.
+
+\section{Definitions and Method Taxonomy}
+
+Let a policy produce a trajectory
+\begin{equation}
+  \tau = (s_0, a_0, s_1, a_1, \ldots, s_T),
+\end{equation}
+where a state may include the prompt, partial response, tool outputs, verifier
+state, files, memory, or compacted context. Let $R(\tau)$ be an outcome reward,
+possibly combined with per-token KL, process rewards, or unit-test feedback.
+
+\subsection{PPO with a critic}
+
+\ppo\ optimizes a clipped policy-gradient surrogate \citep{schulman2017ppo}:
+\begin{equation}
+L^{\PPOm}(\theta) =
+\E_t \left[
+  \min\left(
+    \rho_t(\theta) A_t,
+    \operatorname{clip}(\rho_t(\theta),1-\epsilon,1+\epsilon) A_t
+  \right)
+\right],
+\end{equation}
+where
+\begin{equation}
+  \rho_t(\theta) =
+  \frac{\pi_\theta(a_t \mid s_t)}
+       {\pi_{\theta_{\mathrm{old}}}(a_t \mid s_t)}.
+\end{equation}
+In actor-critic use, a value model $V_\phi$ can estimate one-step temporal
+difference errors
+\begin{equation}
+  \delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t),
+\end{equation}
+or generalized advantage estimates \citep{schulman2015gae}:
+\begin{equation}
+  A_t^{\mathrm{GAE}(\gamma,\lambda)}
+  = \sum_{\ell=0}^{\infty}(\gamma\lambda)^\ell \delta_{t+\ell}
+  .
+\end{equation}
+The critic is valuable only if the value target is learnable, sufficiently
+covered, and cheaper than the credit it recovers.
+
+\subsection{GRPO}
+
+\grpo\ samples a group of completions for the same prompt and normalizes rewards
+inside the group \citep{shao2024deepseekmath,deepseek2025r1}. A simplified
+response-level advantage is
+\begin{equation}
+  \Ahat_i^{\GRPOm} =
+  \frac{R_i - \mu_G}{\sigma_G+\epsilon},
+\end{equation}
+where $\mu_G$ and $\sigma_G$ are group statistics. This critic-free design is
+memory-efficient and effective in many verifiable-reward settings. Its
+long-horizon risk is intra-rollout information loss: one scalar can be
+broadcast across tokens with very different causal roles.
+
+\subsection{OPD and OPSD}
+
+\opd\ trains a student on student-sampled trajectories while a teacher provides
+dense supervision on those visited states \citep{agarwal2023gkd,li2026opd}. A
+typical objective is
+\begin{equation}
+L^{\OPDm}
+= \E_{x \sim D,\,y \sim \pi_s(\cdot\mid x)}
+\left[
+  \sum_t
+  \KL\!\left(
+    \pi_T(\cdot \mid x,y_{<t})
+    \,\|\, \pi_s(\cdot \mid x,y_{<t})
+  \right)
+\right].
+\end{equation}
+\opsd\ removes the separate teacher model by making one model play a privileged
+teacher role and an ordinary student role over student rollouts
+\citep{zhao2026opsd}. These are dense distillation objectives. They can be
+excellent post-training tools, but they are not the same objective as reward
+optimization.
+
+\begin{table}[!htbp]
+\centering
+\caption{Method taxonomy for long-horizon post-training.}
+\label{tab:taxonomy}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\linewidth}{@{}L{1.65cm}L{1.95cm}L{1.75cm}L{2.2cm}Y@{}}
+\toprule
+Method & Objective & Granularity & Extra signal & Main risk \\
+\midrule
+\ppo\ critic & reward/KL opt. & token/state & value; reward; ref. & critic cost; value miscalibration \\
+\grpo & group RL & resp./group & verifier; no critic & weak intra-rollout credit \\
+\opd & teacher KL & token logits & teacher model & teacher mismatch; teacher cost \\
+\opsd & self-KL & token logits & privileged traces & leakage; truncation collapse \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Variance reduction versus credit assignment}
+
+The critic in actor--critic \ppo\ does two jobs at once. It acts as a
+state-dependent baseline that can reduce policy-gradient variance, and it
+creates token- or state-indexed temporal credit. These are different
+mechanisms. A running global baseline can reduce variance without telling us
+which step helped; a structural group method can remain critic-free while
+recovering some step-level contrast; a sampled value method can estimate
+per-state credit without training a value network.
+
+\begin{table}[!htbp]
+\centering
+\caption{Two separable axes: how a baseline is formed and where credit is
+assigned. ``SPO'' is overloaded; here it refers separately to Single-stream
+Policy Optimization and Segment Policy Optimization.}
+\label{tab:variance-credit-taxonomy}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{0.96\linewidth}{@{}L{2.0cm}YY@{}}
+\toprule
+Baseline source & Trajectory-level credit & Step-/segment-level credit \\
+\midrule
+None & REINFORCE & -- \\
+Global & REINFORCE++; Single-stream PO & add process rewards \\
+\addlinespace[2pt]
+Sibling/LOO & \grpo; RLOO; DAPO; Dr. \grpo & GiGPO; SALT; anchor contrast; PRM+\grpo \\
+\addlinespace[2pt]
+Learned critic $V(s)$ & usually unnecessary alone & \ppo/GAE; ArCHer \\
+Sampled value & -- & VinePPO; OPPO; Segment PO \\
+Redistribution & -- & RUDDER-style decomposition \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Coverage-gated credit}
+
+The counterexample in this paper suggests a simple adaptive estimator. A critic
+should not be used merely because a value model exists; it should be used where
+the value estimate is locally supported. Let $n_D(s_t)$ be a replay or batch
+coverage count for the critic state abstraction, $k$ a minimum support
+threshold, $\hat A^{\mathrm{TD}}_t$ a critic temporal-difference advantage, and
+$\hat A^{G}_i$ the group-relative scalar for trajectory $i$. Define
+\begin{equation}
+m_t = \mathbf{1}\{n_D(s_t) \ge k\}, \qquad
+\hat A^{\mathrm{CG}}_t =
+m_t \hat A^{\mathrm{TD}}_t + (1-m_t)\hat A^{G}_i .
+\end{equation}
+This coverage-gated estimator is intentionally modest. It does not solve
+critic blindness: if the state abstraction hides the causal feature, high
+coverage can still be misleading. Its purpose is to make critic readiness an
+explicit experimental variable and to preserve group-relative signal where the
+critic is locally undercovered.
+
+\section{Related Work}
+
+\paragraph{PPO and actor--critic post-training.}
+\ppo\ was introduced as a simpler clipped-objective alternative to
+trust-region policy optimization \citep{schulman2017ppo}. In RLHF-style
+language-model training, actor--critic optimization is usually wrapped with KL
+penalties, reference policies, reward models, old-logprob storage, reward
+normalization, and sequence-level preference signals
+\citep{ouyang2022instructgpt,stiennon2020summarize}. The relevant point for
+this work is not one historical RLHF recipe, but the availability of a state-
+or token-indexed value estimate. A critic can turn delayed outcome feedback
+into temporally structured advantages. That can help when rollouts contain
+subgoals and detours, but it also creates a second model that can drift,
+overfit, or assign confident false credit.
+
+\paragraph{GRPO and RL with verifiable rewards.}
+DeepSeekMath introduced \grpo\ as a critic-free method for mathematical
+reasoning, replacing the learned value model with group-relative reward
+normalization \citep{shao2024deepseekmath}. DeepSeek-R1 then made \grpo-style
+RL a central public reference point for reasoning-model training
+\citep{deepseek2025r1}. Subsequent work has analyzed the effective loss,
+success amplification, response-length effects, dynamic sampling, clipping
+details, and statistical structure of \grpo-like gradients
+\citep{mroueh2025grpo,liu2025r1zero,yu2025dapo,zhou2026grpo,salmani2026mdpgrpo}.
+The practical attraction is real: \grpo\ removes critic memory and critic
+training, which can be decisive at large scale. The risk studied here is that a
+response-level group scalar can be information-wasteful inside long,
+heterogeneous rollouts.
+
+\paragraph{Baselines, sampled values, and step credit.}
+Recent work shows that the design space is broader than \ppo\ versus \grpo.
+REINFORCE-style and global-normalization methods reduce critic cost without
+necessarily solving intra-rollout credit \citep{ahmadian2024backtobasics,hu2025reinforcepp,xu2025singlestream}.
+VinePPO estimates values by branching Monte Carlo rollouts rather than fitting a
+value network \citep{kazemnejad2024vineppo}. ArCHer uses a hierarchical
+multi-turn value structure for language-model agents \citep{zhou2024archer}.
+OPPO is a very recent token-credit proposal based on Bayesian value recursion
+and should be read as a promising taxonomy anchor rather than settled evidence
+\citep{li2026oppo}. RUDDER and Segment Policy Optimization connect the same
+question to delayed-reward redistribution and segment-level credit
+\citep{arjona2018rudder,guo2025segmentpo}.
+
+\paragraph{Dense and structural step signals.}
+Process supervision is another way to avoid a pure terminal broadcast. Stepwise
+verification and process reward models provide direct intermediate feedback
+\citep{lightman2023verify,wang2023mathshepherd}, while implicit process rewards
+try to recover denser signals from cheaper outcome supervision
+\citep{yuan2024freeprocess}. GiGPO and SALT are especially relevant because
+they preserve critic-free or group-based structure while constructing
+finer-grained comparisons across repeated states or trajectory graphs
+\citep{feng2025gigpo,li2025salt}. These methods make the main point sharper:
+``critic-free'' does not have to mean ``trajectory-only,'' and ``critic-based''
+does not automatically mean correct credit. Our anchor-action contrast row is a
+minimal local analogue of that structural idea for the toy environment; it is
+not a reproduction of GiGPO or SALT.
+
+\paragraph{On-policy distillation.}
+\opd\ and related generalized knowledge distillation methods train on
+student-visited states, reducing train/inference mismatch relative to purely
+offline teacher forcing \citep{agarwal2023gkd,li2026opd}. \opsd\ uses the same
+model in privileged teacher and ordinary student roles, aiming to capture dense
+reasoning supervision without a separate teacher model \citep{zhao2026opsd}.
+Recent OPD analyses emphasize teacher/student compatibility, teacher novelty,
+length inflation, and truncation collapse \citep{li2026opd,luo2026opd}. These
+methods are close to the present problem because they also produce dense
+token-level signals on rollouts. They differ because their signal is a
+distillation target rather than a reward-improvement objective.
+
+\paragraph{Long-horizon agentic training.}
+Long-horizon agentic RL introduces issues that are often absent in short
+verifier tasks: tool-call state, file-system state, hidden evaluation
+artifacts, environment side effects, compaction, and anti-hacking
+infrastructure. The GLM-5.2 report is useful because it explicitly names
+compacted sub-traces, variable numbers of trainable traces per prompt, and a
+move from group-wise optimization to critic-based \ppo\ with token-level
+advantages \citep{zai2026glm52}. We treat this as a case study of a design
+pressure, not as proof of a causal performance mechanism.
+
+\section{Cost Accounting}
+
+Fair comparisons should charge all hidden inputs, not only final benchmark
+score. For \ppo, the bill includes value-model parameters, value targets,
+critic forward passes, optimizer state, old-policy log probabilities, KL
+control, and rollout storage. For \grpo, the bill includes group size,
+discarded completions, low-dispersion groups, and verifier calls. For
+\opd/\opsd, it includes teacher or privileged-context compute, dense logits,
+trajectory length inflation, and truncation handling. For agentic coding RL, it
+also includes anti-hacking filters, online tool-call monitors, LLM judges,
+sandboxing, blocked-call handling, and dummy observations when invalid calls are
+intercepted.
+
+The near-term reporting scorecard for this workstream is the reward change
+reported beside its resource vector, not a literal scalar objective:
+\begin{equation}
+\Delta \mathrm{reward}
+\quad\text{given}\quad
+(\mathrm{generated\ tokens},\ \mathrm{wall\ clock},\
+\mathrm{extra\ model\ memory}),
+\end{equation}
+reported alongside reproducible artifacts and negative results.
+
+\paragraph{Policy and rollout cost.}
+For \ppo, each trainable token typically needs old-policy log probabilities,
+advantages, reference-policy information for KL control, and value-model
+targets. If rollouts are compacted into sub-traces, the implementation must
+decide whether every sub-trace is trainable, how truncation is handled, and how
+losses are normalized across very different lengths. \grpo\ avoids the critic
+but spends compute on group sampling. If many group members have identical
+verifier outcomes, the effective signal can be weak even when token generation
+cost is high.
+
+\paragraph{Verifier, judge, and safety cost.}
+In coding-agent RL, pass/fail rewards can be corrupted by shortcuts such as
+reading hidden tests, fetching target solutions, or exploiting benchmark
+leakage. Online anti-hacking filters, rule-based monitors, LLM judges, dummy
+observations for blocked calls, and sandboxing are not optional bookkeeping
+details. They are part of the training objective as experienced by the agent.
+Ignoring them makes method comparisons look cleaner than they really are.
+
+\paragraph{Distillation cost.}
+\opd\ and \opsd\ can look cheap if only student updates are counted. A fair bill
+also includes teacher logits or hidden states, privileged traces, context
+construction, rejection/truncation policies, and any additional sampling needed
+to keep the student on-policy. Dense token supervision can be worth this cost,
+but it should not be compared to RL methods as if the dense signal were free.
+
+\section{Toy Experiment}
+
+\subsection{Environment}
+
+The toy environment creates variable-length trajectories with three action
+types: \texttt{help}, \texttt{harm}, and \texttt{wait}. \texttt{help} increases
+a hidden progress score, \texttt{harm} decreases it, and \texttt{wait} consumes
+a token without changing progress. A terminal verifier returns success when the
+final score reaches a prompt-specific threshold. Because the finite dynamics
+are known, we can compute an oracle state-action advantage:
+\begin{equation}
+  A^\star(s_t,a_t)
+  = -c + V^\star(s_{t+1},h-1) - V^\star(s_t,h),
+\end{equation}
+where $c$ is token cost and $h$ is remaining horizon.
+
+\subsection{Estimators and metrics}
+
+The group-relative estimator normalizes terminal returns inside each prompt
+group and broadcasts the resulting scalar to all tokens in the trajectory. The
+critic-style estimator fits a tabular value model from sampled returns-to-go and
+computes one-step temporal-difference advantages. We measure Pearson
+correlation with the oracle advantage, calibrated MSE after affine rescaling,
+raw MSE, sign accuracy, wait-token leakage, within-trajectory variance,
+zero-variance group fraction, and exact critic-state hit rate.
+
+The variance-credit grid adds eight non-oracle estimators on the same toy
+dynamics: raw REINFORCE returns, a global return baseline, sibling group
+normalization, leave-one-out group centering, a dense progress-reward proxy, a
+critic-free anchor-action contrast over repeated state-action visits, a learned
+critic TD estimator, and a sampled Monte Carlo value estimator. The purpose is
+not to simulate every cited algorithm, but to test the mechanism classes in
+Table \ref{tab:variance-credit-taxonomy}: baseline-only variance reduction,
+structural critic-free step credit, and value-estimation-based step credit.
+
+Three robustness audits test likely objections. The anchor-coverage audit
+sweeps evaluation batch size to change how often exact state-action anchors
+repeat, testing whether the structural critic-free baseline is coverage-bound.
+The length-imbalance audit adds a length-adjusted group scalar, computed by
+normalizing return per token inside each prompt group, and sweeps maximum
+horizon. The token-cost audit reruns baseline and long-wait settings with
+per-token costs $c \in \{0, 0.01, 0.02, 0.05\}$, including the
+no-explicit-length-penalty case $c=0$.
+
+The closed-loop training audit uses the same toy dynamics but trains a tabular
+softmax policy with policy-gradient updates under matched generated-token
+budgets. This is still not full \ppo\ or production \grpo: there is no neural
+policy, KL controller, minibatch optimizer, or clipped surrogate. It does test
+whether estimator-fidelity differences survive one downstream optimization
+loop. The compared signals are group total return, group return per token,
+critic TD from a replay value table, and coverage-gated credit.
+
+The oracle-alignment matrix remains an estimator-fidelity experiment under
+controlled dynamics. The closed-loop audit is a downstream tabular-policy
+stress test, not a production \ppo-vs-\grpo\ benchmark.
+
+\section{Experimental Protocol}
+
+\paragraph{Design principle.}
+The experiment is designed around a known oracle. In real language-model RL, we
+usually observe a reward and a model update but not the true token-level
+advantage. Here the finite-state dynamics allow exact dynamic programming for
+$V^\star$, which turns the question into an estimator-fidelity problem. That
+lets us separate two claims that are often conflated: whether a method is cheap
+and whether its advantage signal points at the right tokens.
+
+\paragraph{Case axes.}
+The deep matrix varies five axes. The horizon axis tests whether scalar
+terminal broadcasts become less aligned as trajectories lengthen. The group-size
+axis tests whether more completions per prompt rescue \grpo-like normalization.
+The critic-budget axis tests coverage: a value table trained from too few
+groups should not be trusted. The observability axis removes or coarsens state
+features to simulate poor value-model inputs. The sparse-reward axis tests
+harder terminal feedback. Finally, the counterexample intentionally combines a
+blind critic and low coverage to create a regime where group-relative terminal
+outcomes should win.
+
+\paragraph{Decision rule.}
+The headline statistic is Pearson correlation with the oracle advantage. A case
+is a mean critic win when the mean critic correlation exceeds the mean
+group-relative correlation. Because one mean win can be tiny, we also report a
+95\% across-seed confidence interval for the delta. A ``clear critic'' case has
+positive delta after subtracting the interval; a ``clear group'' case has
+negative delta after adding the interval; otherwise the case is labeled a near
+tie. This is why the abstract says both ``17 mean critic wins'' and the more
+cautious ``16 clear, 1 near tie, 1 clear group'' reading.
+
+\paragraph{Why not a full closed-loop \ppo/\grpo\ benchmark?}
+The closed-loop audit below is intentionally tabular and unclipped. A full
+\ppo/\grpo\ benchmark would mix estimator fidelity with optimizer settings,
+clipping schedules, policy parameterization, exploration, and KL control. This
+paper therefore asks the oracle-credit question first, then uses a small
+downstream policy-training audit as a sanity check rather than as final
+production evidence.
+
+\section{Results}
+
+The canonical matrix uses \DeepSeedCount\ seeds and \DeepCaseCount\ fixed cases
+across horizon length, group size, critic budget, observability, sparse-reward
+regimes, and a designed counterexample. Critic-style TD has the higher mean
+correlation in \DeepMeanCriticWins\ of \DeepCaseCount\ cases. A
+confidence-interval reading is more cautious: \DeepClearCriticCases\ cases are
+clearly critic-favorable, \DeepNearTieCases\ is a near tie, and
+\DeepClearGroupCases\ is clearly group-favorable. The mean critic-minus-group
+correlation is \DeepMeanDeltaCorrelation. Table \ref{tab:deep-matrix} reports
+representative cases; the full CSV and JSON are committed in \texttt{results/}.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{deep_matrix_delta.png}
+\caption{Mean critic-minus-group oracle-advantage correlation by case.
+Positive values favor critic-style temporal-difference advantages.}
+\label{fig:delta}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.86\linewidth]{deep_matrix_coverage.png}
+\caption{Critic state coverage versus estimator advantage. The group-relative
+counterexample occurs when the critic is blind and undercovered.}
+\label{fig:coverage}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\caption{Selected rows from the 20-seed deep matrix. Delta is critic $r$ minus
+group $r$; CI is a 95\% across-seed interval for delta.}
+\label{tab:deep-matrix}
+\small
+\input{generated/deep_matrix_table.tex}
+\end{table}
+\FloatBarrier
+
+\paragraph{Interpretation.}
+Within this controlled estimator-fidelity toy, the evidence supports the
+\ppo-favorable hypothesis when progress state is observable and critic coverage
+is adequate: critic-style advantages track token-level oracle credit more
+closely than response-level group scalars. The result also protects against
+dogma. In the coverage-limited case, the confidence interval crosses zero; in
+the blind and undercovered case, group-relative terminal outcome information is
+better than a poor value table.
+
+\begin{table}[!htbp]
+\centering
+\caption{Variance-reduction versus credit-assignment grid on the long-wait toy
+case. Baseline-only methods can lower second moment, but they do not create
+within-trajectory credit variation. Abbreviations: Var. is variance reduction;
+Group z is sibling-group z-scoring; LOO is leave-one-out; Within is
+within-trajectory estimator variance; Anchor ctr. is anchor-action contrast.}
+\label{tab:variance-credit-grid}
+\scriptsize
+\input{generated/variance_credit_table.tex}
+\end{table}
+\FloatBarrier
+
+\paragraph{Variance-credit decomposition.}
+Table \ref{tab:variance-credit-grid} makes the decomposition explicit. The
+global baseline reduces the second moment of the trajectory-level policy
+gradient signal relative to raw REINFORCE returns, but it leaves
+within-trajectory variance at zero because every token in a trajectory still
+receives the same scalar. Sibling group normalization is memory-light and
+critic-free, but in this long-wait setting it also remains a trajectory-level
+broadcast. The anchor-action contrast row tests a stronger critic-free
+structural baseline: it uses repeated state-action anchors to create local
+step-level comparisons without fitting a value model. It is a transductive
+batch estimator over exact repeated toy states: it assumes repeated
+state-action coverage, and unsupported anchors receive zero rather than a
+borrowed value estimate. It substantially narrows
+the gap to the critic rows, improving correlation from the sibling-group
+baseline's 0.319 to 0.715, but it remains below learned critic TD at 0.870 and
+sampled Monte Carlo value estimation at 0.849. The dense progress-reward proxy
+also gives a step signal, but because it lacks horizon and threshold
+information, it is not a full value estimate. The strongest claim supported by
+this grid is therefore not that every critic-free method is weak; it is that
+long-horizon tasks need some mechanism for state-sensitive step credit, and in
+this toy the value-estimation mechanisms still carry the highest oracle
+alignment.
+
+\begin{table}[!htbp]
+\centering
+\caption{Anchor-coverage audit over five seeds. Groups is the number of
+evaluation prompt groups in the estimator batch; Support is the fraction of
+steps with leave-one-out state-action anchor support. $A-G$ is anchor $r$ minus
+group $r$; $C-A$ is critic $r$ minus anchor $r$.}
+\label{tab:anchor-coverage}
+\scriptsize
+\input{generated/anchor_coverage_table.tex}
+\end{table}
+
+\paragraph{Anchor coverage audit.}
+Table \ref{tab:anchor-coverage} checks the assumption behind the structural
+critic-free baseline. At two evaluation groups, only 41.3\% of steps have
+supported repeated anchors and anchor contrast is worse than sibling grouping
+($r=0.134$ versus $r=0.361$). The method crosses the sibling baseline at eight
+groups, reaches support above 0.80 at 16 groups, and climbs to $r=0.751$ at 64
+groups. Critic TD remains higher in every row. This is a useful negative and
+positive result at once: structural critic-free step credit can be real, but it
+is not free. It needs repeated comparable states, and sparse-anchor regimes
+should fall back to group or critic signals rather than pretending a local
+contrast exists.
+
+\begin{table}[!htbp]
+\centering
+\caption{Length-imbalance audit on the long-wait scenario. Len gap is the mean
+within-group max-minus-min trajectory length. Len-adj. is a group scalar based
+on return per token; $\Delta_G$ and $\Delta_L$ are critic $r$ minus group-total
+and length-adjusted group $r$.}
+\label{tab:length-imbalance}
+\scriptsize
+\input{generated/length_imbalance_table.tex}
+\end{table}
+
+\paragraph{Length-imbalance audit.}
+Table \ref{tab:length-imbalance} tests whether a simple length correction
+rescues trajectory-level grouping. It does not in this toy. As $H_{\max}$
+increases from 4 to 20, mean within-group length range grows from 1.775 to
+13.439 tokens and wait-token fraction grows from 0.336 to 0.573. The
+length-adjusted group scalar remains close to the total-return group scalar:
+at $H_{\max}=20$, critic $r$ is 0.811, group-total $r$ is 0.266, and
+length-adjusted group $r$ is 0.260. Length correction changes the rollout
+ranking signal, but it still broadcasts one number to all tokens.
+
+\begin{table}[!htbp]
+\centering
+\caption{Token-cost sensitivity over 20 seeds. The $c=0$ rows remove the
+explicit per-token penalty. CI is a 95\% interval for critic-minus-group
+correlation; Wait$_G$ and Wait$_C$ are wait-token leakage ratios.}
+\label{tab:token-cost}
+\scriptsize
+\input{generated/token_cost_table.tex}
+\end{table}
+
+\paragraph{Token-cost sensitivity.}
+Table \ref{tab:token-cost} checks whether the critic result is just a side
+effect of the per-token cost. The answer is no for these controlled dynamics.
+All eight scenario/cost rows have positive critic-minus-group correlation after
+subtracting the 95\% interval. In the long-wait, zero-cost row, critic $r$ is
+0.888, group $r$ is 0.335, and the delta is 0.552. Removing the explicit length
+penalty therefore does not remove the temporal-credit gap.
+
+\begin{table}[!htbp]
+\centering
+\caption{Closed-loop tabular policy training under matched generated-token
+budgets. Default uses the standard replay budget; low cov. restricts replay and
+raises the coverage gate. Cov-gated is coverage-gated credit.}
+\label{tab:closed-loop}
+\scriptsize
+\input{generated/closed_loop_training_table.tex}
+\end{table}
+
+\paragraph{Closed-loop training.}
+Table \ref{tab:closed-loop} is the first downstream optimization check. The
+result is more conservative than the oracle-fidelity tables, as expected. In
+the default setting, group-total training improves mean return from 0.515 to
+0.785, while critic TD reaches 0.810 and coverage-gated credit reaches 0.809.
+In the low-coverage stress setting, group total reaches 0.769, critic TD reaches
+0.780, and coverage-gated credit reaches 0.777 while using critic credit on only
+64.4\% of final-batch steps. The adaptive estimator is therefore a candidate
+design pattern, not a claimed replacement for \ppo\ or \grpo: it preserves most
+critic benefit while making critic use explicit and auditable.
+
+\FloatBarrier
+
+\section{Mechanism Analysis}
+
+\paragraph{Horizon length.}
+The horizon cases show the central intuition. As trajectories lengthen and wait
+tokens accumulate, a response-level scalar is asked to explain increasingly
+heterogeneous token roles. The group-relative estimator can still rank complete
+rollouts, but that does not mean it assigns good token credit. The critic-style
+estimator retains access to progress state and remaining horizon, so it can
+separate helpful actions from wait actions even when the final reward is
+delayed.
+
+\paragraph{Group size.}
+Increasing group size improves the quality of group statistics only when the
+additional samples create meaningful reward dispersion. In the long-wait cases,
+larger groups help the group-relative estimator somewhat, but the broadcast
+problem remains: every token in a completion inherits the same normalized
+outcome. In settings where verifier outcomes are sparse or clustered, larger
+groups can spend many tokens for little additional advantage information.
+
+\paragraph{Critic budget and coverage.}
+The critic-budget axis is the strongest warning against a simplistic ``critics
+are better'' claim. With only two training groups, the critic has an exact-state
+hit rate below one half and the confidence interval crosses zero. With more
+coverage, the critic delta grows sharply. In a neural setting, the analogous
+quantity is not table hit rate but value-model calibration under the current
+policy distribution. A poorly covered critic should be treated as a risk, not a
+badge of sophistication.
+
+\paragraph{Observability.}
+The observability cases show that a critic can still extract some value from
+coarse state, but a blind critic loses much of the temporal structure. The toy
+blind critic is intentionally simple; real long-horizon agents can become
+effectively blind for subtler reasons, including lossy compaction, missing tool
+state, stale memory, hidden environment variables, or value-model inputs that do
+not include the causal feature needed for future return.
+
+\paragraph{Counterexample.}
+The counterexample is not an embarrassment; it is the scientific control. If a
+paper about \ppo\ versus \grpo\ cannot state when \grpo\ should win, it is not a
+method paper. In the blind-undercovered case, terminal group outcomes carry more
+usable information than a weak value table. The resulting group win is small but
+clear under the confidence-interval rule.
+
+\section{Which Method Is Better?}
+
+The answer is conditional, and the condition is about information. \ppo-style
+critic methods are more plausible to test when future return is predictable
+from prefix state, when rollouts contain mixed token roles, and when the critic
+has enough coverage to be calibrated. \grpo-style methods are more plausible to
+test when rewards are cheap, verifiable, and meaningfully dispersed within
+prompt groups, or when the critic would be blind, stale, or too expensive.
+\opd\ and \opsd\ are more plausible when the available dense signal is a
+teacher or privileged self-teacher rather than an external reward.
+
+This suggests a hybrid research program. Use rejection sampling and
+\grpo-like RL to find successes when verifiers are reliable. Use value or
+process models where temporal credit is the bottleneck. Use \opd/\opsd\ to
+distill verified or teacher-improved behaviors into cheaper policies. Report
+all of these with generated-token, verifier, teacher, critic, and wall-clock
+costs. The strongest method is unlikely to be a single objective used
+everywhere; it is more likely a pipeline whose components are selected by the
+information available at each training stage.
+
+\section{Failure Modes and Testable Predictions}
+
+\paragraph{PPO/critic failures.}
+Critics can overfit reward artifacts, become stale after policy drift, collapse
+on long sparse trajectories, or assign confident but wrong temporal credit.
+
+\paragraph{GRPO failures.}
+\grpo\ can suffer zero-variance groups, low-dispersion amplification, response
+length bias, scalar reward broadcast over harmful tokens, and group composition
+confounding prompt difficulty with policy quality
+\citep{mroueh2025grpo,liu2025r1zero,yu2025dapo,zhou2026grpo,salmani2026mdpgrpo}.
+
+\paragraph{OPD/OPSD failures.}
+Teacher/student thinking patterns may be incompatible; the teacher may offer no
+new information; on-policy rollouts may inflate in length and truncate; and
+privileged self-teacher traces may leak solution structure
+\citep{li2026opd,luo2026opd,zhao2026opsd}.
+
+\paragraph{Predictions.}
+We predict that increasing horizon length and no-op padding will reduce the
+Pearson alignment between response-level group advantages and oracle or process
+labels. We predict that increasing group size will help \grpo\ mainly when it
+increases within-prompt reward dispersion. We predict that adding process
+rewards will narrow the \ppo/\grpo\ credit gap, and that degrading critic
+observability will produce regimes where \grpo\ wins. We predict that
+\opd/\opsd\ will be most token-efficient when teacher signals are novel and
+rollout lengths are controlled. Sampled-value methods should approach
+critic-like credit when the branching budget is high enough, but their
+inference cost should dominate in long agentic traces unless branch reuse or
+state sharing is available.
+
+\section{Threats to Validity}
+
+\paragraph{Toy dynamics.}
+The toy has a small finite state, a known oracle, and a tabular critic. This is
+deliberately unlike frontier post-training. The benefit is interpretability;
+the cost is that neural generalization, distribution shift, optimizer dynamics,
+and reward-model error are not measured.
+
+\paragraph{Estimator versus optimizer.}
+The experiment compares advantage estimators, not complete \ppo\ and \grpo\
+training loops. A full optimizer could amplify or dampen estimator differences
+through clipping, KL schedules, entropy, minibatching, and policy
+parameterization. This paper therefore supports a mechanism hypothesis, not a
+leaderboard conclusion.
+
+\paragraph{Simplified GRPO baseline.}
+The group-relative baseline is intentionally simple. Future comparisons should
+include leave-one-out baselines, length-normalized objectives, Dr. GRPO-style
+corrections, DAPO-style dynamic sampling, token-level process rewards, and
+low-dispersion safeguards. A stronger \grpo\ family member may narrow the gap
+in some regimes.
+
+\paragraph{Simplified critic.}
+The critic is tabular and trained from returns-to-go. Neural value models can
+generalize across states, but they can also hallucinate value structure. The
+toy's exact-state hit rate is a proxy for coverage, not a complete model of
+critic reliability.
+
+\paragraph{External validity.}
+The GLM-5.2 discussion is based on a public vendor report and local text
+snapshot, not independent reproduction of its training stack. It should be read
+as evidence that the design pressure exists in industry systems, not as proof
+that critic-based \ppo\ caused a benchmark gain.
+
+\section{Reproducibility}
+
+The core experiment code has no external Python dependencies. The canonical
+checks are:
+\begin{verbatim}
+python3 -m unittest discover -s tests
+./scripts/run_smoke.sh
+python3 -m experiments.deep_matrix \
+  --output-json results/deep_matrix_20seed.json \
+  --output-csv results/deep_matrix_20seed.csv \
+  --output-md results/deep_matrix_20seed.md \
+  --figures-dir results/figures
+python3 -m experiments.variance_credit_grid \
+  --output-json results/variance_credit_grid_seed17.json \
+  --output-md results/variance_credit_grid_seed17.md
+python3 -m experiments.length_imbalance_audit \
+  --output-json results/length_imbalance_audit_seedset.json \
+  --output-md results/length_imbalance_audit_seedset.md
+python3 -m experiments.token_cost_sensitivity \
+  --output-json results/token_cost_sensitivity_20seed.json \
+  --output-md results/token_cost_sensitivity_20seed.md
+python3 -m experiments.closed_loop_credit_training \
+  --output-json results/closed_loop_credit_training_10seed.json \
+  --output-md results/closed_loop_credit_training_10seed.md
+./scripts/build_latex_paper.sh
+\end{verbatim}
+The LaTeX paper is built with Tectonic when available and emitted as the full
+paper PDF artifact under \texttt{public/}.
+
+The coverage-gated closed-loop proposal is also wired into Limes AutoResearch.
+From the repository root, set \texttt{PYTHONPATH} to the sibling
+\texttt{limes-autoresearch/repo} checkout and run:
+\begin{verbatim}
+python3 -m autoresearch_limes run \
+  autoresearch/closed_loop_credit_training_config.json \
+  --ledger autoresearch/runs/closed_loop_ledger.jsonl
+\end{verbatim}
+The committed result card records the promotion gate and the fact that the
+current run is a candidate, not a verified replay.
+
+\section{Limitations}
+
+The toy environment has a finite known state and a tabular critic. Real
+post-training adds neural approximation, KL controllers, reward-model errors,
+tool failures, distributed rollout systems, stale policies, optimizer details,
+and data contamination risks. The \grpo\ baseline is intentionally simple; the
+next benchmark should include leave-one-out baselines, length-normalized
+variants, DAPO/Dr. GRPO-style corrections, process rewards, and dynamic
+sampling before making stronger claims.
+
+\section{Roadmap for Limes Labs}
+
+\paragraph{nanoGPT scale.}
+The next controlled step is a tiny neural policy where the true environment is
+still known but the critic must generalize. This can test whether tabular
+coverage results survive function approximation.
+
+\paragraph{AutoResearch and agentic tasks.}
+For agentic research workflows, the key artifact is a trace schema that records
+tool state, compaction boundaries, blocked actions, reward calls, and process
+labels. Without that schema, value modeling and group-relative normalization
+cannot be audited fairly. The AutoResearch spec in this repository is a first
+hook: it turns coverage-gated credit into a bounded, ledgered research question
+with explicit baselines and promotion criteria.
+
+\paragraph{EuroBench and Parameter Golf.}
+Benchmark integrations should report cost-normalized improvement, not only
+final score. Parameter Golf is especially useful for comparing memory
+multipliers: a critic may improve credit assignment but violate a deployment
+budget. EuroBench-style tasks can test whether long-horizon behavior transfers
+from toy state to real language and tool use.
+
+\clearpage
+\section{Conclusion}
+
+For long heterogeneous trajectories, critic-based \ppo\ is a strong candidate
+when value targets are learnable and adequately covered. \grpo\ remains
+attractive when group reward contrast is reliable and critic modeling is too
+costly or poorly observed. \opd\ and \opsd\ are complementary dense-supervision
+tools that can transfer behaviors on student-visited states; unless they are
+paired with reward-improvement filtering, they answer a different objective
+from reward optimization. The right public research program is
+therefore not ``\ppo\ always beats \grpo,'' but a set of falsifiable boundaries
+for when temporal credit is worth its cost.
+
+\appendix
+
+\section{Formal Objective Notes}
+
+\paragraph{Broadcasted group advantages.}
+In a response-level group-relative update, a completion-level reward statistic
+is often applied to every trainable token in that completion. Let
+$g_i=(R_i-\mu_G)/(\sigma_G+\epsilon)$ be the group-normalized scalar for
+completion $i$. The token update is then proportional to
+$g_i\nabla_\theta\log\pi_\theta(a_{i,t}\mid s_{i,t})$ for many $t$. This is
+efficient, but it implicitly assumes that all trainable tokens in the
+completion should move in the same reward direction. Long-horizon traces
+violate that assumption whenever success depends on a small subset of steps and
+the rest are neutral or harmful.
+
+\paragraph{Temporal-difference advantages.}
+A critic-style estimator replaces one response-level scalar with a local
+difference between predicted future return before and after an action. In the
+toy, this is a tabular one-step TD estimate. In language-model agents, the same
+idea may be implemented with value heads, separate value models, process reward
+models, or learned subgoal predictors. The central requirement is that the
+state representation contains enough information to make future return
+predictable.
+
+\paragraph{Distillation losses.}
+The OPD/OPSD losses in the main text are written as KL objectives because the
+teacher signal is a distribution over next tokens. Other implementations may
+use sequence-level filtering, hidden-state matching, preference-filtered
+teacher traces, or mixed supervised/RL objectives. These variants can be useful
+without changing the taxonomy: they are dense imitation or self-imitation
+signals rather than direct policy-gradient reward optimization.
+
+\section{Toy Environment Details}
+
+\paragraph{State.}
+The state contains prompt identity, hidden progress, remaining horizon, and the
+features visible to the critic variant. The full critic observes enough to
+distinguish progress states. The coarse critic sees compressed state. The blind
+critic intentionally loses the feature needed for reliable future-return
+prediction.
+
+\paragraph{Actions.}
+The action set is deliberately small. \texttt{help} increases progress,
+\texttt{harm} decreases it, and \texttt{wait} consumes budget. This small action
+space makes exact dynamic programming feasible and makes the meaning of credit
+assignment visible. A language-model trace has richer tokens, but the causal
+categories are recognizable: helpful substeps, harmful detours, and neutral
+filler.
+
+\paragraph{Reward.}
+The terminal verifier is sparse and thresholded. This makes the group-relative
+estimator plausible, because rollouts can be ranked by final success, but also
+creates the credit problem: the reward is delayed until after many actions.
+
+\paragraph{Oracle advantage.}
+The oracle advantage uses exact values under known dynamics. This is the
+scientific anchor of the paper. Without it, a method comparison could only say
+which estimator produced higher downstream score under one optimizer. With it,
+we can ask whether an estimator points in the same direction as the true
+token-level credit.
+
+\section{Case Design}
+
+The 18 fixed cases are grouped by axis. Horizon cases increase trace length and
+wait-token exposure. Group-size cases vary the number of completions used for
+within-prompt normalization. Critic-budget cases vary how much data the value
+table sees before evaluation. Observability cases degrade the state available to
+the critic. Sparse-reward cases make terminal success harder. The
+counterexample combines blindness and low coverage.
+
+\begin{table}[h]
+\centering
+\caption{Axis-level summary generated from the canonical matrix.}
+\small
+\input{generated/axis_summary_table.tex}
+\end{table}
+
+\section{Full Case Summary}
+
+Table \ref{tab:full-case-summary} gives the full 18-case summary. It is
+generated from the canonical matrix JSON rather than hand copied.
+
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\input{generated/full_case_table.tex}
+\endgroup
+
+\section{Raw Seed-Level Rows}
+
+Table \ref{tab:raw-seed-rows} records every case-by-seed row used to compute
+the paper's aggregate claims. Publishing these rows makes the mean-win and
+confidence-interval interpretation auditable. The table is long by design:
+there are \DeepCaseCount\ cases and \DeepSeedCount\ seeds, for 360 rows.
+
+\scriptsize
+\input{generated/raw_seed_table.tex}
+\normalsize
+
+\section{Raw Error and Dispersion Rows}
+
+Table \ref{tab:raw-error-rows} records the calibrated-MSE side of the same
+matrix. These rows help distinguish two different claims: a method can have
+higher correlation with oracle credit while also changing calibrated error,
+zero-variance group frequency, or success-rate mix.
+
+\scriptsize
+\input{generated/raw_error_table.tex}
+\normalsize
+
+\section{Reproducibility Checklist}
+
+\begin{enumerate}[leftmargin=*]
+  \item Run the unit tests with \texttt{python3 -m unittest discover -s tests}.
+  \item Run the smoke gate with \texttt{./scripts/run\_smoke.sh}.
+  \item Regenerate the deep matrix with \texttt{python3 -m experiments.deep\_matrix}.
+  \item Regenerate LaTeX inputs with \texttt{python3 scripts/build\_latex\_inputs.py}.
+  \item Build the full paper with \texttt{./scripts/build\_latex\_paper.sh}.
+  \item Verify that the LaTeX artifact manifest records the PDF hash and page
+  count.
+  \item Treat \texttt{public/ppo\_grpo\_opd\_long\_horizon.pdf} and the DOCX as
+  abridged reports; treat the LaTeX PDF as the full paper artifact.
+\end{enumerate}
+
+\section{Next Experiments}
+
+\paragraph{Full clipped \ppo/\grpo\ training.}
+The current closed-loop audit is tabular and unclipped. The next controlled RL
+experiment should implement full clipped \ppo, response-level \grpo, and
+corrected \grpo\ variants such as length-normalized, leave-one-out, DAPO-style,
+and Dr. \grpo-style updates under equal generated-token and optimizer budgets.
+This will test whether the estimator-fidelity and tabular-policy findings
+survive the optimizer details used in modern post-training stacks.
+
+\paragraph{Tiny neural policy.}
+The strongest next upgrade is a small neural benchmark, preferably in
+\texttt{limes-nanogpt} or an equivalent tiny sequence-policy setup, where the
+environment remains controlled but the value model must generalize rather than
+look up exact tabular states. This is the bridge from workshop-strength
+mechanism evidence toward a stronger ML paper.
+
+\paragraph{Process rewards.}
+Adding process labels or subgoal rewards should narrow the gap between
+critic-based and group-relative estimators. This prediction is important
+because many practical systems do not rely on terminal reward alone.
+
+\paragraph{Compaction.}
+A compaction experiment should split long traces into variable numbers of
+sub-traces. The hypothesis is that critic-based individual-rollout objectives
+handle this naturally, while group-wise objectives need additional rules for
+matching sub-traces across completions.
+
+\paragraph{Distillation hybrids.}
+An OPD/OPSD follow-up should use successful RL traces as teacher or privileged
+self-teacher material and measure whether dense distillation preserves the
+credit assignment gains at lower inference cost.
+
+\section{Replication Protocol for New Benchmarks}
+
+\paragraph{Trace schema.}
+A real long-horizon benchmark should record more than a final reward. Each
+trajectory should include prompt identity, sampled response identity, token or
+step indices, tool calls, tool observations, compaction boundaries, verifier
+calls, process labels when available, terminal reward, and any safety or refusal
+events. This schema is the minimum needed to compare a group-relative estimator
+with a value-model estimator after the fact. Without it, the experiment can
+still report final success, but it cannot diagnose where credit was assigned or
+lost.
+
+\paragraph{Budget matching.}
+The clean comparison is not ``PPO run'' versus ``GRPO run'' in isolation. The
+comparison should state generated-token budget, number of prompts, completions
+per prompt, verifier calls, critic update steps, policy update steps, and peak
+activation or optimizer memory. A critic-based method should be charged for
+critic fitting and storage. A group-relative method should be charged for the
+extra completions needed to obtain reward contrast. A distillation method should
+be charged for teacher inference or self-teacher selection.
+
+\paragraph{Primary measurements.}
+For any benchmark with oracle or process annotations, report estimator
+correlation with oracle credit, calibrated MSE, sign accuracy, zero-variance
+group fraction, and return improvement under equal rollout budgets. For
+benchmarks without oracle credit, report held-out process-label agreement,
+per-step value calibration where labels exist, and sensitivity to trajectory
+length. Final score alone is not enough because a method can improve a short
+task while failing the mechanism required for long traces.
+
+\paragraph{Decision rule.}
+A public claim that one family is better should require at least three checks:
+the mean effect favors the method, the confidence interval excludes practical
+near-ties, and an adversarial or counterexample regime is reported. This paper's
+toy result follows that rule: it highlights the critic-favorable mean pattern,
+the near tie under tiny critic budget, and the group-favorable blind
+undercovered case. A larger benchmark should preserve the same discipline.
+
+\paragraph{Audit package.}
+The public release should include raw per-seed rows, aggregate tables, plotting
+scripts, exact command lines, environment notes, and a short statement of
+non-claims. The non-claims matter. For this workstream, the honest claim is that
+critic-style temporal information can dominate in observable long traces, while
+group-relative normalization remains strong when reward contrast is reliable
+and value modeling is weak. That is a research program, not a slogan.
+
+\section{Artifact Provenance and Public Release Notes}
+
+\paragraph{Canonical data source.}
+The canonical numeric artifact for this paper is the deep-matrix JSON under
+\texttt{results/}. The LaTeX macros, selected result table, axis summary, full
+case summary, raw seed rows, and calibrated-error appendix are generated from
+that JSON file by the LaTeX input builder. This keeps the manuscript from
+silently drifting away from the experiment output.
+
+\paragraph{Rendered artifacts.}
+The repository intentionally contains two kinds of public artifacts. The
+abridged PDF/DOCX report is designed for quick reading and sharing. The LaTeX
+PDF is the full paper artifact, including appendices and raw tables. The two
+artifacts should not be compared by page count; they serve different review
+contexts.
+
+\paragraph{Manifest interpretation.}
+The LaTeX manifest records input hashes, output hashes, the TeX engine, and the
+page-count gate. Because generated artifacts are committed with their manifest,
+the manifest's recorded git status necessarily describes the generation-time
+worktree rather than the final commit that contains the manifest. A clean
+checkout can rerun the build script to refresh the manifest and should recover
+the same result counts from the canonical JSON.
+
+\paragraph{How to read the claim.}
+The public headline should be the cautious one: 16 clear critic-favorable cases,
+1 near tie, and 1 clear group-favorable counterexample in this toy estimator
+benchmark. The stronger-sounding ``17 mean critic wins'' is true as a
+descriptive statistic, but the near-tie is scientifically important. The
+counterexample is equally important because it states a boundary condition for
+\grpo-style methods.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

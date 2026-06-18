@@ -1,0 +1,337 @@
+{
+  "case_count": 6,
+  "cases": [
+    {
+      "case_name": "short_dense_full_critic",
+      "config": {
+        "critic_observation": "full",
+        "eval_groups": 40,
+        "group_size": 6,
+        "max_steps": 6,
+        "scenario_description": "Shorter traces with fewer wait tokens; response-level groups are less wasteful.",
+        "scenario_name": "short_dense",
+        "seed": 11,
+        "token_cost": 0.02,
+        "train_groups": 140
+      },
+      "interpretation": "Shorter, denser traces reduce the cost of response-level scalar credit.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": -0.03922794277317372,
+          "critic_minus_group_correlation": 0.5312247561373753,
+          "critic_minus_group_wait_leakage": -0.3182996270109185
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.0027063300970532173,
+          "mean_abs_active_tokens": 0.19682084324962965,
+          "mean_abs_wait_tokens": 0.12404853429549134,
+          "pearson_correlation": 0.9737033329285592,
+          "raw_mse": 0.0029509885016927827,
+          "sign_accuracy": 0.9418472063854048,
+          "wait_to_active_abs_ratio": 0.6302611666903564,
+          "within_trajectory_variance": 0.04455825699397354
+        },
+        "group_relative": {
+          "calibrated_mse": 0.04193427287022694,
+          "mean_abs_active_tokens": 0.8783987920674848,
+          "mean_abs_wait_tokens": 0.8332146553897746,
+          "pearson_correlation": 0.4424785767911839,
+          "raw_mse": 0.821518585522436,
+          "sign_accuracy": 0.6944127708095781,
+          "wait_to_active_abs_ratio": 0.9485607937012749,
+          "within_trajectory_variance": 7.832115107174759e-34
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 1.0,
+        "eval_tokens": 982,
+        "eval_trajectories": 240,
+        "mean_group_return_stddev": 0.4114929255829433,
+        "nonzero_oracle_advantage_fraction": 0.8930753564154786,
+        "success_rate": 0.6541666666666667,
+        "train_trajectories": 840,
+        "wait_token_fraction": 0.2973523421588595,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "critic"
+    },
+    {
+      "case_name": "baseline_full_critic",
+      "config": {
+        "critic_observation": "full",
+        "eval_groups": 40,
+        "group_size": 6,
+        "max_steps": 10,
+        "scenario_description": "Original mixed-horizon toy setting with a full-state critic.",
+        "scenario_name": "baseline",
+        "seed": 112,
+        "token_cost": 0.02,
+        "train_groups": 140
+      },
+      "interpretation": "Baseline mixed horizons with a fully observed tabular value model.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": -0.025917363008660353,
+          "critic_minus_group_correlation": 0.5444438999547003,
+          "critic_minus_group_wait_leakage": -0.3946725886667215
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.0073744915192669154,
+          "mean_abs_active_tokens": 0.1683898451555822,
+          "mean_abs_wait_tokens": 0.09903598289771666,
+          "pearson_correlation": 0.8978626437666963,
+          "raw_mse": 0.008805401825585613,
+          "sign_accuracy": 0.8399034593724859,
+          "wait_to_active_abs_ratio": 0.5881351265939659,
+          "within_trajectory_variance": 0.040014071661718734
+        },
+        "group_relative": {
+          "calibrated_mse": 0.03329185452792727,
+          "mean_abs_active_tokens": 0.8925374222595976,
+          "mean_abs_wait_tokens": 0.8771926647556186,
+          "pearson_correlation": 0.35341874381199606,
+          "raw_mse": 0.8794063202814671,
+          "sign_accuracy": 0.6484312148028962,
+          "wait_to_active_abs_ratio": 0.9828077152606874,
+          "within_trajectory_variance": 1.1595703206831482e-33
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 0.9978601997146933,
+        "eval_tokens": 1402,
+        "eval_trajectories": 240,
+        "mean_group_return_stddev": 0.41322977324450366,
+        "nonzero_oracle_advantage_fraction": 0.8865905848787446,
+        "success_rate": 0.5541666666666667,
+        "train_trajectories": 840,
+        "wait_token_fraction": 0.3744650499286733,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "critic"
+    },
+    {
+      "case_name": "long_wait_full_critic",
+      "config": {
+        "critic_observation": "full",
+        "eval_groups": 48,
+        "group_size": 6,
+        "max_steps": 14,
+        "scenario_description": "Long successful traces often contain uninformative wait tokens.",
+        "scenario_name": "long_wait",
+        "seed": 213,
+        "token_cost": 0.02,
+        "train_groups": 180
+      },
+      "interpretation": "Long wait-heavy traces test whether response-level rewards praise no-op tokens.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": -0.016683308957294526,
+          "critic_minus_group_correlation": 0.6220343074443053,
+          "critic_minus_group_wait_leakage": -0.5496899849201178
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.0039205616876112894,
+          "mean_abs_active_tokens": 0.14726753978611584,
+          "mean_abs_wait_tokens": 0.051111359447667724,
+          "pearson_correlation": 0.9084766228268416,
+          "raw_mse": 0.00456675962324836,
+          "sign_accuracy": 0.718795531811559,
+          "wait_to_active_abs_ratio": 0.34706466558685883,
+          "within_trajectory_variance": 0.025650307354005402
+        },
+        "group_relative": {
+          "calibrated_mse": 0.020603870644905816,
+          "mean_abs_active_tokens": 0.8630839544372022,
+          "mean_abs_wait_tokens": 0.7739745499195126,
+          "pearson_correlation": 0.28644231538253634,
+          "raw_mse": 0.870712990818231,
+          "sign_accuracy": 0.6435162700339971,
+          "wait_to_active_abs_ratio": 0.8967546505069767,
+          "within_trajectory_variance": 2.100467345597329e-33
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 0.9986486486486487,
+        "eval_tokens": 2220,
+        "eval_trajectories": 288,
+        "mean_group_return_stddev": 0.353993383684378,
+        "nonzero_oracle_advantage_fraction": 0.9274774774774774,
+        "success_rate": 0.6736111111111112,
+        "train_trajectories": 1080,
+        "wait_token_fraction": 0.5477477477477477,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "critic"
+    },
+    {
+      "case_name": "sparse_hard_full_critic",
+      "config": {
+        "critic_observation": "full",
+        "eval_groups": 48,
+        "group_size": 8,
+        "max_steps": 14,
+        "scenario_description": "Harder thresholds produce sparse successes and weaker group reward dispersion.",
+        "scenario_name": "sparse_hard",
+        "seed": 314,
+        "token_cost": 0.02,
+        "train_groups": 220
+      },
+      "interpretation": "Sparse success tests whether either estimator has enough signal.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": -0.018421430956570964,
+          "critic_minus_group_correlation": 0.606380833059009,
+          "critic_minus_group_wait_leakage": -0.5400227879582664
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.0039752905723104024,
+          "mean_abs_active_tokens": 0.1560826237529365,
+          "mean_abs_wait_tokens": 0.0652955657495332,
+          "pearson_correlation": 0.9162699931353009,
+          "raw_mse": 0.004970578258952808,
+          "sign_accuracy": 0.8669724770642202,
+          "wait_to_active_abs_ratio": 0.418339749675721,
+          "within_trajectory_variance": 0.028335170488846397
+        },
+        "group_relative": {
+          "calibrated_mse": 0.022396721528881367,
+          "mean_abs_active_tokens": 0.9441702677545519,
+          "mean_abs_wait_tokens": 0.9048574137638138,
+          "pearson_correlation": 0.30988916007629186,
+          "raw_mse": 0.9613695299675231,
+          "sign_accuracy": 0.641848976711362,
+          "wait_to_active_abs_ratio": 0.9583625376339875,
+          "within_trajectory_variance": 2.3381993231076285e-33
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 0.9987437185929648,
+        "eval_tokens": 3184,
+        "eval_trajectories": 384,
+        "mean_group_return_stddev": 0.43951272357054355,
+        "nonzero_oracle_advantage_fraction": 0.8900753768844221,
+        "success_rate": 0.515625,
+        "train_trajectories": 1760,
+        "wait_token_fraction": 0.41488693467336685,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "critic"
+    },
+    {
+      "case_name": "coarse_critic_partial_state",
+      "config": {
+        "critic_observation": "coarse",
+        "eval_groups": 40,
+        "group_size": 6,
+        "max_steps": 12,
+        "scenario_description": "The critic only observes score sign, not exact progress.",
+        "scenario_name": "coarse_critic",
+        "seed": 415,
+        "token_cost": 0.02,
+        "train_groups": 160
+      },
+      "interpretation": "A partially observed critic checks whether value information remains useful.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": -0.010768848810496234,
+          "critic_minus_group_correlation": 0.37989145749642494,
+          "critic_minus_group_wait_leakage": -0.48852398884688625
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.011907202960302184,
+          "mean_abs_active_tokens": 0.1785836295105954,
+          "mean_abs_wait_tokens": 0.07690682156729504,
+          "pearson_correlation": 0.7358117775998567,
+          "raw_mse": 0.02064611621625828,
+          "sign_accuracy": 0.7083607636603029,
+          "wait_to_active_abs_ratio": 0.43064877658750994,
+          "within_trajectory_variance": 0.057139839195608416
+        },
+        "group_relative": {
+          "calibrated_mse": 0.022676051770798417,
+          "mean_abs_active_tokens": 0.8780152875959313,
+          "mean_abs_wait_tokens": 0.8070477399932289,
+          "pearson_correlation": 0.3559203201034318,
+          "raw_mse": 0.8356876164752373,
+          "sign_accuracy": 0.6616194865042792,
+          "wait_to_active_abs_ratio": 0.9191727654343962,
+          "within_trajectory_variance": 9.72594621915554e-34
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 1.0,
+        "eval_tokens": 1659,
+        "eval_trajectories": 240,
+        "mean_group_return_stddev": 0.4054662570566435,
+        "nonzero_oracle_advantage_fraction": 0.9156118143459916,
+        "success_rate": 0.6416666666666667,
+        "train_trajectories": 960,
+        "wait_token_fraction": 0.48884870403857744,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "critic"
+    },
+    {
+      "case_name": "blind_critic_counterexample",
+      "config": {
+        "critic_observation": "blind",
+        "eval_groups": 32,
+        "group_size": 8,
+        "max_steps": 4,
+        "scenario_description": "The critic cannot observe progress score, so terminal group information can dominate.",
+        "scenario_name": "blind_critic",
+        "seed": 516,
+        "token_cost": 0.02,
+        "train_groups": 2
+      },
+      "interpretation": "A blind, undercovered critic is a counterexample where terminal group outcomes win.",
+      "metrics": {
+        "comparison": {
+          "critic_minus_group_calibrated_mse": 0.0014290613477988962,
+          "critic_minus_group_correlation": -0.02175554149622283,
+          "critic_minus_group_wait_leakage": 0.06342977933204286
+        },
+        "critic_value_model": {
+          "calibrated_mse": 0.04776808888325968,
+          "mean_abs_active_tokens": 0.17712033292304083,
+          "mean_abs_wait_tokens": 0.185359477124183,
+          "pearson_correlation": 0.50283821638702,
+          "raw_mse": 0.08374656221411546,
+          "sign_accuracy": 0.44855305466237944,
+          "wait_to_active_abs_ratio": 1.04651721270602,
+          "within_trajectory_variance": 0.06627352291559056
+        },
+        "group_relative": {
+          "calibrated_mse": 0.046339027535460785,
+          "mean_abs_active_tokens": 0.8801916285689261,
+          "mean_abs_wait_tokens": 0.8653053290070866,
+          "pearson_correlation": 0.5245937578832428,
+          "raw_mse": 0.7961627803533279,
+          "sign_accuracy": 0.7845659163987139,
+          "wait_to_active_abs_ratio": 0.9830874333739772,
+          "within_trajectory_variance": 1.1435209044799213e-33
+        }
+      },
+      "sample_counts": {
+        "critic_exact_state_rate": 0.6839378238341969,
+        "eval_tokens": 772,
+        "eval_trajectories": 256,
+        "mean_group_return_stddev": 0.39741172695253557,
+        "nonzero_oracle_advantage_fraction": 0.805699481865285,
+        "success_rate": 0.46484375,
+        "train_trajectories": 16,
+        "wait_token_fraction": 0.33031088082901555,
+        "zero_variance_group_fraction": 0.0
+      },
+      "winner_by_correlation": "group"
+    }
+  ],
+  "seed": 11,
+  "summary": {
+    "critic_wins_by_correlation": 5,
+    "group_wins_by_correlation": 1,
+    "mean_critic_minus_group_calibrated_mse": -0.01826497219306615,
+    "mean_critic_minus_group_correlation": 0.4437032854325987,
+    "ties_by_correlation": 0
+  }
+}

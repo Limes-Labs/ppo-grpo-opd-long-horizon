@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1052" viewBox="0 0 1500 1052">
+<rect width="100%" height="100%" fill="white"/>
+<text x="40" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0B2545">Critic minus group correlation by case</text>
+<text x="40" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Positive values favor critic-style TD advantage; negative values favor group-relative advantage.</text>
+<line x1="915" y1="94" x2="915" y2="997" stroke="#666666" stroke-width="2"/>
+<text x="907" y="1022" font-family="Arial, sans-serif" font-size="15" fill="#555555">0</text>
+<text x="40" y="145" font-family="Arial, sans-serif" font-size="15" fill="#111111">horizon_04_baseline</text>
+<rect x="915" y="126" width="381" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1306" y="145" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.482</text>
+<text x="40" y="193" font-family="Arial, sans-serif" font-size="15" fill="#111111">horizon_08_baseline</text>
+<rect x="915" y="174" width="423" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1348" y="193" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.535</text>
+<text x="40" y="241" font-family="Arial, sans-serif" font-size="15" fill="#111111">horizon_12_baseline</text>
+<rect x="915" y="222" width="420" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1345" y="241" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.531</text>
+<text x="40" y="289" font-family="Arial, sans-serif" font-size="15" fill="#111111">horizon_16_long_wait</text>
+<rect x="915" y="270" width="452" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1377" y="289" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.571</text>
+<text x="40" y="337" font-family="Arial, sans-serif" font-size="15" fill="#111111">group_size_02_long_wait</text>
+<rect x="915" y="318" width="440" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1365" y="337" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.557</text>
+<text x="40" y="385" font-family="Arial, sans-serif" font-size="15" fill="#111111">group_size_04_long_wait</text>
+<rect x="915" y="366" width="435" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1360" y="385" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.550</text>
+<text x="40" y="433" font-family="Arial, sans-serif" font-size="15" fill="#111111">group_size_08_long_wait</text>
+<rect x="915" y="414" width="446" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1371" y="433" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.564</text>
+<text x="40" y="481" font-family="Arial, sans-serif" font-size="15" fill="#111111">group_size_12_long_wait</text>
+<rect x="915" y="462" width="460" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1385" y="481" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.582</text>
+<text x="40" y="529" font-family="Arial, sans-serif" font-size="15" fill="#111111">critic_budget_002_full</text>
+<rect x="915" y="510" width="12" height="24" rx="6" fill="#1F6F4A"/>
+<text x="937" y="529" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.015</text>
+<text x="40" y="577" font-family="Arial, sans-serif" font-size="15" fill="#111111">critic_budget_008_full</text>
+<rect x="915" y="558" width="84" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1009" y="577" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.107</text>
+<text x="40" y="625" font-family="Arial, sans-serif" font-size="15" fill="#111111">critic_budget_032_full</text>
+<rect x="915" y="606" width="303" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1228" y="625" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.383</text>
+<text x="40" y="673" font-family="Arial, sans-serif" font-size="15" fill="#111111">critic_budget_128_full</text>
+<rect x="915" y="654" width="438" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1363" y="673" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.554</text>
+<text x="40" y="721" font-family="Arial, sans-serif" font-size="15" fill="#111111">observability_full</text>
+<rect x="915" y="702" width="405" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1330" y="721" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.513</text>
+<text x="40" y="769" font-family="Arial, sans-serif" font-size="15" fill="#111111">observability_coarse</text>
+<rect x="915" y="750" width="302" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1227" y="769" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.382</text>
+<text x="40" y="817" font-family="Arial, sans-serif" font-size="15" fill="#111111">observability_blind</text>
+<rect x="915" y="798" width="102" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1027" y="817" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.129</text>
+<text x="40" y="865" font-family="Arial, sans-serif" font-size="15" fill="#111111">blind_undercovered_counterexample</text>
+<rect x="872" y="846" width="43" height="24" rx="6" fill="#9B1C1C"/>
+<text x="798" y="865" font-family="Arial, sans-serif" font-size="15" fill="#9B1C1C">-0.055</text>
+<text x="40" y="913" font-family="Arial, sans-serif" font-size="15" fill="#111111">sparse_hard_group04</text>
+<rect x="915" y="894" width="445" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1370" y="913" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.563</text>
+<text x="40" y="961" font-family="Arial, sans-serif" font-size="15" fill="#111111">sparse_hard_group08</text>
+<rect x="915" y="942" width="475" height="24" rx="6" fill="#1F6F4A"/>
+<text x="1400" y="961" font-family="Arial, sans-serif" font-size="15" fill="#1F6F4A">+0.600</text>
+</svg>

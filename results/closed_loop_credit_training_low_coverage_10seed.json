@@ -1,0 +1,4858 @@
+{
+  "config": {
+    "critic_replay_limit": 80,
+    "entropy_bonus": 0.003,
+    "eval_every": 10,
+    "eval_groups": 60,
+    "gate_min_count": 4,
+    "group_size": 5,
+    "groups_per_iteration": 16,
+    "learning_rate": 0.035,
+    "max_steps": 14,
+    "methods": [
+      "group_total",
+      "group_length_norm",
+      "critic_td",
+      "coverage_gated"
+    ],
+    "scenario_name": "long_wait",
+    "seeds": [
+      11,
+      29,
+      47,
+      83,
+      131,
+      173,
+      211,
+      257,
+      307,
+      359
+    ],
+    "train_iterations": 50
+  },
+  "method_summaries": [
+    {
+      "final_critic_fraction": 0.0,
+      "final_harm_rate": 0.09987211101695885,
+      "final_help_rate": 0.36159345802327214,
+      "final_return": 0.7686666666666666,
+      "final_success": 0.9283333333333333,
+      "final_wait_fraction": 0.5385344309597689,
+      "initial_return": 0.5079333333333333,
+      "initial_success": 0.665,
+      "method": "group_total",
+      "return_improvement": 0.2607333333333333,
+      "seed_count": 10,
+      "success_improvement": 0.2633333333333333
+    },
+    {
+      "final_critic_fraction": 0.0,
+      "final_harm_rate": 0.1018805535715553,
+      "final_help_rate": 0.359876834973344,
+      "final_return": 0.7536666666666667,
+      "final_success": 0.9133333333333333,
+      "final_wait_fraction": 0.5382426114551007,
+      "initial_return": 0.5079333333333333,
+      "initial_success": 0.665,
+      "method": "group_length_norm",
+      "return_improvement": 0.24573333333333336,
+      "seed_count": 10,
+      "success_improvement": 0.24833333333333335
+    },
+    {
+      "final_critic_fraction": 0.9445299559994057,
+      "final_harm_rate": 0.08976295051038927,
+      "final_help_rate": 0.35065470929055476,
+      "final_return": 0.7803333333333333,
+      "final_success": 0.9400000000000001,
+      "final_wait_fraction": 0.559582340199056,
+      "initial_return": 0.5079333333333333,
+      "initial_success": 0.665,
+      "method": "critic_td",
+      "return_improvement": 0.27240000000000003,
+      "seed_count": 10,
+      "success_improvement": 0.275
+    },
+    {
+      "final_critic_fraction": 0.644278579426545,
+      "final_harm_rate": 0.09549356705168646,
+      "final_help_rate": 0.35679128392896525,
+      "final_return": 0.7769999999999999,
+      "final_success": 0.9366666666666668,
+      "final_wait_fraction": 0.5477151490193484,
+      "initial_return": 0.5079333333333333,
+      "initial_success": 0.665,
+      "method": "coverage_gated",
+      "return_improvement": 0.2690666666666667,
+      "seed_count": 10,
+      "success_improvement": 0.27166666666666667
+    }
+  ],
+  "runs": [
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.106,
+        "help_rate": 0.342,
+        "mean_length": 8.333333333333334,
+        "mean_return": 0.7333333333333333,
+        "success_rate": 0.9,
+        "wait_rate": 0.552,
+        "wait_token_fraction": 0.552
+      },
+      "improvement": {
+        "mean_return": 0.18133333333333335,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.11936936936936937,
+        "help_rate": 0.35585585585585583,
+        "mean_length": 7.4,
+        "mean_return": 0.5519999999999999,
+        "success_rate": 0.7,
+        "wait_rate": 0.5247747747747747,
+        "wait_token_fraction": 0.5247747747747747
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11936936936936937,
+            "help_rate": 0.35585585585585583,
+            "mean_length": 7.4,
+            "mean_return": 0.5519999999999999,
+            "success_rate": 0.7,
+            "wait_rate": 0.5247747747747747,
+            "wait_token_fraction": 0.5247747747747747
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.118,
+            "help_rate": 0.35,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.6833333333333333,
+            "success_rate": 0.85,
+            "wait_rate": 0.532,
+            "wait_token_fraction": 0.532
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.0821256038647343,
+            "help_rate": 0.3719806763285024,
+            "mean_length": 6.9,
+            "mean_return": 0.7286666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5458937198067633,
+            "wait_token_fraction": 0.5458937198067633
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08067940552016985,
+            "help_rate": 0.34182590233545646,
+            "mean_length": 7.85,
+            "mean_return": 0.743,
+            "success_rate": 0.9,
+            "wait_rate": 0.5774946921443737,
+            "wait_token_fraction": 0.5774946921443737
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09670781893004116,
+            "help_rate": 0.3497942386831276,
+            "mean_length": 8.1,
+            "mean_return": 0.788,
+            "success_rate": 0.95,
+            "wait_rate": 0.5534979423868313,
+            "wait_token_fraction": 0.5534979423868313
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.106,
+            "help_rate": 0.342,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.7333333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.552,
+            "wait_token_fraction": 0.552
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 11
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09090909090909091,
+        "help_rate": 0.32575757575757575,
+        "mean_length": 8.8,
+        "mean_return": 0.7739999999999999,
+        "success_rate": 0.95,
+        "wait_rate": 0.5833333333333334,
+        "wait_token_fraction": 0.5833333333333334
+      },
+      "improvement": {
+        "mean_return": 0.29599999999999993,
+        "success_rate": 0.33333333333333326
+      },
+      "initial_eval": {
+        "harm_rate": 0.13942307692307693,
+        "help_rate": 0.37259615384615385,
+        "mean_length": 6.933333333333334,
+        "mean_return": 0.478,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.4879807692307692,
+        "wait_token_fraction": 0.4879807692307692
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13942307692307693,
+            "help_rate": 0.37259615384615385,
+            "mean_length": 6.933333333333334,
+            "mean_return": 0.478,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.4879807692307692,
+            "wait_token_fraction": 0.4879807692307692
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11727078891257996,
+            "help_rate": 0.34968017057569295,
+            "mean_length": 7.816666666666666,
+            "mean_return": 0.6769999999999999,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5330490405117271,
+            "wait_token_fraction": 0.5330490405117271
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09649122807017543,
+            "help_rate": 0.35526315789473684,
+            "mean_length": 7.6,
+            "mean_return": 0.6980000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.5482456140350878,
+            "wait_token_fraction": 0.5482456140350878
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10775862068965517,
+            "help_rate": 0.33836206896551724,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.712,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5538793103448276,
+            "wait_token_fraction": 0.5538793103448276
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09670781893004116,
+            "help_rate": 0.35185185185185186,
+            "mean_length": 8.1,
+            "mean_return": 0.7546666666666667,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.551440329218107,
+            "wait_token_fraction": 0.551440329218107
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09090909090909091,
+            "help_rate": 0.32575757575757575,
+            "mean_length": 8.8,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5833333333333334,
+            "wait_token_fraction": 0.5833333333333334
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 29
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09341825902335456,
+        "help_rate": 0.37579617834394907,
+        "mean_length": 7.85,
+        "mean_return": 0.8096666666666666,
+        "success_rate": 0.9666666666666667,
+        "wait_rate": 0.5307855626326964,
+        "wait_token_fraction": 0.5307855626326964
+      },
+      "improvement": {
+        "mean_return": 0.23966666666666658,
+        "success_rate": 0.2333333333333334
+      },
+      "initial_eval": {
+        "harm_rate": 0.12448979591836734,
+        "help_rate": 0.32857142857142857,
+        "mean_length": 8.166666666666666,
+        "mean_return": 0.5700000000000001,
+        "success_rate": 0.7333333333333333,
+        "wait_rate": 0.5469387755102041,
+        "wait_token_fraction": 0.5469387755102041
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12448979591836734,
+            "help_rate": 0.32857142857142857,
+            "mean_length": 8.166666666666666,
+            "mean_return": 0.5700000000000001,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5469387755102041,
+            "wait_token_fraction": 0.5469387755102041
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11494252873563218,
+            "help_rate": 0.34099616858237547,
+            "mean_length": 8.7,
+            "mean_return": 0.6426666666666667,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5440613026819924,
+            "wait_token_fraction": 0.5440613026819924
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09197651663405088,
+            "help_rate": 0.3287671232876712,
+            "mean_length": 8.516666666666667,
+            "mean_return": 0.7463333333333334,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5792563600782779,
+            "wait_token_fraction": 0.5792563600782779
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12055335968379446,
+            "help_rate": 0.35375494071146246,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.6980000000000001,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.525691699604743,
+            "wait_token_fraction": 0.525691699604743
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09845559845559845,
+            "help_rate": 0.3474903474903475,
+            "mean_length": 8.633333333333333,
+            "mean_return": 0.7606666666666667,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5540540540540541,
+            "wait_token_fraction": 0.5540540540540541
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09341825902335456,
+            "help_rate": 0.37579617834394907,
+            "mean_length": 7.85,
+            "mean_return": 0.8096666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5307855626326964,
+            "wait_token_fraction": 0.5307855626326964
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 47
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.11715481171548117,
+        "help_rate": 0.37656903765690375,
+        "mean_length": 7.966666666666667,
+        "mean_return": 0.7573333333333333,
+        "success_rate": 0.9166666666666666,
+        "wait_rate": 0.5062761506276151,
+        "wait_token_fraction": 0.5062761506276151
+      },
+      "improvement": {
+        "mean_return": 0.19833333333333336,
+        "success_rate": 0.19999999999999996
+      },
+      "initial_eval": {
+        "harm_rate": 0.14376321353065538,
+        "help_rate": 0.346723044397463,
+        "mean_length": 7.883333333333334,
+        "mean_return": 0.5589999999999999,
+        "success_rate": 0.7166666666666667,
+        "wait_rate": 0.5095137420718816,
+        "wait_token_fraction": 0.5095137420718816
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14376321353065538,
+            "help_rate": 0.346723044397463,
+            "mean_length": 7.883333333333334,
+            "mean_return": 0.5589999999999999,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.5095137420718816,
+            "wait_token_fraction": 0.5095137420718816
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.128099173553719,
+            "help_rate": 0.34917355371900827,
+            "mean_length": 8.066666666666666,
+            "mean_return": 0.672,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5227272727272727,
+            "wait_token_fraction": 0.5227272727272727
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10615711252653928,
+            "help_rate": 0.36942675159235666,
+            "mean_length": 7.85,
+            "mean_return": 0.7263333333333333,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.524416135881104,
+            "wait_token_fraction": 0.524416135881104
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10256410256410256,
+            "help_rate": 0.38675213675213677,
+            "mean_length": 7.8,
+            "mean_return": 0.794,
+            "success_rate": 0.95,
+            "wait_rate": 0.5106837606837606,
+            "wait_token_fraction": 0.5106837606837606
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.06339468302658487,
+            "help_rate": 0.34355828220858897,
+            "mean_length": 8.15,
+            "mean_return": 0.787,
+            "success_rate": 0.95,
+            "wait_rate": 0.5930470347648262,
+            "wait_token_fraction": 0.5930470347648262
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11715481171548117,
+            "help_rate": 0.37656903765690375,
+            "mean_length": 7.966666666666667,
+            "mean_return": 0.7573333333333333,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5062761506276151,
+            "wait_token_fraction": 0.5062761506276151
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 83
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.11521739130434783,
+        "help_rate": 0.3760869565217391,
+        "mean_length": 7.666666666666667,
+        "mean_return": 0.7633333333333333,
+        "success_rate": 0.9166666666666666,
+        "wait_rate": 0.508695652173913,
+        "wait_token_fraction": 0.508695652173913
+      },
+      "improvement": {
+        "mean_return": 0.23133333333333328,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.13095238095238096,
+        "help_rate": 0.3492063492063492,
+        "mean_length": 8.4,
+        "mean_return": 0.532,
+        "success_rate": 0.7,
+        "wait_rate": 0.5198412698412699,
+        "wait_token_fraction": 0.5198412698412699
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13095238095238096,
+            "help_rate": 0.3492063492063492,
+            "mean_length": 8.4,
+            "mean_return": 0.532,
+            "success_rate": 0.7,
+            "wait_rate": 0.5198412698412699,
+            "wait_token_fraction": 0.5198412698412699
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1744421906693712,
+            "help_rate": 0.3671399594320487,
+            "mean_length": 8.216666666666667,
+            "mean_return": 0.5523333333333333,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.45841784989858014,
+            "wait_token_fraction": 0.45841784989858014
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11597374179431072,
+            "help_rate": 0.3544857768052516,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.6976666666666667,
+            "success_rate": 0.85,
+            "wait_rate": 0.5295404814004376,
+            "wait_token_fraction": 0.5295404814004376
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13013698630136986,
+            "help_rate": 0.3972602739726027,
+            "mean_length": 7.3,
+            "mean_return": 0.7206666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.4726027397260274,
+            "wait_token_fraction": 0.4726027397260274
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09750566893424037,
+            "help_rate": 0.35827664399092973,
+            "mean_length": 7.35,
+            "mean_return": 0.7196666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.54421768707483,
+            "wait_token_fraction": 0.54421768707483
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11521739130434783,
+            "help_rate": 0.3760869565217391,
+            "mean_length": 7.666666666666667,
+            "mean_return": 0.7633333333333333,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.508695652173913,
+            "wait_token_fraction": 0.508695652173913
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 131
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08258928571428571,
+        "help_rate": 0.36607142857142855,
+        "mean_length": 7.466666666666667,
+        "mean_return": 0.784,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5513392857142857,
+        "wait_token_fraction": 0.5513392857142857
+      },
+      "improvement": {
+        "mean_return": 0.34500000000000003,
+        "success_rate": 0.33333333333333337
+      },
+      "initial_eval": {
+        "harm_rate": 0.15734989648033126,
+        "help_rate": 0.3416149068322981,
+        "mean_length": 8.05,
+        "mean_return": 0.439,
+        "success_rate": 0.6,
+        "wait_rate": 0.5010351966873706,
+        "wait_token_fraction": 0.5010351966873706
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.15734989648033126,
+            "help_rate": 0.3416149068322981,
+            "mean_length": 8.05,
+            "mean_return": 0.439,
+            "success_rate": 0.6,
+            "wait_rate": 0.5010351966873706,
+            "wait_token_fraction": 0.5010351966873706
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09292035398230089,
+            "help_rate": 0.3561946902654867,
+            "mean_length": 7.533333333333333,
+            "mean_return": 0.716,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5508849557522124,
+            "wait_token_fraction": 0.5508849557522124
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11498973305954825,
+            "help_rate": 0.35728952772073924,
+            "mean_length": 8.116666666666667,
+            "mean_return": 0.6543333333333333,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5277207392197125,
+            "wait_token_fraction": 0.5277207392197125
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08855291576673865,
+            "help_rate": 0.34773218142548595,
+            "mean_length": 7.716666666666667,
+            "mean_return": 0.7123333333333334,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5637149028077754,
+            "wait_token_fraction": 0.5637149028077754
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11299435028248588,
+            "help_rate": 0.3389830508474576,
+            "mean_length": 8.85,
+            "mean_return": 0.7230000000000001,
+            "success_rate": 0.9,
+            "wait_rate": 0.5480225988700564,
+            "wait_token_fraction": 0.5480225988700564
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08258928571428571,
+            "help_rate": 0.36607142857142855,
+            "mean_length": 7.466666666666667,
+            "mean_return": 0.784,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5513392857142857,
+            "wait_token_fraction": 0.5513392857142857
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 173
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.07582938388625593,
+        "help_rate": 0.36729857819905215,
+        "mean_length": 7.033333333333333,
+        "mean_return": 0.776,
+        "success_rate": 0.9166666666666666,
+        "wait_rate": 0.556872037914692,
+        "wait_token_fraction": 0.556872037914692
+      },
+      "improvement": {
+        "mean_return": 0.31400000000000006,
+        "success_rate": 0.29999999999999993
+      },
+      "initial_eval": {
+        "harm_rate": 0.14224137931034483,
+        "help_rate": 0.3448275862068966,
+        "mean_length": 7.733333333333333,
+        "mean_return": 0.46199999999999997,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.5129310344827587,
+        "wait_token_fraction": 0.5129310344827587
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14224137931034483,
+            "help_rate": 0.3448275862068966,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.46199999999999997,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.5129310344827587,
+            "wait_token_fraction": 0.5129310344827587
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1382488479262673,
+            "help_rate": 0.3663594470046083,
+            "mean_length": 7.233333333333333,
+            "mean_return": 0.6053333333333334,
+            "success_rate": 0.75,
+            "wait_rate": 0.49539170506912444,
+            "wait_token_fraction": 0.49539170506912444
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08840864440078586,
+            "help_rate": 0.3379174852652259,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.747,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5736738703339882,
+            "wait_token_fraction": 0.5736738703339882
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08018867924528301,
+            "help_rate": 0.3608490566037736,
+            "mean_length": 7.066666666666666,
+            "mean_return": 0.7586666666666667,
+            "success_rate": 0.9,
+            "wait_rate": 0.5589622641509434,
+            "wait_token_fraction": 0.5589622641509434
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.07627118644067797,
+            "help_rate": 0.3305084745762712,
+            "mean_length": 7.866666666666666,
+            "mean_return": 0.776,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5932203389830508,
+            "wait_token_fraction": 0.5932203389830508
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.07582938388625593,
+            "help_rate": 0.36729857819905215,
+            "mean_length": 7.033333333333333,
+            "mean_return": 0.776,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.556872037914692,
+            "wait_token_fraction": 0.556872037914692
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 211
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10905349794238683,
+        "help_rate": 0.3662551440329218,
+        "mean_length": 8.1,
+        "mean_return": 0.7713333333333333,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5246913580246914,
+        "wait_token_fraction": 0.5246913580246914
+      },
+      "improvement": {
+        "mean_return": 0.3416666666666666,
+        "success_rate": 0.35
+      },
+      "initial_eval": {
+        "harm_rate": 0.13882863340563992,
+        "help_rate": 0.32537960954446854,
+        "mean_length": 7.683333333333334,
+        "mean_return": 0.4296666666666667,
+        "success_rate": 0.5833333333333334,
+        "wait_rate": 0.5357917570498916,
+        "wait_token_fraction": 0.5357917570498916
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13882863340563992,
+            "help_rate": 0.32537960954446854,
+            "mean_length": 7.683333333333334,
+            "mean_return": 0.4296666666666667,
+            "success_rate": 0.5833333333333334,
+            "wait_rate": 0.5357917570498916,
+            "wait_token_fraction": 0.5357917570498916
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1111111111111111,
+            "help_rate": 0.3477366255144033,
+            "mean_length": 8.1,
+            "mean_return": 0.6880000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.5411522633744856,
+            "wait_token_fraction": 0.5411522633744856
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12394957983193278,
+            "help_rate": 0.3802521008403361,
+            "mean_length": 7.933333333333334,
+            "mean_return": 0.6913333333333334,
+            "success_rate": 0.85,
+            "wait_rate": 0.4957983193277311,
+            "wait_token_fraction": 0.4957983193277311
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10721649484536082,
+            "help_rate": 0.35670103092783506,
+            "mean_length": 8.083333333333334,
+            "mean_return": 0.7716666666666666,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5360824742268041,
+            "wait_token_fraction": 0.5360824742268041
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10650887573964497,
+            "help_rate": 0.36489151873767256,
+            "mean_length": 8.45,
+            "mean_return": 0.7643333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5285996055226825,
+            "wait_token_fraction": 0.5285996055226825
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10905349794238683,
+            "help_rate": 0.3662551440329218,
+            "mean_length": 8.1,
+            "mean_return": 0.7713333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5246913580246914,
+            "wait_token_fraction": 0.5246913580246914
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 257
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10609037328094302,
+        "help_rate": 0.3614931237721022,
+        "mean_length": 8.483333333333333,
+        "mean_return": 0.7303333333333334,
+        "success_rate": 0.9,
+        "wait_rate": 0.5324165029469549,
+        "wait_token_fraction": 0.5324165029469549
+      },
+      "improvement": {
+        "mean_return": 0.19900000000000007,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.13636363636363635,
+        "help_rate": 0.35177865612648224,
+        "mean_length": 8.433333333333334,
+        "mean_return": 0.5313333333333333,
+        "success_rate": 0.7,
+        "wait_rate": 0.5118577075098815,
+        "wait_token_fraction": 0.5118577075098815
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13636363636363635,
+            "help_rate": 0.35177865612648224,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.5313333333333333,
+            "success_rate": 0.7,
+            "wait_rate": 0.5118577075098815,
+            "wait_token_fraction": 0.5118577075098815
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.0975609756097561,
+            "help_rate": 0.3434959349593496,
+            "mean_length": 8.2,
+            "mean_return": 0.6193333333333333,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5589430894308943,
+            "wait_token_fraction": 0.5589430894308943
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14065510597302505,
+            "help_rate": 0.3622350674373796,
+            "mean_length": 8.65,
+            "mean_return": 0.7103333333333333,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.49710982658959535,
+            "wait_token_fraction": 0.49710982658959535
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12236286919831224,
+            "help_rate": 0.37130801687763715,
+            "mean_length": 7.9,
+            "mean_return": 0.6920000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.5063291139240507,
+            "wait_token_fraction": 0.5063291139240507
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10227272727272728,
+            "help_rate": 0.3541666666666667,
+            "mean_length": 8.8,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5435606060606061,
+            "wait_token_fraction": 0.5435606060606061
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10609037328094302,
+            "help_rate": 0.3614931237721022,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7303333333333334,
+            "success_rate": 0.9,
+            "wait_rate": 0.5324165029469549,
+            "wait_token_fraction": 0.5324165029469549
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 307
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10245901639344263,
+        "help_rate": 0.35860655737704916,
+        "mean_length": 8.133333333333333,
+        "mean_return": 0.7873333333333333,
+        "success_rate": 0.95,
+        "wait_rate": 0.5389344262295082,
+        "wait_token_fraction": 0.5389344262295082
+      },
+      "improvement": {
+        "mean_return": 0.261,
+        "success_rate": 0.2666666666666666
+      },
+      "initial_eval": {
+        "harm_rate": 0.10615711252653928,
+        "help_rate": 0.3354564755838641,
+        "mean_length": 7.85,
+        "mean_return": 0.5263333333333333,
+        "success_rate": 0.6833333333333333,
+        "wait_rate": 0.5583864118895966,
+        "wait_token_fraction": 0.5583864118895966
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10615711252653928,
+            "help_rate": 0.3354564755838641,
+            "mean_length": 7.85,
+            "mean_return": 0.5263333333333333,
+            "success_rate": 0.6833333333333333,
+            "wait_rate": 0.5583864118895966,
+            "wait_token_fraction": 0.5583864118895966
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1342685370741483,
+            "help_rate": 0.3486973947895792,
+            "mean_length": 8.316666666666666,
+            "mean_return": 0.6003333333333334,
+            "success_rate": 0.7666666666666667,
+            "wait_rate": 0.5170340681362725,
+            "wait_token_fraction": 0.5170340681362725
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11042944785276074,
+            "help_rate": 0.36809815950920244,
+            "mean_length": 8.15,
+            "mean_return": 0.737,
+            "success_rate": 0.9,
+            "wait_rate": 0.5214723926380368,
+            "wait_token_fraction": 0.5214723926380368
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10722100656455143,
+            "help_rate": 0.37636761487964987,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.781,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5164113785557987,
+            "wait_token_fraction": 0.5164113785557987
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10786516853932585,
+            "help_rate": 0.35730337078651686,
+            "mean_length": 7.416666666666667,
+            "mean_return": 0.6683333333333333,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5348314606741573,
+            "wait_token_fraction": 0.5348314606741573
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10245901639344263,
+            "help_rate": 0.35860655737704916,
+            "mean_length": 8.133333333333333,
+            "mean_return": 0.7873333333333333,
+            "success_rate": 0.95,
+            "wait_rate": 0.5389344262295082,
+            "wait_token_fraction": 0.5389344262295082
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_total",
+      "seed": 359
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.102,
+        "help_rate": 0.326,
+        "mean_length": 8.333333333333334,
+        "mean_return": 0.7166666666666667,
+        "success_rate": 0.8833333333333333,
+        "wait_rate": 0.572,
+        "wait_token_fraction": 0.572
+      },
+      "improvement": {
+        "mean_return": 0.16466666666666674,
+        "success_rate": 0.18333333333333335
+      },
+      "initial_eval": {
+        "harm_rate": 0.11936936936936937,
+        "help_rate": 0.35585585585585583,
+        "mean_length": 7.4,
+        "mean_return": 0.5519999999999999,
+        "success_rate": 0.7,
+        "wait_rate": 0.5247747747747747,
+        "wait_token_fraction": 0.5247747747747747
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11936936936936937,
+            "help_rate": 0.35585585585585583,
+            "mean_length": 7.4,
+            "mean_return": 0.5519999999999999,
+            "success_rate": 0.7,
+            "wait_rate": 0.5247747747747747,
+            "wait_token_fraction": 0.5247747747747747
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12,
+            "help_rate": 0.346,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.6666666666666666,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.534,
+            "wait_token_fraction": 0.534
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09903381642512077,
+            "help_rate": 0.3864734299516908,
+            "mean_length": 6.9,
+            "mean_return": 0.7286666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5144927536231884,
+            "wait_token_fraction": 0.5144927536231884
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.07218683651804671,
+            "help_rate": 0.33970276008492567,
+            "mean_length": 7.85,
+            "mean_return": 0.7596666666666666,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5881104033970276,
+            "wait_token_fraction": 0.5881104033970276
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10493827160493827,
+            "help_rate": 0.36213991769547327,
+            "mean_length": 8.1,
+            "mean_return": 0.8046666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5329218106995884,
+            "wait_token_fraction": 0.5329218106995884
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.102,
+            "help_rate": 0.326,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.7166666666666667,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.572,
+            "wait_token_fraction": 0.572
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 11
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09659090909090909,
+        "help_rate": 0.32386363636363635,
+        "mean_length": 8.8,
+        "mean_return": 0.7573333333333333,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5795454545454546,
+        "wait_token_fraction": 0.5795454545454546
+      },
+      "improvement": {
+        "mean_return": 0.2793333333333333,
+        "success_rate": 0.31666666666666665
+      },
+      "initial_eval": {
+        "harm_rate": 0.13942307692307693,
+        "help_rate": 0.37259615384615385,
+        "mean_length": 6.933333333333334,
+        "mean_return": 0.478,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.4879807692307692,
+        "wait_token_fraction": 0.4879807692307692
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13942307692307693,
+            "help_rate": 0.37259615384615385,
+            "mean_length": 6.933333333333334,
+            "mean_return": 0.478,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.4879807692307692,
+            "wait_token_fraction": 0.4879807692307692
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11727078891257996,
+            "help_rate": 0.34541577825159914,
+            "mean_length": 7.816666666666666,
+            "mean_return": 0.627,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5373134328358209,
+            "wait_token_fraction": 0.5373134328358209
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08991228070175439,
+            "help_rate": 0.3574561403508772,
+            "mean_length": 7.6,
+            "mean_return": 0.7313333333333334,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5526315789473685,
+            "wait_token_fraction": 0.5526315789473685
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12931034482758622,
+            "help_rate": 0.33405172413793105,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.5953333333333333,
+            "success_rate": 0.75,
+            "wait_rate": 0.5366379310344828,
+            "wait_token_fraction": 0.5366379310344828
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10493827160493827,
+            "help_rate": 0.36419753086419754,
+            "mean_length": 8.1,
+            "mean_return": 0.788,
+            "success_rate": 0.95,
+            "wait_rate": 0.5308641975308642,
+            "wait_token_fraction": 0.5308641975308642
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09659090909090909,
+            "help_rate": 0.32386363636363635,
+            "mean_length": 8.8,
+            "mean_return": 0.7573333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5795454545454546,
+            "wait_token_fraction": 0.5795454545454546
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 29
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10191082802547771,
+        "help_rate": 0.3609341825902335,
+        "mean_length": 7.85,
+        "mean_return": 0.7763333333333333,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5371549893842887,
+        "wait_token_fraction": 0.5371549893842887
+      },
+      "improvement": {
+        "mean_return": 0.20633333333333326,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.12448979591836734,
+        "help_rate": 0.32857142857142857,
+        "mean_length": 8.166666666666666,
+        "mean_return": 0.5700000000000001,
+        "success_rate": 0.7333333333333333,
+        "wait_rate": 0.5469387755102041,
+        "wait_token_fraction": 0.5469387755102041
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12448979591836734,
+            "help_rate": 0.32857142857142857,
+            "mean_length": 8.166666666666666,
+            "mean_return": 0.5700000000000001,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5469387755102041,
+            "wait_token_fraction": 0.5469387755102041
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10727969348659004,
+            "help_rate": 0.3505747126436782,
+            "mean_length": 8.7,
+            "mean_return": 0.6926666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5421455938697318,
+            "wait_token_fraction": 0.5421455938697318
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09784735812133072,
+            "help_rate": 0.33463796477495106,
+            "mean_length": 8.516666666666667,
+            "mean_return": 0.7296666666666667,
+            "success_rate": 0.9,
+            "wait_rate": 0.5675146771037182,
+            "wait_token_fraction": 0.5675146771037182
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1324110671936759,
+            "help_rate": 0.3557312252964427,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.6646666666666667,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5118577075098815,
+            "wait_token_fraction": 0.5118577075098815
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.0945945945945946,
+            "help_rate": 0.33783783783783783,
+            "mean_length": 8.633333333333333,
+            "mean_return": 0.7273333333333334,
+            "success_rate": 0.9,
+            "wait_rate": 0.5675675675675675,
+            "wait_token_fraction": 0.5675675675675675
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10191082802547771,
+            "help_rate": 0.3609341825902335,
+            "mean_length": 7.85,
+            "mean_return": 0.7763333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5371549893842887,
+            "wait_token_fraction": 0.5371549893842887
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 47
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10669456066945607,
+        "help_rate": 0.37447698744769875,
+        "mean_length": 7.966666666666667,
+        "mean_return": 0.7406666666666666,
+        "success_rate": 0.9,
+        "wait_rate": 0.5188284518828452,
+        "wait_token_fraction": 0.5188284518828452
+      },
+      "improvement": {
+        "mean_return": 0.18166666666666664,
+        "success_rate": 0.18333333333333335
+      },
+      "initial_eval": {
+        "harm_rate": 0.14376321353065538,
+        "help_rate": 0.346723044397463,
+        "mean_length": 7.883333333333334,
+        "mean_return": 0.5589999999999999,
+        "success_rate": 0.7166666666666667,
+        "wait_rate": 0.5095137420718816,
+        "wait_token_fraction": 0.5095137420718816
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14376321353065538,
+            "help_rate": 0.346723044397463,
+            "mean_length": 7.883333333333334,
+            "mean_return": 0.5589999999999999,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.5095137420718816,
+            "wait_token_fraction": 0.5095137420718816
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11570247933884298,
+            "help_rate": 0.35330578512396693,
+            "mean_length": 8.066666666666666,
+            "mean_return": 0.672,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.53099173553719,
+            "wait_token_fraction": 0.53099173553719
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11464968152866242,
+            "help_rate": 0.37367303609341823,
+            "mean_length": 7.85,
+            "mean_return": 0.7096666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5116772823779193,
+            "wait_token_fraction": 0.5116772823779193
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10256410256410256,
+            "help_rate": 0.3717948717948718,
+            "mean_length": 7.8,
+            "mean_return": 0.7773333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5256410256410257,
+            "wait_token_fraction": 0.5256410256410257
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.081799591002045,
+            "help_rate": 0.35991820040899797,
+            "mean_length": 8.15,
+            "mean_return": 0.787,
+            "success_rate": 0.95,
+            "wait_rate": 0.558282208588957,
+            "wait_token_fraction": 0.558282208588957
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10669456066945607,
+            "help_rate": 0.37447698744769875,
+            "mean_length": 7.966666666666667,
+            "mean_return": 0.7406666666666666,
+            "success_rate": 0.9,
+            "wait_rate": 0.5188284518828452,
+            "wait_token_fraction": 0.5188284518828452
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 83
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.12173913043478261,
+        "help_rate": 0.3847826086956522,
+        "mean_length": 7.666666666666667,
+        "mean_return": 0.7466666666666666,
+        "success_rate": 0.9,
+        "wait_rate": 0.4934782608695652,
+        "wait_token_fraction": 0.4934782608695652
+      },
+      "improvement": {
+        "mean_return": 0.21466666666666656,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.13095238095238096,
+        "help_rate": 0.3492063492063492,
+        "mean_length": 8.4,
+        "mean_return": 0.532,
+        "success_rate": 0.7,
+        "wait_rate": 0.5198412698412699,
+        "wait_token_fraction": 0.5198412698412699
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13095238095238096,
+            "help_rate": 0.3492063492063492,
+            "mean_length": 8.4,
+            "mean_return": 0.532,
+            "success_rate": 0.7,
+            "wait_rate": 0.5198412698412699,
+            "wait_token_fraction": 0.5198412698412699
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.16835699797160245,
+            "help_rate": 0.36511156186612576,
+            "mean_length": 8.216666666666667,
+            "mean_return": 0.5856666666666667,
+            "success_rate": 0.75,
+            "wait_rate": 0.4665314401622718,
+            "wait_token_fraction": 0.4665314401622718
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12472647702407003,
+            "help_rate": 0.35667396061269147,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.6643333333333333,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5185995623632386,
+            "wait_token_fraction": 0.5185995623632386
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1415525114155251,
+            "help_rate": 0.3995433789954338,
+            "mean_length": 7.3,
+            "mean_return": 0.7040000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.4589041095890411,
+            "wait_token_fraction": 0.4589041095890411
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10657596371882086,
+            "help_rate": 0.36281179138321995,
+            "mean_length": 7.35,
+            "mean_return": 0.7196666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5306122448979592,
+            "wait_token_fraction": 0.5306122448979592
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12173913043478261,
+            "help_rate": 0.3847826086956522,
+            "mean_length": 7.666666666666667,
+            "mean_return": 0.7466666666666666,
+            "success_rate": 0.9,
+            "wait_rate": 0.4934782608695652,
+            "wait_token_fraction": 0.4934782608695652
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 131
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09598214285714286,
+        "help_rate": 0.37723214285714285,
+        "mean_length": 7.466666666666667,
+        "mean_return": 0.8006666666666666,
+        "success_rate": 0.95,
+        "wait_rate": 0.5267857142857143,
+        "wait_token_fraction": 0.5267857142857143
+      },
+      "improvement": {
+        "mean_return": 0.36166666666666664,
+        "success_rate": 0.35
+      },
+      "initial_eval": {
+        "harm_rate": 0.15734989648033126,
+        "help_rate": 0.3416149068322981,
+        "mean_length": 8.05,
+        "mean_return": 0.439,
+        "success_rate": 0.6,
+        "wait_rate": 0.5010351966873706,
+        "wait_token_fraction": 0.5010351966873706
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.15734989648033126,
+            "help_rate": 0.3416149068322981,
+            "mean_length": 8.05,
+            "mean_return": 0.439,
+            "success_rate": 0.6,
+            "wait_rate": 0.5010351966873706,
+            "wait_token_fraction": 0.5010351966873706
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10176991150442478,
+            "help_rate": 0.3672566371681416,
+            "mean_length": 7.533333333333333,
+            "mean_return": 0.716,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5309734513274337,
+            "wait_token_fraction": 0.5309734513274337
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1026694045174538,
+            "help_rate": 0.3593429158110883,
+            "mean_length": 8.116666666666667,
+            "mean_return": 0.721,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5379876796714579,
+            "wait_token_fraction": 0.5379876796714579
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08855291576673865,
+            "help_rate": 0.34773218142548595,
+            "mean_length": 7.716666666666667,
+            "mean_return": 0.7123333333333334,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5637149028077754,
+            "wait_token_fraction": 0.5637149028077754
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11299435028248588,
+            "help_rate": 0.3483992467043315,
+            "mean_length": 8.85,
+            "mean_return": 0.7063333333333334,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5386064030131826,
+            "wait_token_fraction": 0.5386064030131826
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09598214285714286,
+            "help_rate": 0.37723214285714285,
+            "mean_length": 7.466666666666667,
+            "mean_return": 0.8006666666666666,
+            "success_rate": 0.95,
+            "wait_rate": 0.5267857142857143,
+            "wait_token_fraction": 0.5267857142857143
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 173
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.0947867298578199,
+        "help_rate": 0.3791469194312796,
+        "mean_length": 7.033333333333333,
+        "mean_return": 0.7093333333333334,
+        "success_rate": 0.85,
+        "wait_rate": 0.5260663507109005,
+        "wait_token_fraction": 0.5260663507109005
+      },
+      "improvement": {
+        "mean_return": 0.2473333333333334,
+        "success_rate": 0.23333333333333328
+      },
+      "initial_eval": {
+        "harm_rate": 0.14224137931034483,
+        "help_rate": 0.3448275862068966,
+        "mean_length": 7.733333333333333,
+        "mean_return": 0.46199999999999997,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.5129310344827587,
+        "wait_token_fraction": 0.5129310344827587
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14224137931034483,
+            "help_rate": 0.3448275862068966,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.46199999999999997,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.5129310344827587,
+            "wait_token_fraction": 0.5129310344827587
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1359447004608295,
+            "help_rate": 0.3617511520737327,
+            "mean_length": 7.233333333333333,
+            "mean_return": 0.5886666666666667,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5023041474654378,
+            "wait_token_fraction": 0.5023041474654378
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.0962671905697446,
+            "help_rate": 0.3477406679764244,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7803333333333333,
+            "success_rate": 0.95,
+            "wait_rate": 0.555992141453831,
+            "wait_token_fraction": 0.555992141453831
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09905660377358491,
+            "help_rate": 0.36556603773584906,
+            "mean_length": 7.066666666666666,
+            "mean_return": 0.7086666666666667,
+            "success_rate": 0.85,
+            "wait_rate": 0.535377358490566,
+            "wait_token_fraction": 0.535377358490566
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.08898305084745763,
+            "help_rate": 0.3347457627118644,
+            "mean_length": 7.866666666666666,
+            "mean_return": 0.7593333333333334,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.576271186440678,
+            "wait_token_fraction": 0.576271186440678
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.0947867298578199,
+            "help_rate": 0.3791469194312796,
+            "mean_length": 7.033333333333333,
+            "mean_return": 0.7093333333333334,
+            "success_rate": 0.85,
+            "wait_rate": 0.5260663507109005,
+            "wait_token_fraction": 0.5260663507109005
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 211
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09465020576131687,
+        "help_rate": 0.36213991769547327,
+        "mean_length": 8.1,
+        "mean_return": 0.788,
+        "success_rate": 0.95,
+        "wait_rate": 0.5432098765432098,
+        "wait_token_fraction": 0.5432098765432098
+      },
+      "improvement": {
+        "mean_return": 0.35833333333333334,
+        "success_rate": 0.3666666666666666
+      },
+      "initial_eval": {
+        "harm_rate": 0.13882863340563992,
+        "help_rate": 0.32537960954446854,
+        "mean_length": 7.683333333333334,
+        "mean_return": 0.4296666666666667,
+        "success_rate": 0.5833333333333334,
+        "wait_rate": 0.5357917570498916,
+        "wait_token_fraction": 0.5357917570498916
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13882863340563992,
+            "help_rate": 0.32537960954446854,
+            "mean_length": 7.683333333333334,
+            "mean_return": 0.4296666666666667,
+            "success_rate": 0.5833333333333334,
+            "wait_rate": 0.5357917570498916,
+            "wait_token_fraction": 0.5357917570498916
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11522633744855967,
+            "help_rate": 0.35802469135802467,
+            "mean_length": 8.1,
+            "mean_return": 0.6713333333333333,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5267489711934157,
+            "wait_token_fraction": 0.5267489711934157
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13445378151260504,
+            "help_rate": 0.3865546218487395,
+            "mean_length": 7.933333333333334,
+            "mean_return": 0.6746666666666667,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.4789915966386555,
+            "wait_token_fraction": 0.4789915966386555
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13402061855670103,
+            "help_rate": 0.36907216494845363,
+            "mean_length": 8.083333333333334,
+            "mean_return": 0.7383333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.49690721649484537,
+            "wait_token_fraction": 0.49690721649484537
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10453648915187377,
+            "help_rate": 0.368836291913215,
+            "mean_length": 8.45,
+            "mean_return": 0.7643333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5266272189349113,
+            "wait_token_fraction": 0.5266272189349113
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09465020576131687,
+            "help_rate": 0.36213991769547327,
+            "mean_length": 8.1,
+            "mean_return": 0.788,
+            "success_rate": 0.95,
+            "wait_rate": 0.5432098765432098,
+            "wait_token_fraction": 0.5432098765432098
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 257
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10609037328094302,
+        "help_rate": 0.35363457760314343,
+        "mean_length": 8.483333333333333,
+        "mean_return": 0.7303333333333334,
+        "success_rate": 0.9,
+        "wait_rate": 0.5402750491159135,
+        "wait_token_fraction": 0.5402750491159135
+      },
+      "improvement": {
+        "mean_return": 0.19900000000000007,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.13636363636363635,
+        "help_rate": 0.35177865612648224,
+        "mean_length": 8.433333333333334,
+        "mean_return": 0.5313333333333333,
+        "success_rate": 0.7,
+        "wait_rate": 0.5118577075098815,
+        "wait_token_fraction": 0.5118577075098815
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13636363636363635,
+            "help_rate": 0.35177865612648224,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.5313333333333333,
+            "success_rate": 0.7,
+            "wait_rate": 0.5118577075098815,
+            "wait_token_fraction": 0.5118577075098815
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11178861788617886,
+            "help_rate": 0.3394308943089431,
+            "mean_length": 8.2,
+            "mean_return": 0.5693333333333332,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5487804878048781,
+            "wait_token_fraction": 0.5487804878048781
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1233140655105973,
+            "help_rate": 0.35260115606936415,
+            "mean_length": 8.65,
+            "mean_return": 0.7103333333333333,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5240847784200385,
+            "wait_token_fraction": 0.5240847784200385
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11392405063291139,
+            "help_rate": 0.36075949367088606,
+            "mean_length": 7.9,
+            "mean_return": 0.7086666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5253164556962026,
+            "wait_token_fraction": 0.5253164556962026
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10984848484848485,
+            "help_rate": 0.35795454545454547,
+            "mean_length": 8.8,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5321969696969697,
+            "wait_token_fraction": 0.5321969696969697
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10609037328094302,
+            "help_rate": 0.35363457760314343,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7303333333333334,
+            "success_rate": 0.9,
+            "wait_rate": 0.5402750491159135,
+            "wait_token_fraction": 0.5402750491159135
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 307
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09836065573770492,
+        "help_rate": 0.35655737704918034,
+        "mean_length": 8.133333333333333,
+        "mean_return": 0.7706666666666667,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5450819672131147,
+        "wait_token_fraction": 0.5450819672131147
+      },
+      "improvement": {
+        "mean_return": 0.2443333333333334,
+        "success_rate": 0.25
+      },
+      "initial_eval": {
+        "harm_rate": 0.10615711252653928,
+        "help_rate": 0.3354564755838641,
+        "mean_length": 7.85,
+        "mean_return": 0.5263333333333333,
+        "success_rate": 0.6833333333333333,
+        "wait_rate": 0.5583864118895966,
+        "wait_token_fraction": 0.5583864118895966
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10615711252653928,
+            "help_rate": 0.3354564755838641,
+            "mean_length": 7.85,
+            "mean_return": 0.5263333333333333,
+            "success_rate": 0.6833333333333333,
+            "wait_rate": 0.5583864118895966,
+            "wait_token_fraction": 0.5583864118895966
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.1402805611222445,
+            "help_rate": 0.3466933867735471,
+            "mean_length": 8.316666666666666,
+            "mean_return": 0.5503333333333333,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.5130260521042084,
+            "wait_token_fraction": 0.5130260521042084
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12474437627811862,
+            "help_rate": 0.3558282208588957,
+            "mean_length": 8.15,
+            "mean_return": 0.637,
+            "success_rate": 0.8,
+            "wait_rate": 0.5194274028629857,
+            "wait_token_fraction": 0.5194274028629857
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12035010940919037,
+            "help_rate": 0.38074398249452956,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.731,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.4989059080962801,
+            "wait_token_fraction": 0.4989059080962801
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10786516853932585,
+            "help_rate": 0.3752808988764045,
+            "mean_length": 7.416666666666667,
+            "mean_return": 0.685,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5168539325842697,
+            "wait_token_fraction": 0.5168539325842697
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.09836065573770492,
+            "help_rate": 0.35655737704918034,
+            "mean_length": 8.133333333333333,
+            "mean_return": 0.7706666666666667,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5450819672131147,
+            "wait_token_fraction": 0.5450819672131147
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "group_length_norm",
+      "seed": 359
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.104,
+        "help_rate": 0.33,
+        "mean_length": 8.333333333333334,
+        "mean_return": 0.7166666666666667,
+        "success_rate": 0.8833333333333333,
+        "wait_rate": 0.566,
+        "wait_token_fraction": 0.566
+      },
+      "improvement": {
+        "mean_return": 0.16466666666666674,
+        "success_rate": 0.18333333333333335
+      },
+      "initial_eval": {
+        "harm_rate": 0.11936936936936937,
+        "help_rate": 0.35585585585585583,
+        "mean_length": 7.4,
+        "mean_return": 0.5519999999999999,
+        "success_rate": 0.7,
+        "wait_rate": 0.5247747747747747,
+        "wait_token_fraction": 0.5247747747747747
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11936936936936937,
+            "help_rate": 0.35585585585585583,
+            "mean_length": 7.4,
+            "mean_return": 0.5519999999999999,
+            "success_rate": 0.7,
+            "wait_rate": 0.5247747747747747,
+            "wait_token_fraction": 0.5247747747747747
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.8833063209076175,
+          "eval": {
+            "harm_rate": 0.126,
+            "help_rate": 0.35,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.65,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.524,
+            "wait_token_fraction": 0.524
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9750830564784053,
+          "eval": {
+            "harm_rate": 0.08454106280193237,
+            "help_rate": 0.35990338164251207,
+            "mean_length": 6.9,
+            "mean_return": 0.7286666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5555555555555556,
+            "wait_token_fraction": 0.5555555555555556
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9567233384853169,
+          "eval": {
+            "harm_rate": 0.0870488322717622,
+            "help_rate": 0.3503184713375796,
+            "mean_length": 7.85,
+            "mean_return": 0.7929999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5626326963906582,
+            "wait_token_fraction": 0.5626326963906582
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.8956521739130435,
+          "eval": {
+            "harm_rate": 0.08847736625514403,
+            "help_rate": 0.3497942386831276,
+            "mean_length": 8.1,
+            "mean_return": 0.8046666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5617283950617284,
+            "wait_token_fraction": 0.5617283950617284
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9381107491856677,
+          "eval": {
+            "harm_rate": 0.104,
+            "help_rate": 0.33,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.7166666666666667,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.566,
+            "wait_token_fraction": 0.566
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 11
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08333333333333333,
+        "help_rate": 0.3314393939393939,
+        "mean_length": 8.8,
+        "mean_return": 0.8073333333333333,
+        "success_rate": 0.9833333333333333,
+        "wait_rate": 0.5852272727272727,
+        "wait_token_fraction": 0.5852272727272727
+      },
+      "improvement": {
+        "mean_return": 0.32933333333333337,
+        "success_rate": 0.3666666666666666
+      },
+      "initial_eval": {
+        "harm_rate": 0.13942307692307693,
+        "help_rate": 0.37259615384615385,
+        "mean_length": 6.933333333333334,
+        "mean_return": 0.478,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.4879807692307692,
+        "wait_token_fraction": 0.4879807692307692
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13942307692307693,
+            "help_rate": 0.37259615384615385,
+            "mean_length": 6.933333333333334,
+            "mean_return": 0.478,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.4879807692307692,
+            "wait_token_fraction": 0.4879807692307692
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9704433497536946,
+          "eval": {
+            "harm_rate": 0.1044776119402985,
+            "help_rate": 0.34328358208955223,
+            "mean_length": 7.816666666666666,
+            "mean_return": 0.7103333333333333,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5522388059701493,
+            "wait_token_fraction": 0.5522388059701493
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9595015576323987,
+          "eval": {
+            "harm_rate": 0.1162280701754386,
+            "help_rate": 0.375,
+            "mean_length": 7.6,
+            "mean_return": 0.7313333333333334,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5087719298245614,
+            "wait_token_fraction": 0.5087719298245614
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.921092564491654,
+          "eval": {
+            "harm_rate": 0.09482758620689655,
+            "help_rate": 0.3232758620689655,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.7453333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.5818965517241379,
+            "wait_token_fraction": 0.5818965517241379
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9418238993710691,
+          "eval": {
+            "harm_rate": 0.09465020576131687,
+            "help_rate": 0.3497942386831276,
+            "mean_length": 8.1,
+            "mean_return": 0.8046666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5555555555555556,
+            "wait_token_fraction": 0.5555555555555556
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9646302250803859,
+          "eval": {
+            "harm_rate": 0.08333333333333333,
+            "help_rate": 0.3314393939393939,
+            "mean_length": 8.8,
+            "mean_return": 0.8073333333333333,
+            "success_rate": 0.9833333333333333,
+            "wait_rate": 0.5852272727272727,
+            "wait_token_fraction": 0.5852272727272727
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 29
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.07643312101910828,
+        "help_rate": 0.346072186836518,
+        "mean_length": 7.85,
+        "mean_return": 0.7929999999999999,
+        "success_rate": 0.95,
+        "wait_rate": 0.5774946921443737,
+        "wait_token_fraction": 0.5774946921443737
+      },
+      "improvement": {
+        "mean_return": 0.22299999999999986,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.12448979591836734,
+        "help_rate": 0.32857142857142857,
+        "mean_length": 8.166666666666666,
+        "mean_return": 0.5700000000000001,
+        "success_rate": 0.7333333333333333,
+        "wait_rate": 0.5469387755102041,
+        "wait_token_fraction": 0.5469387755102041
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12448979591836734,
+            "help_rate": 0.32857142857142857,
+            "mean_length": 8.166666666666666,
+            "mean_return": 0.5700000000000001,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5469387755102041,
+            "wait_token_fraction": 0.5469387755102041
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9698795180722891,
+          "eval": {
+            "harm_rate": 0.1053639846743295,
+            "help_rate": 0.3390804597701149,
+            "mean_length": 8.7,
+            "mean_return": 0.6926666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5555555555555556,
+            "wait_token_fraction": 0.5555555555555556
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9437299035369775,
+          "eval": {
+            "harm_rate": 0.08806262230919765,
+            "help_rate": 0.3268101761252446,
+            "mean_length": 8.516666666666667,
+            "mean_return": 0.7463333333333334,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5851272015655578,
+            "wait_token_fraction": 0.5851272015655578
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9585253456221198,
+          "eval": {
+            "harm_rate": 0.09288537549407115,
+            "help_rate": 0.3241106719367589,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.748,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5830039525691699,
+            "wait_token_fraction": 0.5830039525691699
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.935126582278481,
+          "eval": {
+            "harm_rate": 0.0888030888030888,
+            "help_rate": 0.33204633204633205,
+            "mean_length": 8.633333333333333,
+            "mean_return": 0.7773333333333333,
+            "success_rate": 0.95,
+            "wait_rate": 0.5791505791505791,
+            "wait_token_fraction": 0.5791505791505791
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9434250764525994,
+          "eval": {
+            "harm_rate": 0.07643312101910828,
+            "help_rate": 0.346072186836518,
+            "mean_length": 7.85,
+            "mean_return": 0.7929999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5774946921443737,
+            "wait_token_fraction": 0.5774946921443737
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 47
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.1087866108786611,
+        "help_rate": 0.36610878661087864,
+        "mean_length": 7.966666666666667,
+        "mean_return": 0.7739999999999999,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5251046025104602,
+        "wait_token_fraction": 0.5251046025104602
+      },
+      "improvement": {
+        "mean_return": 0.21499999999999997,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.14376321353065538,
+        "help_rate": 0.346723044397463,
+        "mean_length": 7.883333333333334,
+        "mean_return": 0.5589999999999999,
+        "success_rate": 0.7166666666666667,
+        "wait_rate": 0.5095137420718816,
+        "wait_token_fraction": 0.5095137420718816
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14376321353065538,
+            "help_rate": 0.346723044397463,
+            "mean_length": 7.883333333333334,
+            "mean_return": 0.5589999999999999,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.5095137420718816,
+            "wait_token_fraction": 0.5095137420718816
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9724919093851133,
+          "eval": {
+            "harm_rate": 0.128099173553719,
+            "help_rate": 0.34710743801652894,
+            "mean_length": 8.066666666666666,
+            "mean_return": 0.672,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5247933884297521,
+            "wait_token_fraction": 0.5247933884297521
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9798850574712644,
+          "eval": {
+            "harm_rate": 0.0870488322717622,
+            "help_rate": 0.3673036093418259,
+            "mean_length": 7.85,
+            "mean_return": 0.7763333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5456475583864119,
+            "wait_token_fraction": 0.5456475583864119
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9134897360703812,
+          "eval": {
+            "harm_rate": 0.0876068376068376,
+            "help_rate": 0.3547008547008547,
+            "mean_length": 7.8,
+            "mean_return": 0.8106666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5576923076923077,
+            "wait_token_fraction": 0.5576923076923077
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9630872483221476,
+          "eval": {
+            "harm_rate": 0.06952965235173825,
+            "help_rate": 0.3476482617586912,
+            "mean_length": 8.15,
+            "mean_return": 0.787,
+            "success_rate": 0.95,
+            "wait_rate": 0.5828220858895705,
+            "wait_token_fraction": 0.5828220858895705
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9251592356687898,
+          "eval": {
+            "harm_rate": 0.1087866108786611,
+            "help_rate": 0.36610878661087864,
+            "mean_length": 7.966666666666667,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5251046025104602,
+            "wait_token_fraction": 0.5251046025104602
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 83
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.11521739130434783,
+        "help_rate": 0.3673913043478261,
+        "mean_length": 7.666666666666667,
+        "mean_return": 0.7633333333333333,
+        "success_rate": 0.9166666666666666,
+        "wait_rate": 0.5173913043478261,
+        "wait_token_fraction": 0.5173913043478261
+      },
+      "improvement": {
+        "mean_return": 0.23133333333333328,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.13095238095238096,
+        "help_rate": 0.3492063492063492,
+        "mean_length": 8.4,
+        "mean_return": 0.532,
+        "success_rate": 0.7,
+        "wait_rate": 0.5198412698412699,
+        "wait_token_fraction": 0.5198412698412699
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13095238095238096,
+            "help_rate": 0.3492063492063492,
+            "mean_length": 8.4,
+            "mean_return": 0.532,
+            "success_rate": 0.7,
+            "wait_rate": 0.5198412698412699,
+            "wait_token_fraction": 0.5198412698412699
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9193037974683544,
+          "eval": {
+            "harm_rate": 0.1460446247464503,
+            "help_rate": 0.3630831643002028,
+            "mean_length": 8.216666666666667,
+            "mean_return": 0.6023333333333334,
+            "success_rate": 0.7666666666666667,
+            "wait_rate": 0.4908722109533469,
+            "wait_token_fraction": 0.4908722109533469
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9317147192716236,
+          "eval": {
+            "harm_rate": 0.13566739606126915,
+            "help_rate": 0.3588621444201313,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.731,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5054704595185996,
+            "wait_token_fraction": 0.5054704595185996
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9223744292237442,
+          "eval": {
+            "harm_rate": 0.0958904109589041,
+            "help_rate": 0.3744292237442922,
+            "mean_length": 7.3,
+            "mean_return": 0.7873333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5296803652968036,
+            "wait_token_fraction": 0.5296803652968036
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9391025641025641,
+          "eval": {
+            "harm_rate": 0.08616780045351474,
+            "help_rate": 0.35827664399092973,
+            "mean_length": 7.35,
+            "mean_return": 0.753,
+            "success_rate": 0.9,
+            "wait_rate": 0.5555555555555556,
+            "wait_token_fraction": 0.5555555555555556
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9336158192090396,
+          "eval": {
+            "harm_rate": 0.11521739130434783,
+            "help_rate": 0.3673913043478261,
+            "mean_length": 7.666666666666667,
+            "mean_return": 0.7633333333333333,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5173913043478261,
+            "wait_token_fraction": 0.5173913043478261
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 131
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.07589285714285714,
+        "help_rate": 0.36830357142857145,
+        "mean_length": 7.466666666666667,
+        "mean_return": 0.8006666666666666,
+        "success_rate": 0.95,
+        "wait_rate": 0.5558035714285714,
+        "wait_token_fraction": 0.5558035714285714
+      },
+      "improvement": {
+        "mean_return": 0.36166666666666664,
+        "success_rate": 0.35
+      },
+      "initial_eval": {
+        "harm_rate": 0.15734989648033126,
+        "help_rate": 0.3416149068322981,
+        "mean_length": 8.05,
+        "mean_return": 0.439,
+        "success_rate": 0.6,
+        "wait_rate": 0.5010351966873706,
+        "wait_token_fraction": 0.5010351966873706
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.15734989648033126,
+            "help_rate": 0.3416149068322981,
+            "mean_length": 8.05,
+            "mean_return": 0.439,
+            "success_rate": 0.6,
+            "wait_rate": 0.5010351966873706,
+            "wait_token_fraction": 0.5010351966873706
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9359756097560976,
+          "eval": {
+            "harm_rate": 0.084070796460177,
+            "help_rate": 0.35176991150442477,
+            "mean_length": 7.533333333333333,
+            "mean_return": 0.7493333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.5641592920353983,
+            "wait_token_fraction": 0.5641592920353983
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9319620253164557,
+          "eval": {
+            "harm_rate": 0.09034907597535935,
+            "help_rate": 0.34496919917864477,
+            "mean_length": 8.116666666666667,
+            "mean_return": 0.7543333333333333,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5646817248459959,
+            "wait_token_fraction": 0.5646817248459959
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9150943396226415,
+          "eval": {
+            "harm_rate": 0.09719222462203024,
+            "help_rate": 0.3304535637149028,
+            "mean_length": 7.716666666666667,
+            "mean_return": 0.6956666666666667,
+            "success_rate": 0.85,
+            "wait_rate": 0.572354211663067,
+            "wait_token_fraction": 0.572354211663067
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9516380655226209,
+          "eval": {
+            "harm_rate": 0.08851224105461393,
+            "help_rate": 0.327683615819209,
+            "mean_length": 8.85,
+            "mean_return": 0.773,
+            "success_rate": 0.95,
+            "wait_rate": 0.583804143126177,
+            "wait_token_fraction": 0.583804143126177
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9442724458204335,
+          "eval": {
+            "harm_rate": 0.07589285714285714,
+            "help_rate": 0.36830357142857145,
+            "mean_length": 7.466666666666667,
+            "mean_return": 0.8006666666666666,
+            "success_rate": 0.95,
+            "wait_rate": 0.5558035714285714,
+            "wait_token_fraction": 0.5558035714285714
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 173
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08530805687203792,
+        "help_rate": 0.36729857819905215,
+        "mean_length": 7.033333333333333,
+        "mean_return": 0.7593333333333334,
+        "success_rate": 0.9,
+        "wait_rate": 0.54739336492891,
+        "wait_token_fraction": 0.54739336492891
+      },
+      "improvement": {
+        "mean_return": 0.29733333333333345,
+        "success_rate": 0.2833333333333333
+      },
+      "initial_eval": {
+        "harm_rate": 0.14224137931034483,
+        "help_rate": 0.3448275862068966,
+        "mean_length": 7.733333333333333,
+        "mean_return": 0.46199999999999997,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.5129310344827587,
+        "wait_token_fraction": 0.5129310344827587
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14224137931034483,
+            "help_rate": 0.3448275862068966,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.46199999999999997,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.5129310344827587,
+            "wait_token_fraction": 0.5129310344827587
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9195751138088012,
+          "eval": {
+            "harm_rate": 0.11981566820276497,
+            "help_rate": 0.35023041474654376,
+            "mean_length": 7.233333333333333,
+            "mean_return": 0.6553333333333333,
+            "success_rate": 0.8,
+            "wait_rate": 0.5299539170506913,
+            "wait_token_fraction": 0.5299539170506913
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9550387596899225,
+          "eval": {
+            "harm_rate": 0.09823182711198428,
+            "help_rate": 0.343811394891945,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7303333333333334,
+            "success_rate": 0.9,
+            "wait_rate": 0.5579567779960707,
+            "wait_token_fraction": 0.5579567779960707
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9238805970149254,
+          "eval": {
+            "harm_rate": 0.09433962264150944,
+            "help_rate": 0.3632075471698113,
+            "mean_length": 7.066666666666666,
+            "mean_return": 0.7420000000000001,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5424528301886793,
+            "wait_token_fraction": 0.5424528301886793
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9389067524115756,
+          "eval": {
+            "harm_rate": 0.06991525423728813,
+            "help_rate": 0.3241525423728814,
+            "mean_length": 7.866666666666666,
+            "mean_return": 0.7593333333333334,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.6059322033898306,
+            "wait_token_fraction": 0.6059322033898306
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9493670886075949,
+          "eval": {
+            "harm_rate": 0.08530805687203792,
+            "help_rate": 0.36729857819905215,
+            "mean_length": 7.033333333333333,
+            "mean_return": 0.7593333333333334,
+            "success_rate": 0.9,
+            "wait_rate": 0.54739336492891,
+            "wait_token_fraction": 0.54739336492891
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 211
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08024691358024691,
+        "help_rate": 0.35185185185185186,
+        "mean_length": 8.1,
+        "mean_return": 0.8213333333333334,
+        "success_rate": 0.9833333333333333,
+        "wait_rate": 0.5679012345679012,
+        "wait_token_fraction": 0.5679012345679012
+      },
+      "improvement": {
+        "mean_return": 0.39166666666666666,
+        "success_rate": 0.3999999999999999
+      },
+      "initial_eval": {
+        "harm_rate": 0.13882863340563992,
+        "help_rate": 0.32537960954446854,
+        "mean_length": 7.683333333333334,
+        "mean_return": 0.4296666666666667,
+        "success_rate": 0.5833333333333334,
+        "wait_rate": 0.5357917570498916,
+        "wait_token_fraction": 0.5357917570498916
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13882863340563992,
+            "help_rate": 0.32537960954446854,
+            "mean_length": 7.683333333333334,
+            "mean_return": 0.4296666666666667,
+            "success_rate": 0.5833333333333334,
+            "wait_rate": 0.5357917570498916,
+            "wait_token_fraction": 0.5357917570498916
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.970125786163522,
+          "eval": {
+            "harm_rate": 0.11728395061728394,
+            "help_rate": 0.3497942386831276,
+            "mean_length": 8.1,
+            "mean_return": 0.6880000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.5329218106995884,
+            "wait_token_fraction": 0.5329218106995884
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9151712887438825,
+          "eval": {
+            "harm_rate": 0.09033613445378151,
+            "help_rate": 0.3697478991596639,
+            "mean_length": 7.933333333333334,
+            "mean_return": 0.7913333333333334,
+            "success_rate": 0.95,
+            "wait_rate": 0.5399159663865546,
+            "wait_token_fraction": 0.5399159663865546
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9307692307692308,
+          "eval": {
+            "harm_rate": 0.1134020618556701,
+            "help_rate": 0.354639175257732,
+            "mean_length": 8.083333333333334,
+            "mean_return": 0.7216666666666666,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5319587628865979,
+            "wait_token_fraction": 0.5319587628865979
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9445350734094616,
+          "eval": {
+            "harm_rate": 0.08284023668639054,
+            "help_rate": 0.33925049309664695,
+            "mean_length": 8.45,
+            "mean_return": 0.781,
+            "success_rate": 0.95,
+            "wait_rate": 0.5779092702169625,
+            "wait_token_fraction": 0.5779092702169625
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9582089552238806,
+          "eval": {
+            "harm_rate": 0.08024691358024691,
+            "help_rate": 0.35185185185185186,
+            "mean_length": 8.1,
+            "mean_return": 0.8213333333333334,
+            "success_rate": 0.9833333333333333,
+            "wait_rate": 0.5679012345679012,
+            "wait_token_fraction": 0.5679012345679012
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 257
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08644400785854617,
+        "help_rate": 0.3379174852652259,
+        "mean_length": 8.483333333333333,
+        "mean_return": 0.7636666666666667,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5756385068762279,
+        "wait_token_fraction": 0.5756385068762279
+      },
+      "improvement": {
+        "mean_return": 0.2323333333333334,
+        "success_rate": 0.2333333333333334
+      },
+      "initial_eval": {
+        "harm_rate": 0.13636363636363635,
+        "help_rate": 0.35177865612648224,
+        "mean_length": 8.433333333333334,
+        "mean_return": 0.5313333333333333,
+        "success_rate": 0.7,
+        "wait_rate": 0.5118577075098815,
+        "wait_token_fraction": 0.5118577075098815
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13636363636363635,
+            "help_rate": 0.35177865612648224,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.5313333333333333,
+            "success_rate": 0.7,
+            "wait_rate": 0.5118577075098815,
+            "wait_token_fraction": 0.5118577075098815
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9391447368421053,
+          "eval": {
+            "harm_rate": 0.11585365853658537,
+            "help_rate": 0.34552845528455284,
+            "mean_length": 8.2,
+            "mean_return": 0.6193333333333333,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5386178861788617,
+            "wait_token_fraction": 0.5386178861788617
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.939935064935065,
+          "eval": {
+            "harm_rate": 0.11560693641618497,
+            "help_rate": 0.3583815028901734,
+            "mean_length": 8.65,
+            "mean_return": 0.7603333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5260115606936416,
+            "wait_token_fraction": 0.5260115606936416
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9451038575667656,
+          "eval": {
+            "harm_rate": 0.10548523206751055,
+            "help_rate": 0.35864978902953587,
+            "mean_length": 7.9,
+            "mean_return": 0.6920000000000001,
+            "success_rate": 0.85,
+            "wait_rate": 0.5358649789029536,
+            "wait_token_fraction": 0.5358649789029536
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9578207381370826,
+          "eval": {
+            "harm_rate": 0.07386363636363637,
+            "help_rate": 0.32765151515151514,
+            "mean_length": 8.8,
+            "mean_return": 0.7906666666666666,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5984848484848485,
+            "wait_token_fraction": 0.5984848484848485
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9486725663716814,
+          "eval": {
+            "harm_rate": 0.08644400785854617,
+            "help_rate": 0.3379174852652259,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7636666666666667,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5756385068762279,
+            "wait_token_fraction": 0.5756385068762279
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 307
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08196721311475409,
+        "help_rate": 0.3401639344262295,
+        "mean_length": 8.133333333333333,
+        "mean_return": 0.804,
+        "success_rate": 0.9666666666666667,
+        "wait_rate": 0.5778688524590164,
+        "wait_token_fraction": 0.5778688524590164
+      },
+      "improvement": {
+        "mean_return": 0.27766666666666673,
+        "success_rate": 0.2833333333333333
+      },
+      "initial_eval": {
+        "harm_rate": 0.10615711252653928,
+        "help_rate": 0.3354564755838641,
+        "mean_length": 7.85,
+        "mean_return": 0.5263333333333333,
+        "success_rate": 0.6833333333333333,
+        "wait_rate": 0.5583864118895966,
+        "wait_token_fraction": 0.5583864118895966
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10615711252653928,
+            "help_rate": 0.3354564755838641,
+            "mean_length": 7.85,
+            "mean_return": 0.5263333333333333,
+            "success_rate": 0.6833333333333333,
+            "wait_rate": 0.5583864118895966,
+            "wait_token_fraction": 0.5583864118895966
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.9255813953488372,
+          "eval": {
+            "harm_rate": 0.11823647294589178,
+            "help_rate": 0.35070140280561124,
+            "mean_length": 8.316666666666666,
+            "mean_return": 0.6503333333333334,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.531062124248497,
+            "wait_token_fraction": 0.531062124248497
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.9100294985250738,
+          "eval": {
+            "harm_rate": 0.11860940695296524,
+            "help_rate": 0.36809815950920244,
+            "mean_length": 8.15,
+            "mean_return": 0.7036666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5132924335378323,
+            "wait_token_fraction": 0.5132924335378323
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.9456140350877194,
+          "eval": {
+            "harm_rate": 0.10940919037199125,
+            "help_rate": 0.3741794310722101,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.7643333333333333,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5164113785557987,
+            "wait_token_fraction": 0.5164113785557987
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.9521452145214522,
+          "eval": {
+            "harm_rate": 0.09662921348314607,
+            "help_rate": 0.34831460674157305,
+            "mean_length": 7.416666666666667,
+            "mean_return": 0.7183333333333334,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5550561797752809,
+            "wait_token_fraction": 0.5550561797752809
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.9398373983739837,
+          "eval": {
+            "harm_rate": 0.08196721311475409,
+            "help_rate": 0.3401639344262295,
+            "mean_length": 8.133333333333333,
+            "mean_return": 0.804,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5778688524590164,
+            "wait_token_fraction": 0.5778688524590164
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "critic_td",
+      "seed": 359
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.1,
+        "help_rate": 0.334,
+        "mean_length": 8.333333333333334,
+        "mean_return": 0.7333333333333333,
+        "success_rate": 0.9,
+        "wait_rate": 0.566,
+        "wait_token_fraction": 0.566
+      },
+      "improvement": {
+        "mean_return": 0.18133333333333335,
+        "success_rate": 0.20000000000000007
+      },
+      "initial_eval": {
+        "harm_rate": 0.11936936936936937,
+        "help_rate": 0.35585585585585583,
+        "mean_length": 7.4,
+        "mean_return": 0.5519999999999999,
+        "success_rate": 0.7,
+        "wait_rate": 0.5247747747747747,
+        "wait_token_fraction": 0.5247747747747747
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.11936936936936937,
+            "help_rate": 0.35585585585585583,
+            "mean_length": 7.4,
+            "mean_return": 0.5519999999999999,
+            "success_rate": 0.7,
+            "wait_rate": 0.5247747747747747,
+            "wait_token_fraction": 0.5247747747747747
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6061588330632091,
+          "eval": {
+            "harm_rate": 0.106,
+            "help_rate": 0.35,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.7,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.544,
+            "wait_token_fraction": 0.544
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.5880398671096345,
+          "eval": {
+            "harm_rate": 0.0893719806763285,
+            "help_rate": 0.3695652173913043,
+            "mean_length": 6.9,
+            "mean_return": 0.6953333333333334,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5410628019323671,
+            "wait_token_fraction": 0.5410628019323671
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6398763523956723,
+          "eval": {
+            "harm_rate": 0.08492569002123142,
+            "help_rate": 0.3630573248407643,
+            "mean_length": 7.85,
+            "mean_return": 0.7929999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5520169851380042,
+            "wait_token_fraction": 0.5520169851380042
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6217391304347826,
+          "eval": {
+            "harm_rate": 0.11522633744855967,
+            "help_rate": 0.3497942386831276,
+            "mean_length": 8.1,
+            "mean_return": 0.738,
+            "success_rate": 0.9,
+            "wait_rate": 0.5349794238683128,
+            "wait_token_fraction": 0.5349794238683128
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.5977198697068404,
+          "eval": {
+            "harm_rate": 0.1,
+            "help_rate": 0.334,
+            "mean_length": 8.333333333333334,
+            "mean_return": 0.7333333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.566,
+            "wait_token_fraction": 0.566
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 11
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10037878787878787,
+        "help_rate": 0.3352272727272727,
+        "mean_length": 8.8,
+        "mean_return": 0.7739999999999999,
+        "success_rate": 0.95,
+        "wait_rate": 0.5643939393939394,
+        "wait_token_fraction": 0.5643939393939394
+      },
+      "improvement": {
+        "mean_return": 0.29599999999999993,
+        "success_rate": 0.33333333333333326
+      },
+      "initial_eval": {
+        "harm_rate": 0.13942307692307693,
+        "help_rate": 0.37259615384615385,
+        "mean_length": 6.933333333333334,
+        "mean_return": 0.478,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.4879807692307692,
+        "wait_token_fraction": 0.4879807692307692
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13942307692307693,
+            "help_rate": 0.37259615384615385,
+            "mean_length": 6.933333333333334,
+            "mean_return": 0.478,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.4879807692307692,
+            "wait_token_fraction": 0.4879807692307692
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6814449917898193,
+          "eval": {
+            "harm_rate": 0.10021321961620469,
+            "help_rate": 0.34328358208955223,
+            "mean_length": 7.816666666666666,
+            "mean_return": 0.6769999999999999,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5565031982942431,
+            "wait_token_fraction": 0.5565031982942431
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.6884735202492211,
+          "eval": {
+            "harm_rate": 0.09649122807017543,
+            "help_rate": 0.3574561403508772,
+            "mean_length": 7.6,
+            "mean_return": 0.7146666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5460526315789473,
+            "wait_token_fraction": 0.5460526315789473
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.622154779969651,
+          "eval": {
+            "harm_rate": 0.10344827586206896,
+            "help_rate": 0.3426724137931034,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.712,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5538793103448276,
+            "wait_token_fraction": 0.5538793103448276
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6320754716981132,
+          "eval": {
+            "harm_rate": 0.11728395061728394,
+            "help_rate": 0.37037037037037035,
+            "mean_length": 8.1,
+            "mean_return": 0.7546666666666667,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5123456790123457,
+            "wait_token_fraction": 0.5123456790123457
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.6784565916398714,
+          "eval": {
+            "harm_rate": 0.10037878787878787,
+            "help_rate": 0.3352272727272727,
+            "mean_length": 8.8,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5643939393939394,
+            "wait_token_fraction": 0.5643939393939394
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 29
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09766454352441614,
+        "help_rate": 0.37579617834394907,
+        "mean_length": 7.85,
+        "mean_return": 0.7929999999999999,
+        "success_rate": 0.95,
+        "wait_rate": 0.5265392781316348,
+        "wait_token_fraction": 0.5265392781316348
+      },
+      "improvement": {
+        "mean_return": 0.22299999999999986,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.12448979591836734,
+        "help_rate": 0.32857142857142857,
+        "mean_length": 8.166666666666666,
+        "mean_return": 0.5700000000000001,
+        "success_rate": 0.7333333333333333,
+        "wait_rate": 0.5469387755102041,
+        "wait_token_fraction": 0.5469387755102041
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.12448979591836734,
+            "help_rate": 0.32857142857142857,
+            "mean_length": 8.166666666666666,
+            "mean_return": 0.5700000000000001,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5469387755102041,
+            "wait_token_fraction": 0.5469387755102041
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6701807228915663,
+          "eval": {
+            "harm_rate": 0.12260536398467432,
+            "help_rate": 0.3448275862068966,
+            "mean_length": 8.7,
+            "mean_return": 0.6426666666666667,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5325670498084292,
+            "wait_token_fraction": 0.5325670498084292
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.5916398713826366,
+          "eval": {
+            "harm_rate": 0.08414872798434442,
+            "help_rate": 0.33268101761252444,
+            "mean_length": 8.516666666666667,
+            "mean_return": 0.7463333333333334,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5831702544031311,
+            "wait_token_fraction": 0.5831702544031311
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6559139784946236,
+          "eval": {
+            "harm_rate": 0.08498023715415019,
+            "help_rate": 0.3359683794466403,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.748,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5790513833992095,
+            "wait_token_fraction": 0.5790513833992095
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6629746835443038,
+          "eval": {
+            "harm_rate": 0.10617760617760617,
+            "help_rate": 0.3532818532818533,
+            "mean_length": 8.633333333333333,
+            "mean_return": 0.7606666666666667,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5405405405405406,
+            "wait_token_fraction": 0.5405405405405406
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.6636085626911316,
+          "eval": {
+            "harm_rate": 0.09766454352441614,
+            "help_rate": 0.37579617834394907,
+            "mean_length": 7.85,
+            "mean_return": 0.7929999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5265392781316348,
+            "wait_token_fraction": 0.5265392781316348
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 47
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09832635983263599,
+        "help_rate": 0.3598326359832636,
+        "mean_length": 7.966666666666667,
+        "mean_return": 0.7739999999999999,
+        "success_rate": 0.9333333333333333,
+        "wait_rate": 0.5418410041841004,
+        "wait_token_fraction": 0.5418410041841004
+      },
+      "improvement": {
+        "mean_return": 0.21499999999999997,
+        "success_rate": 0.21666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.14376321353065538,
+        "help_rate": 0.346723044397463,
+        "mean_length": 7.883333333333334,
+        "mean_return": 0.5589999999999999,
+        "success_rate": 0.7166666666666667,
+        "wait_rate": 0.5095137420718816,
+        "wait_token_fraction": 0.5095137420718816
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14376321353065538,
+            "help_rate": 0.346723044397463,
+            "mean_length": 7.883333333333334,
+            "mean_return": 0.5589999999999999,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.5095137420718816,
+            "wait_token_fraction": 0.5095137420718816
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6116504854368932,
+          "eval": {
+            "harm_rate": 0.10743801652892562,
+            "help_rate": 0.33884297520661155,
+            "mean_length": 8.066666666666666,
+            "mean_return": 0.6553333333333333,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5537190082644629,
+            "wait_token_fraction": 0.5537190082644629
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.6293103448275862,
+          "eval": {
+            "harm_rate": 0.11252653927813164,
+            "help_rate": 0.3651804670912951,
+            "mean_length": 7.85,
+            "mean_return": 0.693,
+            "success_rate": 0.85,
+            "wait_rate": 0.5222929936305732,
+            "wait_token_fraction": 0.5222929936305732
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.5762463343108505,
+          "eval": {
+            "harm_rate": 0.10897435897435898,
+            "help_rate": 0.3803418803418803,
+            "mean_length": 7.8,
+            "mean_return": 0.7773333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5106837606837606,
+            "wait_token_fraction": 0.5106837606837606
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.7030201342281879,
+          "eval": {
+            "harm_rate": 0.07157464212678936,
+            "help_rate": 0.35787321063394684,
+            "mean_length": 8.15,
+            "mean_return": 0.787,
+            "success_rate": 0.95,
+            "wait_rate": 0.5705521472392638,
+            "wait_token_fraction": 0.5705521472392638
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.6289808917197452,
+          "eval": {
+            "harm_rate": 0.09832635983263599,
+            "help_rate": 0.3598326359832636,
+            "mean_length": 7.966666666666667,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5418410041841004,
+            "wait_token_fraction": 0.5418410041841004
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 83
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09565217391304348,
+        "help_rate": 0.3717391304347826,
+        "mean_length": 7.666666666666667,
+        "mean_return": 0.7966666666666666,
+        "success_rate": 0.95,
+        "wait_rate": 0.532608695652174,
+        "wait_token_fraction": 0.532608695652174
+      },
+      "improvement": {
+        "mean_return": 0.2646666666666666,
+        "success_rate": 0.25
+      },
+      "initial_eval": {
+        "harm_rate": 0.13095238095238096,
+        "help_rate": 0.3492063492063492,
+        "mean_length": 8.4,
+        "mean_return": 0.532,
+        "success_rate": 0.7,
+        "wait_rate": 0.5198412698412699,
+        "wait_token_fraction": 0.5198412698412699
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13095238095238096,
+            "help_rate": 0.3492063492063492,
+            "mean_length": 8.4,
+            "mean_return": 0.532,
+            "success_rate": 0.7,
+            "wait_rate": 0.5198412698412699,
+            "wait_token_fraction": 0.5198412698412699
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6867088607594937,
+          "eval": {
+            "harm_rate": 0.16835699797160245,
+            "help_rate": 0.3630831643002028,
+            "mean_length": 8.216666666666667,
+            "mean_return": 0.5523333333333333,
+            "success_rate": 0.7166666666666667,
+            "wait_rate": 0.4685598377281947,
+            "wait_token_fraction": 0.4685598377281947
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.5735963581183612,
+          "eval": {
+            "harm_rate": 0.12910284463894967,
+            "help_rate": 0.350109409190372,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.631,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5207877461706784,
+            "wait_token_fraction": 0.5207877461706784
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.5646879756468798,
+          "eval": {
+            "harm_rate": 0.11643835616438356,
+            "help_rate": 0.3858447488584475,
+            "mean_length": 7.3,
+            "mean_return": 0.754,
+            "success_rate": 0.9,
+            "wait_rate": 0.4977168949771689,
+            "wait_token_fraction": 0.4977168949771689
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6602564102564102,
+          "eval": {
+            "harm_rate": 0.07482993197278912,
+            "help_rate": 0.3424036281179138,
+            "mean_length": 7.35,
+            "mean_return": 0.753,
+            "success_rate": 0.9,
+            "wait_rate": 0.5827664399092971,
+            "wait_token_fraction": 0.5827664399092971
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.6370056497175142,
+          "eval": {
+            "harm_rate": 0.09565217391304348,
+            "help_rate": 0.3717391304347826,
+            "mean_length": 7.666666666666667,
+            "mean_return": 0.7966666666666666,
+            "success_rate": 0.95,
+            "wait_rate": 0.532608695652174,
+            "wait_token_fraction": 0.532608695652174
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 131
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08705357142857142,
+        "help_rate": 0.3638392857142857,
+        "mean_length": 7.466666666666667,
+        "mean_return": 0.8006666666666666,
+        "success_rate": 0.95,
+        "wait_rate": 0.5491071428571429,
+        "wait_token_fraction": 0.5491071428571429
+      },
+      "improvement": {
+        "mean_return": 0.36166666666666664,
+        "success_rate": 0.35
+      },
+      "initial_eval": {
+        "harm_rate": 0.15734989648033126,
+        "help_rate": 0.3416149068322981,
+        "mean_length": 8.05,
+        "mean_return": 0.439,
+        "success_rate": 0.6,
+        "wait_rate": 0.5010351966873706,
+        "wait_token_fraction": 0.5010351966873706
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.15734989648033126,
+            "help_rate": 0.3416149068322981,
+            "mean_length": 8.05,
+            "mean_return": 0.439,
+            "success_rate": 0.6,
+            "wait_rate": 0.5010351966873706,
+            "wait_token_fraction": 0.5010351966873706
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.7286585365853658,
+          "eval": {
+            "harm_rate": 0.10398230088495575,
+            "help_rate": 0.3473451327433628,
+            "mean_length": 7.533333333333333,
+            "mean_return": 0.5993333333333334,
+            "success_rate": 0.75,
+            "wait_rate": 0.5486725663716814,
+            "wait_token_fraction": 0.5486725663716814
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.75,
+          "eval": {
+            "harm_rate": 0.10882956878850103,
+            "help_rate": 0.3675564681724846,
+            "mean_length": 8.116666666666667,
+            "mean_return": 0.7043333333333333,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5236139630390144,
+            "wait_token_fraction": 0.5236139630390144
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.5738993710691824,
+          "eval": {
+            "harm_rate": 0.08207343412526998,
+            "help_rate": 0.34773218142548595,
+            "mean_length": 7.716666666666667,
+            "mean_return": 0.7123333333333334,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5701943844492441,
+            "wait_token_fraction": 0.5701943844492441
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6427457098283932,
+          "eval": {
+            "harm_rate": 0.1167608286252354,
+            "help_rate": 0.3578154425612053,
+            "mean_length": 8.85,
+            "mean_return": 0.773,
+            "success_rate": 0.95,
+            "wait_rate": 0.5254237288135594,
+            "wait_token_fraction": 0.5254237288135594
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.5789473684210527,
+          "eval": {
+            "harm_rate": 0.08705357142857142,
+            "help_rate": 0.3638392857142857,
+            "mean_length": 7.466666666666667,
+            "mean_return": 0.8006666666666666,
+            "success_rate": 0.95,
+            "wait_rate": 0.5491071428571429,
+            "wait_token_fraction": 0.5491071428571429
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 173
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.0924170616113744,
+        "help_rate": 0.3696682464454976,
+        "mean_length": 7.033333333333333,
+        "mean_return": 0.7426666666666667,
+        "success_rate": 0.8833333333333333,
+        "wait_rate": 0.5379146919431279,
+        "wait_token_fraction": 0.5379146919431279
+      },
+      "improvement": {
+        "mean_return": 0.28066666666666673,
+        "success_rate": 0.2666666666666666
+      },
+      "initial_eval": {
+        "harm_rate": 0.14224137931034483,
+        "help_rate": 0.3448275862068966,
+        "mean_length": 7.733333333333333,
+        "mean_return": 0.46199999999999997,
+        "success_rate": 0.6166666666666667,
+        "wait_rate": 0.5129310344827587,
+        "wait_token_fraction": 0.5129310344827587
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.14224137931034483,
+            "help_rate": 0.3448275862068966,
+            "mean_length": 7.733333333333333,
+            "mean_return": 0.46199999999999997,
+            "success_rate": 0.6166666666666667,
+            "wait_rate": 0.5129310344827587,
+            "wait_token_fraction": 0.5129310344827587
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6646433990895296,
+          "eval": {
+            "harm_rate": 0.12672811059907835,
+            "help_rate": 0.3617511520737327,
+            "mean_length": 7.233333333333333,
+            "mean_return": 0.6386666666666667,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.511520737327189,
+            "wait_token_fraction": 0.511520737327189
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.703875968992248,
+          "eval": {
+            "harm_rate": 0.10805500982318271,
+            "help_rate": 0.3516699410609037,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.7136666666666667,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5402750491159135,
+            "wait_token_fraction": 0.5402750491159135
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6402985074626866,
+          "eval": {
+            "harm_rate": 0.08726415094339622,
+            "help_rate": 0.3584905660377358,
+            "mean_length": 7.066666666666666,
+            "mean_return": 0.7420000000000001,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5542452830188679,
+            "wait_token_fraction": 0.5542452830188679
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.7395498392282959,
+          "eval": {
+            "harm_rate": 0.09745762711864407,
+            "help_rate": 0.3220338983050847,
+            "mean_length": 7.866666666666666,
+            "mean_return": 0.7260000000000001,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5805084745762712,
+            "wait_token_fraction": 0.5805084745762712
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.5854430379746836,
+          "eval": {
+            "harm_rate": 0.0924170616113744,
+            "help_rate": 0.3696682464454976,
+            "mean_length": 7.033333333333333,
+            "mean_return": 0.7426666666666667,
+            "success_rate": 0.8833333333333333,
+            "wait_rate": 0.5379146919431279,
+            "wait_token_fraction": 0.5379146919431279
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 211
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.10905349794238683,
+        "help_rate": 0.360082304526749,
+        "mean_length": 8.1,
+        "mean_return": 0.7546666666666667,
+        "success_rate": 0.9166666666666666,
+        "wait_rate": 0.5308641975308642,
+        "wait_token_fraction": 0.5308641975308642
+      },
+      "improvement": {
+        "mean_return": 0.325,
+        "success_rate": 0.33333333333333326
+      },
+      "initial_eval": {
+        "harm_rate": 0.13882863340563992,
+        "help_rate": 0.32537960954446854,
+        "mean_length": 7.683333333333334,
+        "mean_return": 0.4296666666666667,
+        "success_rate": 0.5833333333333334,
+        "wait_rate": 0.5357917570498916,
+        "wait_token_fraction": 0.5357917570498916
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13882863340563992,
+            "help_rate": 0.32537960954446854,
+            "mean_length": 7.683333333333334,
+            "mean_return": 0.4296666666666667,
+            "success_rate": 0.5833333333333334,
+            "wait_rate": 0.5357917570498916,
+            "wait_token_fraction": 0.5357917570498916
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.7248427672955975,
+          "eval": {
+            "harm_rate": 0.1111111111111111,
+            "help_rate": 0.34156378600823045,
+            "mean_length": 8.1,
+            "mean_return": 0.6213333333333334,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5473251028806584,
+            "wait_token_fraction": 0.5473251028806584
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.6492659053833605,
+          "eval": {
+            "harm_rate": 0.1323529411764706,
+            "help_rate": 0.3760504201680672,
+            "mean_length": 7.933333333333334,
+            "mean_return": 0.6746666666666666,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.49159663865546216,
+            "wait_token_fraction": 0.49159663865546216
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6138461538461538,
+          "eval": {
+            "harm_rate": 0.1134020618556701,
+            "help_rate": 0.36082474226804123,
+            "mean_length": 8.083333333333334,
+            "mean_return": 0.7383333333333333,
+            "success_rate": 0.9,
+            "wait_rate": 0.5257731958762887,
+            "wait_token_fraction": 0.5257731958762887
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6101141924959217,
+          "eval": {
+            "harm_rate": 0.10453648915187377,
+            "help_rate": 0.358974358974359,
+            "mean_length": 8.45,
+            "mean_return": 0.7643333333333333,
+            "success_rate": 0.9333333333333333,
+            "wait_rate": 0.5364891518737672,
+            "wait_token_fraction": 0.5364891518737672
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.6432835820895523,
+          "eval": {
+            "harm_rate": 0.10905349794238683,
+            "help_rate": 0.360082304526749,
+            "mean_length": 8.1,
+            "mean_return": 0.7546666666666667,
+            "success_rate": 0.9166666666666666,
+            "wait_rate": 0.5308641975308642,
+            "wait_token_fraction": 0.5308641975308642
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 257
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.09037328094302555,
+        "help_rate": 0.3575638506876228,
+        "mean_length": 8.483333333333333,
+        "mean_return": 0.797,
+        "success_rate": 0.9666666666666667,
+        "wait_rate": 0.5520628683693517,
+        "wait_token_fraction": 0.5520628683693517
+      },
+      "improvement": {
+        "mean_return": 0.2656666666666667,
+        "success_rate": 0.2666666666666667
+      },
+      "initial_eval": {
+        "harm_rate": 0.13636363636363635,
+        "help_rate": 0.35177865612648224,
+        "mean_length": 8.433333333333334,
+        "mean_return": 0.5313333333333333,
+        "success_rate": 0.7,
+        "wait_rate": 0.5118577075098815,
+        "wait_token_fraction": 0.5118577075098815
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.13636363636363635,
+            "help_rate": 0.35177865612648224,
+            "mean_length": 8.433333333333334,
+            "mean_return": 0.5313333333333333,
+            "success_rate": 0.7,
+            "wait_rate": 0.5118577075098815,
+            "wait_token_fraction": 0.5118577075098815
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.662828947368421,
+          "eval": {
+            "harm_rate": 0.12195121951219512,
+            "help_rate": 0.3394308943089431,
+            "mean_length": 8.2,
+            "mean_return": 0.5693333333333332,
+            "success_rate": 0.7333333333333333,
+            "wait_rate": 0.5386178861788617,
+            "wait_token_fraction": 0.5386178861788617
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.5909090909090909,
+          "eval": {
+            "harm_rate": 0.11175337186897881,
+            "help_rate": 0.33140655105973027,
+            "mean_length": 8.65,
+            "mean_return": 0.6436666666666666,
+            "success_rate": 0.8166666666666667,
+            "wait_rate": 0.5568400770712909,
+            "wait_token_fraction": 0.5568400770712909
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6543026706231454,
+          "eval": {
+            "harm_rate": 0.10759493670886076,
+            "help_rate": 0.3670886075949367,
+            "mean_length": 7.9,
+            "mean_return": 0.7086666666666667,
+            "success_rate": 0.8666666666666667,
+            "wait_rate": 0.5253164556962026,
+            "wait_token_fraction": 0.5253164556962026
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.6449912126537786,
+          "eval": {
+            "harm_rate": 0.10227272727272728,
+            "help_rate": 0.3560606060606061,
+            "mean_length": 8.8,
+            "mean_return": 0.7739999999999999,
+            "success_rate": 0.95,
+            "wait_rate": 0.5416666666666666,
+            "wait_token_fraction": 0.5416666666666666
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.7008849557522124,
+          "eval": {
+            "harm_rate": 0.09037328094302555,
+            "help_rate": 0.3575638506876228,
+            "mean_length": 8.483333333333333,
+            "mean_return": 0.797,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5520628683693517,
+            "wait_token_fraction": 0.5520628683693517
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 307
+    },
+    {
+      "config": {
+        "critic_replay_limit": 80,
+        "entropy_bonus": 0.003,
+        "eval_every": 10,
+        "eval_groups": 60,
+        "gate_min_count": 4,
+        "group_size": 5,
+        "groups_per_iteration": 16,
+        "learning_rate": 0.035,
+        "max_steps": 14,
+        "scenario_name": "long_wait",
+        "train_iterations": 50
+      },
+      "final_eval": {
+        "harm_rate": 0.08401639344262295,
+        "help_rate": 0.3401639344262295,
+        "mean_length": 8.133333333333333,
+        "mean_return": 0.804,
+        "success_rate": 0.9666666666666667,
+        "wait_rate": 0.5758196721311475,
+        "wait_token_fraction": 0.5758196721311475
+      },
+      "improvement": {
+        "mean_return": 0.27766666666666673,
+        "success_rate": 0.2833333333333333
+      },
+      "initial_eval": {
+        "harm_rate": 0.10615711252653928,
+        "help_rate": 0.3354564755838641,
+        "mean_length": 7.85,
+        "mean_return": 0.5263333333333333,
+        "success_rate": 0.6833333333333333,
+        "wait_rate": 0.5583864118895966,
+        "wait_token_fraction": 0.5583864118895966
+      },
+      "learning_curve": [
+        {
+          "critic_fraction": 0.0,
+          "eval": {
+            "harm_rate": 0.10615711252653928,
+            "help_rate": 0.3354564755838641,
+            "mean_length": 7.85,
+            "mean_return": 0.5263333333333333,
+            "success_rate": 0.6833333333333333,
+            "wait_rate": 0.5583864118895966,
+            "wait_token_fraction": 0.5583864118895966
+          },
+          "iteration": 0
+        },
+        {
+          "critic_fraction": 0.6852713178294574,
+          "eval": {
+            "harm_rate": 0.15030060120240482,
+            "help_rate": 0.3587174348697395,
+            "mean_length": 8.316666666666666,
+            "mean_return": 0.5336666666666667,
+            "success_rate": 0.7,
+            "wait_rate": 0.4909819639278557,
+            "wait_token_fraction": 0.4909819639278557
+          },
+          "iteration": 10
+        },
+        {
+          "critic_fraction": 0.6415929203539823,
+          "eval": {
+            "harm_rate": 0.130879345603272,
+            "help_rate": 0.36400817995910023,
+            "mean_length": 8.15,
+            "mean_return": 0.6703333333333333,
+            "success_rate": 0.8333333333333334,
+            "wait_rate": 0.5051124744376279,
+            "wait_token_fraction": 0.5051124744376279
+          },
+          "iteration": 20
+        },
+        {
+          "critic_fraction": 0.6368421052631579,
+          "eval": {
+            "harm_rate": 0.10284463894967177,
+            "help_rate": 0.37199124726477023,
+            "mean_length": 7.616666666666666,
+            "mean_return": 0.7976666666666666,
+            "success_rate": 0.95,
+            "wait_rate": 0.5251641137855579,
+            "wait_token_fraction": 0.5251641137855579
+          },
+          "iteration": 30
+        },
+        {
+          "critic_fraction": 0.7343234323432343,
+          "eval": {
+            "harm_rate": 0.1101123595505618,
+            "help_rate": 0.34831460674157305,
+            "mean_length": 7.416666666666667,
+            "mean_return": 0.635,
+            "success_rate": 0.7833333333333333,
+            "wait_rate": 0.5415730337078651,
+            "wait_token_fraction": 0.5415730337078651
+          },
+          "iteration": 40
+        },
+        {
+          "critic_fraction": 0.7284552845528456,
+          "eval": {
+            "harm_rate": 0.08401639344262295,
+            "help_rate": 0.3401639344262295,
+            "mean_length": 8.133333333333333,
+            "mean_return": 0.804,
+            "success_rate": 0.9666666666666667,
+            "wait_rate": 0.5758196721311475,
+            "wait_token_fraction": 0.5758196721311475
+          },
+          "iteration": 50
+        }
+      ],
+      "method": "coverage_gated",
+      "seed": 359
+    }
+  ],
+  "summary": {
+    "best_by_final_return": "critic_td",
+    "coverage_minus_group_return": 0.008333333333333304,
+    "coverage_minus_group_success": 0.008333333333333415
+  }
+}
