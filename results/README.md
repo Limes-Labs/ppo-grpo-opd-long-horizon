@@ -17,6 +17,14 @@ Current artifacts:
   reduction from credit assignment on the long-wait toy case.
 - `variance_credit_grid_seed17.md` - human-readable table and reading notes for
   the same estimator grid.
+- `length_imbalance_audit_seedset.json` - horizon sweep testing within-group
+  length imbalance and a length-adjusted group baseline.
+- `length_imbalance_audit_seedset.md` - human-readable table for the same
+  length-imbalance audit.
+- `token_cost_sensitivity_20seed.json` - token-cost robustness audit over
+  baseline and long-wait scenarios.
+- `token_cost_sensitivity_20seed.md` - human-readable table for the same
+  token-cost audit.
 - `figures/deep_matrix_delta.svg` - critic-minus-group bar chart.
 - `figures/deep_matrix_coverage.svg` - critic coverage scatter plot.
 
@@ -45,6 +53,18 @@ Regenerate the variance/credit grid with:
 python3 -m experiments.variance_credit_grid \
   --output-json results/variance_credit_grid_seed17.json \
   --output-md results/variance_credit_grid_seed17.md
+```
+
+Regenerate the robustness audits with:
+
+```bash
+python3 -m experiments.length_imbalance_audit \
+  --output-json results/length_imbalance_audit_seedset.json \
+  --output-md results/length_imbalance_audit_seedset.md
+
+python3 -m experiments.token_cost_sensitivity \
+  --output-json results/token_cost_sensitivity_20seed.json \
+  --output-md results/token_cost_sensitivity_20seed.md
 ```
 
 Rendered public paper artifacts live under `public/` and are tracked with

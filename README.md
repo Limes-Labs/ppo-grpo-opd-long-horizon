@@ -31,11 +31,19 @@ drop-in replacements for policy optimization.
   group size, critic budget, observability, and sparse rewards.
 - `experiments/variance_credit_grid.py` - estimator grid separating variance
   reduction mechanisms from step-level credit assignment.
+- `experiments/length_imbalance_audit.py` - audit of group-relative estimators
+  under increasing within-group trajectory-length imbalance.
+- `experiments/token_cost_sensitivity.py` - reward-shaping robustness check
+  over token costs, including the zero-cost case.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
 - `results/deep_matrix_20seed.md` - canonical multi-seed result table used for
   the public PDF/DOCX paper artifacts.
 - `results/variance_credit_grid_seed17.md` - canonical result table for the
   variance-reduction versus credit-assignment grid.
+- `results/length_imbalance_audit_seedset.md` - canonical length-imbalance
+  audit table.
+- `results/token_cost_sensitivity_20seed.md` - canonical token-cost
+  sensitivity table.
 - `public/ppo_grpo_opd_long_horizon.pdf` and
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
   artifacts with charts and result tables. `paper/main.tex` is the full
@@ -113,6 +121,18 @@ python3 -m experiments.variance_credit_grid \
   --output-md results/variance_credit_grid_seed17.md
 ```
 
+Regenerate the length-imbalance and token-cost audits:
+
+```bash
+python3 -m experiments.length_imbalance_audit \
+  --output-json results/length_imbalance_audit_seedset.json \
+  --output-md results/length_imbalance_audit_seedset.md
+
+python3 -m experiments.token_cost_sensitivity \
+  --output-json results/token_cost_sensitivity_20seed.json \
+  --output-md results/token_cost_sensitivity_20seed.md
+```
+
 Regenerate PDF/DOCX paper artifacts with a Python environment that includes
 `reportlab`, `python-docx`, and `Pillow`:
 
@@ -130,8 +150,9 @@ Build the full LaTeX paper:
 
 The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
-`results/variance_credit_grid_seed17.json`, compiles the paper with `tectonic`,
-and checks that the rendered PDF is at least 30 pages.
+`results/variance_credit_grid_seed17.json`, plus the length-imbalance and
+token-cost audit JSON files. It compiles the paper with `tectonic` and checks
+that the rendered PDF is at least 30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
@@ -171,6 +192,14 @@ canonical long-wait run, a global baseline reduces the REINFORCE second moment
 without creating within-trajectory credit variation, while learned critic TD
 and sampled Monte Carlo value estimates create step-level variation and improve
 oracle-advantage correlation over sibling group normalization.
+
+The length-imbalance audit tests a simple length-adjusted group baseline. As
+maximum horizon grows from 4 to 20, mean within-group length range grows from
+1.775 to 13.439 tokens; at the longest horizon, critic TD reaches `r=0.811`
+while group total return is `r=0.266` and length-adjusted group return is
+`r=0.260`. The token-cost audit checks that this is not just the explicit
+per-token penalty: in the long-wait zero-cost row, critic-minus-group
+correlation is `+0.552` over 20 seeds.
 
 ## Working Thesis
 

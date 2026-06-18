@@ -64,8 +64,12 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("paper/generated/raw_seed_table.tex"),
         Path("paper/generated/raw_error_table.tex"),
         Path("paper/generated/variance_credit_table.tex"),
+        Path("paper/generated/length_imbalance_table.tex"),
+        Path("paper/generated/token_cost_table.tex"),
         Path("results/deep_matrix_20seed.json"),
         Path("results/variance_credit_grid_seed17.json"),
+        Path("results/length_imbalance_audit_seedset.json"),
+        Path("results/token_cost_sensitivity_20seed.json"),
         Path("public/figures/deep_matrix_delta.png"),
         Path("public/figures/deep_matrix_coverage.png"),
     ]
@@ -100,6 +104,8 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
             "page_count_ok": page_count >= min_pages,
             "result_source": "results/deep_matrix_20seed.json",
             "variance_credit_source": "results/variance_credit_grid_seed17.json",
+            "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
+            "token_cost_source": "results/token_cost_sensitivity_20seed.json",
         },
     }
 

@@ -16,8 +16,12 @@ FULL_CASE_TABLE = ROOT / "paper/generated/full_case_table.tex"
 RAW_SEED_TABLE = ROOT / "paper/generated/raw_seed_table.tex"
 RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
 VARIANCE_CREDIT_TABLE = ROOT / "paper/generated/variance_credit_table.tex"
+LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
+TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
+LENGTH_IMBALANCE = ROOT / "results/length_imbalance_audit_seedset.json"
+TOKEN_COST = ROOT / "results/token_cost_sensitivity_20seed.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -50,9 +54,12 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\includegraphics[width=\linewidth]{deep_matrix_delta.png}", text)
         self.assertIn(r"\DeepClearCriticCases\ clear critic-favorable cases", text)
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
+        self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
+        self.assertIn(r"\input{generated/token_cost_table.tex}", text)
         self.assertIn("near tie", text)
         self.assertIn("not independent causal evidence", text)
         self.assertIn("not a closed-loop", text)
+        self.assertIn("controlled estimator-fidelity toy", text)
 
     def test_generated_latex_inputs_match_matrix_json(self) -> None:
         matrix = json.loads(MATRIX.read_text())
@@ -87,12 +94,28 @@ class LatexPaperTests(unittest.TestCase):
 
         variance_credit = json.loads(VARIANCE_CREDIT.read_text())
         variance_table = VARIANCE_CREDIT_TABLE.read_text()
-        self.assertIn("Learned critic TD", variance_table)
-        self.assertIn("Sampled MC value", variance_table)
-        self.assertIn(r"\begin{tabularx}", variance_table)
+        self.assertIn("Critic TD", variance_table)
+        self.assertIn("Sampled MC", variance_table)
+        self.assertIn(r"\begin{tabular}", variance_table)
         self.assertEqual(
             variance_credit["summary"]["best_non_oracle_by_correlation"],
             "critic_td",
+        )
+
+        length = json.loads(LENGTH_IMBALANCE.read_text())
+        length_table = LENGTH_IMBALANCE_TABLE.read_text()
+        self.assertIn(r"$H_{\max}$", length_table)
+        self.assertEqual(
+            length["summary"]["critic_wins_vs_group_total"],
+            len(length["horizon_summaries"]),
+        )
+
+        token_cost = json.loads(TOKEN_COST.read_text())
+        token_table = TOKEN_COST_TABLE.read_text()
+        self.assertIn("Wait$_G$", token_table)
+        self.assertEqual(
+            token_cost["summary"]["clear_positive_rows"],
+            token_cost["summary"]["row_count"],
         )
 
     def test_bibliography_covers_required_sources(self) -> None:
@@ -139,6 +162,10 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/raw_error_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/variance_credit_table.tex", manifest["inputs"])
         self.assertIn("results/variance_credit_grid_seed17.json", manifest["inputs"])
+        self.assertIn("paper/generated/length_imbalance_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/token_cost_table.tex", manifest["inputs"])
+        self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
+        self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])
 
 
 if __name__ == "__main__":

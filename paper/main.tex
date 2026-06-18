@@ -8,6 +8,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{ragged2e}
 \usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{graphicx}
@@ -28,7 +29,7 @@
 
 \title{\vspace{-1.0cm}PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training}
 \author{Limes Labs Research Workstream}
-\date{Public draft v0.4, June 18, 2026}
+\date{Public draft v0.5, June 18, 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\opd}{\textsc{OPD}}
@@ -40,6 +41,8 @@
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\KL}{D_{\mathrm{KL}}}
 \newcommand{\Ahat}{\widehat{A}}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 
 \input{generated/result_macros.tex}
 
@@ -202,20 +205,21 @@ teacher role and an ordinary student role over student rollouts
 excellent post-training tools, but they are not the same objective as reward
 optimization.
 
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
 \caption{Method taxonomy for long-horizon post-training.}
 \label{tab:taxonomy}
-\footnotesize
+\scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\linewidth}{@{}p{2.1cm}p{2.45cm}p{2.05cm}p{2.4cm}X@{}}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\linewidth}{@{}L{1.45cm}L{2.35cm}L{1.65cm}L{2.25cm}Y@{}}
 \toprule
-Method & Objective & Signal granularity & Extra signal & Main risk \\
+Method & Objective & Granularity & Extra signal & Main risk \\
 \midrule
-\ppo\ + critic & Reward/KL optimization & token/state & value model, reward, reference & critic cost and miscalibration \\
-\grpo & Group-normalized RL & group/response scalar & reward or verifier, no critic & weak intra-rollout credit \\
-\opd & Teacher distillation & token logits & teacher model & teacher mismatch and teacher cost \\
-\opsd & Privileged self-distillation & token logits & privileged traces & privileged leakage and truncation \\
+\ppo\ + critic & reward/KL opt. & tok./state & value, reward, ref. & critic cost; value miscalibration \\
+\grpo & group-normalized RL & resp./group & verifier; no critic & weak intra-rollout credit \\
+\opd & teacher distillation & token logits & teacher model & teacher mismatch; teacher cost \\
+\opsd & privileged self-distillation & token logits & privileged traces & leakage; truncation collapse \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -230,24 +234,27 @@ which step helped; a structural group method can remain critic-free while
 recovering some step-level contrast; a sampled value method can estimate
 per-state credit without training a value network.
 
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
-\caption{Two separable axes: how the baseline is formed and where credit is
-assigned. ``SPO'' is overloaded in the literature, so the table spells out
-Single-stream Policy Optimization and Segment Policy Optimization.}
+\caption{Two separable axes: how a baseline is formed and where credit is
+assigned. ``SPO'' is overloaded; here it refers separately to Single-stream
+Policy Optimization and Segment Policy Optimization.}
 \label{tab:variance-credit-taxonomy}
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabularx}{\linewidth}{@{}p{2.6cm}XX@{}}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{0.99\linewidth}{@{}L{2.0cm}YY@{}}
 \toprule
-Variance reduction & Trajectory-level credit & Step- or segment-level credit \\
+Baseline source & Trajectory-level credit & Step-/segment-level credit \\
 \midrule
 None & REINFORCE & -- \\
-Global/running & REINFORCE++; Single-stream Policy Optimization & Global baseline plus process rewards \\
-Sibling group/LOO & \grpo, RLOO, DAPO, Dr. \grpo & GiGPO, SALT, process-reward augmented \grpo \\
-Learned critic $V(s)$ & Usually unnecessary if only used at trajectory level & \ppo/GAE, ArCHer \\
-Sampled value & -- & VinePPO, OPPO, Segment Policy Optimization \\
-Redistribution & -- & RUDDER-style return decomposition \\
+Global/running & REINFORCE++; Single-stream PO & add process rewards \\
+\addlinespace[2pt]
+Sibling/LOO & \grpo; RLOO; DAPO; Dr. \grpo & GiGPO; SALT; PRM+\grpo \\
+\addlinespace[2pt]
+Learned critic $V(s)$ & usually unnecessary alone & \ppo/GAE; ArCHer \\
+Sampled value & -- & VinePPO; OPPO; Segment PO \\
+Redistribution & -- & RUDDER-style decomposition \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -341,11 +348,13 @@ also includes anti-hacking filters, online tool-call monitors, LLM judges,
 sandboxing, blocked-call handling, and dummy observations when invalid calls are
 intercepted.
 
-The near-term reporting unit for this workstream is:
+The near-term reporting scorecard for this workstream is the reward change
+reported beside its resource vector, not a literal scalar objective:
 \begin{equation}
-\frac{\Delta \mathrm{reward}}
-{\mathrm{generated\ tokens} \times \mathrm{wall\ clock} \times
-\mathrm{extra\ model\ memory}},
+\Delta \mathrm{reward}
+\quad\text{given}\quad
+(\mathrm{generated\ tokens},\ \mathrm{wall\ clock},\
+\mathrm{extra\ model\ memory}),
 \end{equation}
 reported alongside reproducible artifacts and negative results.
 
@@ -408,6 +417,12 @@ purpose is not to simulate every cited algorithm, but to test the mechanism
 classes in Table \ref{tab:variance-credit-taxonomy}: baseline-only variance
 reduction versus step-level credit.
 
+Two robustness audits test likely objections. The length-imbalance audit adds a
+length-adjusted group scalar, computed by normalizing return per token inside
+each prompt group, and sweeps maximum horizon. The token-cost audit reruns
+baseline and long-wait settings with per-token costs $c \in \{0, 0.01, 0.02,
+0.05\}$, including the no-explicit-length-penalty case $c=0$.
+
 This is not a closed-loop \ppo-vs-\grpo\ training benchmark. It is an estimator
 fidelity experiment under controlled dynamics.
 
@@ -462,7 +477,7 @@ clearly critic-favorable, \DeepNearTieCases\ is a near tie, and
 correlation is \DeepMeanDeltaCorrelation. Table \ref{tab:deep-matrix} reports
 representative cases; the full CSV and JSON are committed in \texttt{results/}.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{deep_matrix_delta.png}
 \caption{Mean critic-minus-group oracle-advantage correlation by case.
@@ -470,7 +485,7 @@ Positive values favor critic-style temporal-difference advantages.}
 \label{fig:delta}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.86\linewidth]{deep_matrix_coverage.png}
 \caption{Critic state coverage versus estimator advantage. The group-relative
@@ -478,7 +493,7 @@ counterexample occurs when the critic is blind and undercovered.}
 \label{fig:coverage}
 \end{figure}
 
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
 \caption{Selected rows from the 20-seed deep matrix. Delta is critic $r$ minus
 group $r$; CI is a 95\% across-seed interval for delta.}
@@ -486,26 +501,29 @@ group $r$; CI is a 95\% across-seed interval for delta.}
 \small
 \input{generated/deep_matrix_table.tex}
 \end{table}
+\FloatBarrier
 
 \paragraph{Interpretation.}
-The evidence supports the \ppo-favorable hypothesis in this controlled toy:
-when progress state is observable and critic coverage is adequate,
-critic-style advantages track token-level oracle credit much better than
-response-level group scalars. The result also protects against dogma. In the
-coverage-limited case, the confidence interval crosses zero; in the blind and
-undercovered case, group-relative terminal outcome information is better than a
-poor value table.
+Within this controlled estimator-fidelity toy, the evidence supports the
+\ppo-favorable hypothesis when progress state is observable and critic coverage
+is adequate: critic-style advantages track token-level oracle credit more
+closely than response-level group scalars. The result also protects against
+dogma. In the coverage-limited case, the confidence interval crosses zero; in
+the blind and undercovered case, group-relative terminal outcome information is
+better than a poor value table.
 
-\begin{table}[t]
+\begin{table}[!htbp]
 \centering
 \caption{Variance-reduction versus credit-assignment grid on the long-wait toy
 case. Baseline-only methods can lower second moment, but they do not create
-within-trajectory credit variation. The table is generated from
-\texttt{results/variance\_credit\_grid\_seed17.json}.}
+within-trajectory credit variation. Abbreviations: Var. is variance reduction;
+Group z is sibling-group z-scoring; LOO is leave-one-out; Within is
+within-trajectory estimator variance.}
 \label{tab:variance-credit-grid}
-\small
+\scriptsize
 \input{generated/variance_credit_table.tex}
 \end{table}
+\FloatBarrier
 
 \paragraph{Variance-credit decomposition.}
 Table \ref{tab:variance-credit-grid} makes the decomposition explicit. The
@@ -519,6 +537,45 @@ create step-level variation and substantially improve correlation with the
 oracle advantage. The dense progress-reward proxy sits between them: it gives a
 step signal, but because it lacks horizon and threshold information, it is not a
 full value estimate.
+
+\begin{table}[!htbp]
+\centering
+\caption{Length-imbalance audit on the long-wait scenario. Len gap is the mean
+within-group max-minus-min trajectory length. Len-adj. is a group scalar based
+on return per token; $\Delta_G$ and $\Delta_L$ are critic $r$ minus group-total
+and length-adjusted group $r$.}
+\label{tab:length-imbalance}
+\scriptsize
+\input{generated/length_imbalance_table.tex}
+\end{table}
+
+\paragraph{Length-imbalance audit.}
+Table \ref{tab:length-imbalance} tests whether a simple length correction
+rescues trajectory-level grouping. It does not in this toy. As $H_{\max}$
+increases from 4 to 20, mean within-group length range grows from 1.775 to
+13.439 tokens and wait-token fraction grows from 0.336 to 0.573. The
+length-adjusted group scalar remains close to the total-return group scalar:
+at $H_{\max}=20$, critic $r$ is 0.811, group-total $r$ is 0.266, and
+length-adjusted group $r$ is 0.260. Length correction changes the rollout
+ranking signal, but it still broadcasts one number to all tokens.
+
+\begin{table}[!htbp]
+\centering
+\caption{Token-cost sensitivity over 20 seeds. The $c=0$ rows remove the
+explicit per-token penalty. CI is a 95\% interval for critic-minus-group
+correlation; Wait$_G$ and Wait$_C$ are wait-token leakage ratios.}
+\label{tab:token-cost}
+\scriptsize
+\input{generated/token_cost_table.tex}
+\end{table}
+
+\paragraph{Token-cost sensitivity.}
+Table \ref{tab:token-cost} checks whether the critic result is just a side
+effect of the per-token cost. The answer is no for these controlled dynamics.
+All eight scenario/cost rows have positive critic-minus-group correlation after
+subtracting the 95\% interval. In the long-wait, zero-cost row, critic $r$ is
+0.888, group $r$ is 0.335, and the delta is 0.552. Removing the explicit length
+penalty therefore does not remove the temporal-credit gap.
 
 \FloatBarrier
 
@@ -568,13 +625,13 @@ clear under the confidence-interval rule.
 \section{Which Method Is Better?}
 
 The answer is conditional, and the condition is about information. \ppo-style
-critic methods are better candidates when future return is predictable from
-prefix state, when rollouts contain mixed token roles, and when the critic has
-enough coverage to be calibrated. \grpo-style methods are better candidates
-when rewards are cheap, verifiable, and meaningfully dispersed within prompt
-groups, or when the critic would be blind, stale, or too expensive. \opd\ and
-\opsd\ are better candidates when the available dense signal is a teacher or
-privileged self-teacher rather than an external reward.
+critic methods are more plausible to test when future return is predictable
+from prefix state, when rollouts contain mixed token roles, and when the critic
+has enough coverage to be calibrated. \grpo-style methods are more plausible to
+test when rewards are cheap, verifiable, and meaningfully dispersed within
+prompt groups, or when the critic would be blind, stale, or too expensive.
+\opd\ and \opsd\ are more plausible when the available dense signal is a
+teacher or privileged self-teacher rather than an external reward.
 
 This suggests a hybrid research program. Use rejection sampling and
 \grpo-like RL to find successes when verifiers are reliable. Use value or
@@ -604,15 +661,17 @@ privileged self-teacher traces may leak solution structure
 \citep{li2026opd,luo2026opd,zhao2026opsd}.
 
 \paragraph{Predictions.}
-Increasing horizon length and no-op padding should reduce the alignment between
-response-level group advantages and process labels. Increasing group size
-should help \grpo\ only when it increases meaningful reward dispersion. Adding
-process rewards should narrow the \ppo/\grpo\ credit gap. Degrading critic
-observability should produce regimes where \grpo\ wins. \opd/\opsd\ should be
-most token-efficient when teacher signals are novel and rollout lengths are
-controlled. Sampled-value methods should approach critic-like credit when the
-branching budget is high enough, but their inference cost should dominate in
-long agentic traces unless branch reuse or state sharing is available.
+We predict that increasing horizon length and no-op padding will reduce the
+Pearson alignment between response-level group advantages and oracle or process
+labels. We predict that increasing group size will help \grpo\ mainly when it
+increases within-prompt reward dispersion. We predict that adding process
+rewards will narrow the \ppo/\grpo\ credit gap, and that degrading critic
+observability will produce regimes where \grpo\ wins. We predict that
+\opd/\opsd\ will be most token-efficient when teacher signals are novel and
+rollout lengths are controlled. Sampled-value methods should approach
+critic-like credit when the branching budget is high enough, but their
+inference cost should dominate in long agentic traces unless branch reuse or
+state sharing is available.
 
 \section{Threats to Validity}
 
@@ -663,6 +722,12 @@ python3 -m experiments.deep_matrix \
 python3 -m experiments.variance_credit_grid \
   --output-json results/variance_credit_grid_seed17.json \
   --output-md results/variance_credit_grid_seed17.md
+python3 -m experiments.length_imbalance_audit \
+  --output-json results/length_imbalance_audit_seedset.json \
+  --output-md results/length_imbalance_audit_seedset.md
+python3 -m experiments.token_cost_sensitivity \
+  --output-json results/token_cost_sensitivity_20seed.json \
+  --output-md results/token_cost_sensitivity_20seed.md
 ./scripts/build_latex_paper.sh
 \end{verbatim}
 The LaTeX paper is built with Tectonic when available and emitted as the full
@@ -698,18 +763,19 @@ multipliers: a critic may improve credit assignment but violate a deployment
 budget. EuroBench-style tasks can test whether long-horizon behavior transfers
 from toy state to real language and tool use.
 
+\clearpage
 \section{Conclusion}
 
 For long heterogeneous trajectories, critic-based \ppo\ is a strong candidate
 when value targets are learnable and adequately covered. \grpo\ remains
 attractive when group reward contrast is reliable and critic modeling is too
 costly or poorly observed. \opd\ and \opsd\ are complementary dense-supervision
-tools that can transfer behaviors on student-visited states, but they should
-not be conflated with reward optimization. The right public research program is
+tools that can transfer behaviors on student-visited states; unless they are
+paired with reward-improvement filtering, they answer a different objective
+from reward optimization. The right public research program is
 therefore not ``\ppo\ always beats \grpo,'' but a set of falsifiable boundaries
 for when temporal credit is worth its cost.
 
-\clearpage
 \appendix
 
 \section{Formal Objective Notes}

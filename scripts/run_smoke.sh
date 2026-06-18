@@ -32,6 +32,26 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/variance_credit_grid_smoke.json" \
   --output-md "$SMOKE_DIR/variance_credit_grid_smoke.md"
 
+"$PYTHON_BIN" -m experiments.length_imbalance_audit \
+  --seeds 11 29 \
+  --horizons 4 12 20 \
+  --train-groups 30 \
+  --eval-groups 8 \
+  --group-size 4 \
+  --output-json "$SMOKE_DIR/length_imbalance_smoke.json" \
+  --output-md "$SMOKE_DIR/length_imbalance_smoke.md"
+
+"$PYTHON_BIN" -m experiments.token_cost_sensitivity \
+  --seeds 11 29 47 \
+  --scenarios long_wait \
+  --token-costs 0.0 0.02 \
+  --train-groups 30 \
+  --eval-groups 8 \
+  --group-size 4 \
+  --max-steps 8 \
+  --output-json "$SMOKE_DIR/token_cost_smoke.json" \
+  --output-md "$SMOKE_DIR/token_cost_smoke.md"
+
 "$PYTHON_BIN" - "$SMOKE_DIR" <<'PY'
 import json
 import math
@@ -90,6 +110,26 @@ if abs(estimators["sibling_group_norm"]["metrics"]["within_trajectory_variance"]
     raise SystemExit("sibling group broadcast unexpectedly had step-level variation")
 if estimators["critic_td"]["metrics"]["within_trajectory_variance"] <= 0.0:
     raise SystemExit("critic TD did not create step-level variation")
+
+length = json.loads((smoke_dir / "length_imbalance_smoke.json").read_text())
+short = length["horizon_summaries"][0]
+long = length["horizon_summaries"][-1]
+if long["mean_group_length_range"] <= short["mean_group_length_range"]:
+    raise SystemExit("length imbalance did not grow across smoke horizons")
+if long["critic_minus_group_total_r"] <= 0.20:
+    raise SystemExit("critic did not beat group total in length audit")
+if long["critic_minus_group_per_token_r"] <= 0.20:
+    raise SystemExit("critic did not beat length-adjusted group in length audit")
+
+cost = json.loads((smoke_dir / "token_cost_smoke.json").read_text())
+if cost["summary"]["clear_positive_rows"] != cost["summary"]["row_count"]:
+    raise SystemExit("token-cost smoke did not keep all rows critic-positive")
+zero_cost = next(
+    row for row in cost["aggregate_rows"]
+    if row["scenario"] == "long_wait" and row["token_cost"] == 0.0
+)
+if zero_cost["delta_r"] <= 0.20:
+    raise SystemExit("zero-cost long-wait row did not preserve critic advantage")
 
 print(f"smoke artifacts: {smoke_dir}")
 PY
