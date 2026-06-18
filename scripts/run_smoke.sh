@@ -73,6 +73,20 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/closed_loop_smoke.json" \
   --output-md "$SMOKE_DIR/closed_loop_smoke.md"
 
+"$PYTHON_BIN" -m experiments.neural_credit_generalization \
+  --seeds 11 \
+  --train-thresholds 1 3 \
+  --eval-thresholds 2 \
+  --train-groups 40 \
+  --eval-groups 12 \
+  --group-size 5 \
+  --max-steps 10 \
+  --hidden-size 8 \
+  --epochs 30 \
+  --max-train-examples 2000 \
+  --output-json "$SMOKE_DIR/neural_credit_smoke.json" \
+  --output-md "$SMOKE_DIR/neural_credit_smoke.md"
+
 "$PYTHON_BIN" - "$SMOKE_DIR" <<'PY'
 import json
 import math
@@ -180,6 +194,16 @@ for name, row in closed_methods.items():
             raise SystemExit(f"closed-loop smoke non-finite {name}.{key}")
 if closed_methods["coverage_gated"]["final_critic_fraction"] <= 0.0:
     raise SystemExit("coverage-gated smoke never used critic credit")
+
+neural = json.loads((smoke_dir / "neural_credit_smoke.json").read_text())
+neural_group = neural["aggregate"]["estimators"]["group_relative"]
+neural_td = neural["aggregate"]["estimators"]["neural_critic_td"]
+if neural["aggregate"]["sample_counts"]["heldout_exact_state_fraction"] < 0.99:
+    raise SystemExit("neural smoke did not evaluate on held-out exact states")
+if neural_td["pearson_correlation"] <= neural_group["pearson_correlation"] + 0.25:
+    raise SystemExit("neural critic did not beat group broadcast in held-out smoke")
+if neural_td["within_trajectory_variance"] <= 1e-4:
+    raise SystemExit("neural critic did not create step-level variation")
 
 print(f"smoke artifacts: {smoke_dir}")
 PY

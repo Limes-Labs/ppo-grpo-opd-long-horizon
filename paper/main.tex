@@ -29,7 +29,7 @@
 
 \title{\vspace{-1.0cm}Trajectory Rewards Are Not Token Credit: Advantage Estimator Fidelity for Long-Horizon Post-Training}
 \author{Limes Labs Research Workstream}
-\date{Public draft v0.7, June 18, 2026}
+\date{Public draft v0.8, June 18, 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\opd}{\textsc{OPD}}
@@ -62,15 +62,17 @@ and value modeling is weak or too expensive. \opd\ and \opsd\ are treated as
 complementary on-policy distillation objectives. The paper contributes a
 variance-reduction/credit-assignment taxonomy, a CPU-only estimator-fidelity
 testbed with known oracle advantages, a structural critic-free anchor-action
-contrast baseline, an exploratory coverage-gated credit estimator, and a
-tabular closed-loop training audit. Across a \DeepSeedCount-seed,
+contrast baseline, an exploratory coverage-gated credit estimator, a tabular
+closed-loop training audit, and a tiny neural value-critic generalization
+audit. Across a \DeepSeedCount-seed,
 \DeepCaseCount-case matrix, critic-style temporal-difference advantages have
 higher mean oracle-advantage correlation in \DeepMeanCriticWins\ cases; a
 confidence-interval reading gives \DeepClearCriticCases\ clear critic-favorable
 cases, \DeepNearTieCases\ near tie, and \DeepClearGroupCases\ clear
 group-favorable counterexample. Closed-loop tabular policy training shows the
-same ordering direction but smaller downstream gaps. The result is mechanism
-evidence, not a frontier-model leaderboard claim.
+same ordering direction but smaller downstream gaps; the tiny neural audit
+preserves the critic-credit advantage on a held-out threshold. The result is
+mechanism evidence, not a frontier-model leaderboard claim.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -101,7 +103,7 @@ group-wise optimization to critic-based \ppo\ with token-level advantages
 \grpo; it is a motivating example of the problem structure studied here.
 
 \paragraph{Contributions.}
-We make five contributions. First, we separate reward optimization methods such
+We make six contributions. First, we separate reward optimization methods such
 as \ppo\ and \grpo\ from on-policy distillation methods such as \opd\ and
 \opsd, then classify them by variance reduction, credit granularity, and
 extra-model cost. Second, we give a cost and failure-mode checklist for fair
@@ -111,7 +113,9 @@ estimator-fidelity matrix. Fourth, we add two baselines beyond trajectory
 broadcasts: anchor-action contrast, a critic-free structural control, and
 coverage-gated credit, an adaptive estimator. Fifth, we run robustness audits
 and a tabular closed-loop training sanity check, showing that alignment gains
-survive downstream optimization only modestly.
+survive downstream optimization only modestly. Sixth, we add a tiny neural
+value-critic audit where the critic must interpolate to a held-out threshold
+instead of using exact tabular lookup.
 
 \paragraph{Scope discipline.}
 The paper makes a narrow claim about credit-assignment mechanisms. It does not
@@ -463,6 +467,13 @@ whether estimator-fidelity differences survive one downstream optimization
 loop. The compared signals are group total return, group return per token,
 critic TD from a replay value table, and coverage-gated credit.
 
+The neural generalization audit keeps the policy fixed and replaces the tabular
+critic with a one-hidden-layer value network trained by SGD on thresholds 1 and
+3, then evaluated on held-out threshold 2. Exact tabular state lookup cannot
+help in this setting because threshold is part of the exact state key. The audit
+therefore asks whether a small value model can interpolate enough structure to
+recover token-level temporal credit.
+
 The oracle-alignment matrix remains an estimator-fidelity experiment under
 controlled dynamics. The closed-loop audit is a downstream tabular-policy
 stress test, not a production \ppo-vs-\grpo\ benchmark.
@@ -672,6 +683,25 @@ In the low-coverage stress setting, group total reaches 0.769, critic TD reaches
 design pattern, not a claimed replacement for \ppo\ or \grpo: it preserves most
 critic benefit while making critic use explicit and auditable.
 
+\begin{table}[!htbp]
+\centering
+\caption{Tiny neural value-critic generalization audit. The value critic is
+trained on thresholds 1 and 3, then evaluated on held-out threshold 2. Exact
+tabular state lookup cannot match the evaluation threshold, so the TD signal
+comes from feature interpolation.}
+\label{tab:neural-generalization}
+\scriptsize
+\input{generated/neural_generalization_table.tex}
+\end{table}
+
+\paragraph{Tiny neural generalization.}
+Table \ref{tab:neural-generalization} is not an LLM-scale experiment, but it
+does remove the most brittle tabular assumption. On the held-out threshold, the
+group-relative broadcast reaches Pearson $r=0.364$ against oracle token credit,
+while neural critic TD reaches $r=0.842$ with lower calibrated MSE and lower
+wait-token leakage. This strengthens the mechanism claim, while still leaving a
+larger transformer or nanoGPT-scale benchmark as future work.
+
 \FloatBarrier
 
 \section{Mechanism Analysis}
@@ -771,10 +801,11 @@ state sharing is available.
 \section{Threats to Validity}
 
 \paragraph{Toy dynamics.}
-The toy has a small finite state, a known oracle, and a tabular critic. This is
-deliberately unlike frontier post-training. The benefit is interpretability;
-the cost is that neural generalization, distribution shift, optimizer dynamics,
-and reward-model error are not measured.
+The toy has a small finite state and a known oracle. Most audits use tabular
+estimators, and the neural audit uses only a tiny value network on held-out toy
+thresholds. This is deliberately unlike frontier post-training. The benefit is
+interpretability; the cost is that transformer-scale generalization,
+distribution shift, optimizer dynamics, and reward-model error are not measured.
 
 \paragraph{Estimator versus optimizer.}
 The experiment compares advantage estimators, not complete \ppo\ and \grpo\
@@ -791,10 +822,12 @@ low-dispersion safeguards. A stronger \grpo\ family member may narrow the gap
 in some regimes.
 
 \paragraph{Simplified critic.}
-The critic is tabular and trained from returns-to-go. Neural value models can
-generalize across states, but they can also hallucinate value structure. The
-toy's exact-state hit rate is a proxy for coverage, not a complete model of
-critic reliability.
+The main critic is tabular and trained from returns-to-go. The tiny neural audit
+checks interpolation across one held-out threshold, but it is still far from a
+large value model trained on language traces. Neural value models can generalize
+across states, but they can also hallucinate value structure. The toy's
+exact-state hit rate is a proxy for coverage, not a complete model of critic
+reliability.
 
 \paragraph{External validity.}
 The GLM-5.2 discussion is based on a public vendor report and local text
@@ -826,6 +859,9 @@ python3 -m experiments.token_cost_sensitivity \
 python3 -m experiments.closed_loop_credit_training \
   --output-json results/closed_loop_credit_training_10seed.json \
   --output-md results/closed_loop_credit_training_10seed.md
+python3 -m experiments.neural_credit_generalization \
+  --output-json results/neural_credit_generalization_seedset.json \
+  --output-md results/neural_credit_generalization_seedset.md
 ./scripts/build_latex_paper.sh
 \end{verbatim}
 The LaTeX paper is built with Tectonic when available and emitted as the full
@@ -855,9 +891,11 @@ sampling before making stronger claims.
 \section{Roadmap for Limes Labs}
 
 \paragraph{nanoGPT scale.}
-The next controlled step is a tiny neural policy where the true environment is
-still known but the critic must generalize. This can test whether tabular
-coverage results survive function approximation.
+The next controlled step is a tiny sequence-model policy where the true
+environment is still known but both policy and value model must generalize over
+token histories. The held-out-threshold neural audit is a first approximation;
+a nanoGPT-scale benchmark is the next test of whether the mechanism survives
+transformer sequence modeling.
 
 \paragraph{AutoResearch and agentic tasks.}
 For agentic research workflows, the key artifact is a trace schema that records
@@ -1007,8 +1045,8 @@ zero-variance group frequency, or success-rate mix.
   \item Build the full paper with \texttt{./scripts/build\_latex\_paper.sh}.
   \item Verify that the LaTeX artifact manifest records the PDF hash and page
   count.
-  \item Treat \texttt{public/ppo\_grpo\_opd\_long\_horizon.pdf} and the DOCX as
-  abridged reports; treat the LaTeX PDF as the full paper artifact.
+  \item Treat \texttt{public/trajectory\_rewards\_are\_not\_token\_credit.pdf}
+  as the single canonical paper PDF.
 \end{enumerate}
 
 \section{Next Experiments}
@@ -1021,12 +1059,12 @@ and Dr. \grpo-style updates under equal generated-token and optimizer budgets.
 This will test whether the estimator-fidelity and tabular-policy findings
 survive the optimizer details used in modern post-training stacks.
 
-\paragraph{Tiny neural policy.}
-The strongest next upgrade is a small neural benchmark, preferably in
-\texttt{limes-nanogpt} or an equivalent tiny sequence-policy setup, where the
-environment remains controlled but the value model must generalize rather than
-look up exact tabular states. This is the bridge from workshop-strength
-mechanism evidence toward a stronger ML paper.
+\paragraph{Tiny sequence-policy benchmark.}
+The strongest next upgrade is a small transformer or nanoGPT-style benchmark
+where the environment remains controlled but the policy, critic, and reward
+model consume token histories rather than compact toy features. The v0.8 neural
+audit checks value interpolation on a held-out toy threshold; it does not yet
+test sequence modeling, KL control, or clipped policy optimization.
 
 \paragraph{Process rewards.}
 Adding process labels or subgoal rewards should narrow the gap between
@@ -1093,26 +1131,26 @@ and value modeling is weak. That is a research program, not a slogan.
 \section{Artifact Provenance and Public Release Notes}
 
 \paragraph{Canonical data source.}
-The canonical numeric artifact for this paper is the deep-matrix JSON under
-\texttt{results/}. The LaTeX macros, selected result table, axis summary, full
-case summary, raw seed rows, and calibrated-error appendix are generated from
-that JSON file by the LaTeX input builder. This keeps the manuscript from
-silently drifting away from the experiment output.
+The canonical numeric artifacts for this paper live under \texttt{results/}.
+The LaTeX macros, result tables, appendices, and neural audit table are
+generated from those JSON files by the LaTeX input builder. This keeps the
+manuscript from silently drifting away from the experiment output.
 
 \paragraph{Rendered artifacts.}
-The repository intentionally contains two kinds of public artifacts. The
-abridged PDF/DOCX report is designed for quick reading and sharing. The LaTeX
-PDF is the full paper artifact, including appendices and raw tables. The two
-artifacts should not be compared by page count; they serve different review
-contexts.
+The repository tracks one public paper PDF under \texttt{public/}:
+\begin{center}
+\small\nolinkurl{trajectory_rewards_are_not_token_credit.pdf}
+\end{center}
+It is built from \texttt{paper/main.tex} and includes appendices and generated
+result tables. Older noncanonical report artifacts were removed to avoid
+ambiguity about which document is current.
 
 \paragraph{Manifest interpretation.}
 The LaTeX manifest records input hashes, output hashes, the TeX engine, and the
-page-count gate. Because generated artifacts are committed with their manifest,
-the manifest's recorded git status necessarily describes the generation-time
-worktree rather than the final commit that contains the manifest. A clean
-checkout can rerun the build script to refresh the manifest and should recover
-the same result counts from the canonical JSON.
+page-count gate. It intentionally omits dirty-worktree status because generated
+artifacts are committed with their manifest. A clean checkout can rerun the
+build script to refresh the manifest and should recover the same result counts
+from the canonical JSON.
 
 \paragraph{How to read the claim.}
 The public headline should be the cautious one: 16 clear critic-favorable cases,

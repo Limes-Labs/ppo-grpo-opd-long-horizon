@@ -1,0 +1,155 @@
+{
+  "aggregate": {
+    "estimators": {
+      "group_relative": {
+        "calibrated_mse": 0.03177425901193324,
+        "mean_abs_active_tokens": 0.9163089707664932,
+        "mean_abs_wait_tokens": 0.840530374479474,
+        "pearson_correlation": 0.3639012535043853,
+        "raw_mse": 0.858916013311069,
+        "sign_accuracy": 0.674340778208196,
+        "wait_to_active_abs_ratio": 0.9171268011934216,
+        "within_trajectory_variance": 1.2197556314452493e-33
+      },
+      "neural_critic_td": {
+        "calibrated_mse": 0.010354561802411929,
+        "mean_abs_active_tokens": 0.17828350619394914,
+        "mean_abs_wait_tokens": 0.07428848063174102,
+        "pearson_correlation": 0.8424884674499094,
+        "raw_mse": 0.01371959557364733,
+        "sign_accuracy": 0.8745636626823501,
+        "wait_to_active_abs_ratio": 0.4179376476369742,
+        "within_trajectory_variance": 0.03807767600386192
+      }
+    },
+    "neural_minus_group_correlation": 0.47858721394552406,
+    "sample_counts": {
+      "eval_tokens": 479.3333333333333,
+      "eval_trajectories": 80.0,
+      "heldout_exact_state_fraction": 1.0,
+      "train_trajectories": 300.0
+    },
+    "train_value_mse": 0.17885795033790844
+  },
+  "config": {
+    "epochs": 35,
+    "eval_groups": 16,
+    "eval_thresholds": [
+      2
+    ],
+    "group_size": 5,
+    "hidden_size": 8,
+    "learning_rate": 0.02,
+    "max_steps": 10,
+    "max_train_examples": 2500,
+    "scenario_name": "long_wait",
+    "seeds": [
+      11,
+      17,
+      23
+    ],
+    "train_groups": 60,
+    "train_thresholds": [
+      1,
+      3
+    ]
+  },
+  "seed_results": [
+    {
+      "estimators": {
+        "group_relative": {
+          "calibrated_mse": 0.030081758901890278,
+          "mean_abs_active_tokens": 0.9246985085348611,
+          "mean_abs_wait_tokens": 0.8915472018477395,
+          "pearson_correlation": 0.3403835381218495,
+          "raw_mse": 0.8989710287450844,
+          "sign_accuracy": 0.6761487964989059,
+          "wait_to_active_abs_ratio": 0.9641490643911081,
+          "within_trajectory_variance": 1.3866695599588098e-33
+        },
+        "neural_critic_td": {
+          "calibrated_mse": 0.013199154131398681,
+          "mean_abs_active_tokens": 0.17071653186148622,
+          "mean_abs_wait_tokens": 0.09944695792139836,
+          "pearson_correlation": 0.7823432731706282,
+          "raw_mse": 0.01967240335840699,
+          "sign_accuracy": 0.7986870897155361,
+          "wait_to_active_abs_ratio": 0.5825268170401116,
+          "within_trajectory_variance": 0.038930339161620295
+        }
+      },
+      "sample_counts": {
+        "eval_tokens": 487,
+        "eval_trajectories": 80,
+        "heldout_exact_state_fraction": 1.0,
+        "train_trajectories": 300
+      },
+      "seed": 11,
+      "train_value_mse": 0.19564432155359618
+    },
+    {
+      "estimators": {
+        "group_relative": {
+          "calibrated_mse": 0.027791546544030214,
+          "mean_abs_active_tokens": 0.9084538533584019,
+          "mean_abs_wait_tokens": 0.8260998642236946,
+          "pearson_correlation": 0.3434509536639534,
+          "raw_mse": 0.8638198426315674,
+          "sign_accuracy": 0.6487603305785123,
+          "wait_to_active_abs_ratio": 0.9093470858973647,
+          "within_trajectory_variance": 1.5792625543975333e-33
+        },
+        "neural_critic_td": {
+          "calibrated_mse": 0.008350125004619121,
+          "mean_abs_active_tokens": 0.15933413655348863,
+          "mean_abs_wait_tokens": 0.04927598147349462,
+          "pearson_correlation": 0.857313089935324,
+          "raw_mse": 0.010188123891253804,
+          "sign_accuracy": 0.8533057851239669,
+          "wait_to_active_abs_ratio": 0.3092619230214526,
+          "within_trajectory_variance": 0.02866784552674694
+        }
+      },
+      "sample_counts": {
+        "eval_tokens": 511,
+        "eval_trajectories": 80,
+        "heldout_exact_state_fraction": 1.0,
+        "train_trajectories": 300
+      },
+      "seed": 17,
+      "train_value_mse": 0.18101975018506944
+    },
+    {
+      "estimators": {
+        "group_relative": {
+          "calibrated_mse": 0.03744947158987923,
+          "mean_abs_active_tokens": 0.9157745504062164,
+          "mean_abs_wait_tokens": 0.8039440573669879,
+          "pearson_correlation": 0.4078692687273529,
+          "raw_mse": 0.8139571685565553,
+          "sign_accuracy": 0.6981132075471698,
+          "wait_to_active_abs_ratio": 0.8778842532917922,
+          "within_trajectory_variance": 6.933347799794049e-34
+        },
+        "neural_critic_td": {
+          "calibrated_mse": 0.009514406271217987,
+          "mean_abs_active_tokens": 0.20479985016687255,
+          "mean_abs_wait_tokens": 0.0741425025003301,
+          "pearson_correlation": 0.8878090392437759,
+          "raw_mse": 0.0112982594712812,
+          "sign_accuracy": 0.9716981132075472,
+          "wait_to_active_abs_ratio": 0.3620242028493585,
+          "within_trajectory_variance": 0.04663484332321854
+        }
+      },
+      "sample_counts": {
+        "eval_tokens": 440,
+        "eval_trajectories": 80,
+        "heldout_exact_state_fraction": 1.0,
+        "train_trajectories": 300
+      },
+      "seed": 23,
+      "train_value_mse": 0.15990977927505973
+    }
+  ]
+}

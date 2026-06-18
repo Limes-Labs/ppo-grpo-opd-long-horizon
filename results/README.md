@@ -39,6 +39,10 @@ Current artifacts:
   stress run for the coverage-gated credit proposal.
 - `closed_loop_credit_training_low_coverage_10seed.md` - human-readable table
   for the same low-coverage run.
+- `neural_credit_generalization_seedset.json` - tiny neural value-critic audit
+  trained on thresholds 1 and 3 and evaluated on held-out threshold 2.
+- `neural_credit_generalization_seedset.md` - human-readable table for the same
+  held-out-threshold neural audit.
 - `figures/deep_matrix_delta.svg` - critic-minus-group bar chart.
 - `figures/deep_matrix_coverage.svg` - critic coverage scatter plot.
 
@@ -104,7 +108,14 @@ python3 -m experiments.closed_loop_credit_training \
   --output-md results/closed_loop_credit_training_low_coverage_10seed.md
 ```
 
-Rendered public paper artifacts live under `public/` and are tracked with
-`public/artifact_manifest.json`. The full paper-formatted LaTeX artifact is
-`public/ppo_grpo_opd_long_horizon_latex.pdf`, with its own manifest at
-`public/latex_artifact_manifest.json`.
+Regenerate the tiny neural generalization audit with:
+
+```bash
+python3 -m experiments.neural_credit_generalization \
+  --output-json results/neural_credit_generalization_seedset.json \
+  --output-md results/neural_credit_generalization_seedset.md
+```
+
+The tracked public paper PDF is
+`public/trajectory_rewards_are_not_token_credit.pdf`, with its manifest at
+`public/paper_manifest.json`.

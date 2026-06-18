@@ -17,14 +17,26 @@ complementary on-policy distillation/self-distillation tools, not as direct
 drop-in replacements for policy optimization.
 
 The repository now includes estimator-fidelity audits, structural critic-free
-baselines, an exploratory coverage-gated credit estimator, and tabular
-closed-loop training. The main remaining upgrade toward a stronger ML paper is
-a tiny neural policy or nanoGPT-scale synthetic benchmark.
+baselines, an exploratory coverage-gated credit estimator, tabular closed-loop
+training, and a tiny neural value-critic generalization audit. The main
+remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
+sequence-policy benchmark.
+
+## Canonical Paper
+
+There is one paper manuscript and one tracked public PDF:
+
+| Role | Path |
+| --- | --- |
+| Canonical source | `paper/main.tex` |
+| Canonical rendered PDF | `public/trajectory_rewards_are_not_token_credit.pdf` |
+| PDF manifest | `public/paper_manifest.json` |
+
+Older noncanonical manuscript/report artifacts were removed so readers do not
+have to guess which paper is current.
 
 ## What Is Here
 
-- `PAPER.md` - Markdown working draft with formal setup, equations, taxonomy,
-  cost accounting, toy results, limitations, and references.
 - `paper/main.tex` and `paper/references.bib` - LaTeX manuscript source for
   the canonical full paper-formatted artifact.
 - `experiments/toy_credit_assignment.py` - CPU-only toy experiment comparing a
@@ -44,11 +56,14 @@ a tiny neural policy or nanoGPT-scale synthetic benchmark.
   over token costs, including the zero-cost case.
 - `experiments/closed_loop_credit_training.py` - tabular closed-loop training
   audit plus the exploratory coverage-gated credit estimator.
+- `experiments/neural_credit_generalization.py` - tiny dependency-free neural
+  value-critic audit trained on thresholds 1 and 3 and evaluated on held-out
+  threshold 2.
 - `autoresearch/` - Limes AutoResearch spec/config for ledgered replay of the
   coverage-gated closed-loop proposal.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
-- `results/deep_matrix_20seed.md` - canonical multi-seed result table used for
-  the public PDF/DOCX paper artifacts.
+- `results/deep_matrix_20seed.md` - canonical multi-seed result table used in
+  the paper.
 - `results/variance_credit_grid_seed17.md` - canonical result table for the
   variance-reduction versus credit-assignment grid.
 - `results/anchor_coverage_audit_seedset.md` - canonical coverage sweep for
@@ -61,21 +76,13 @@ a tiny neural policy or nanoGPT-scale synthetic benchmark.
   training audit under the default replay budget.
 - `results/closed_loop_credit_training_low_coverage_10seed.md` - low-coverage
   stress run for coverage-gated credit.
-- `public/ppo_grpo_opd_long_horizon.pdf` and
-  `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
-  artifacts with charts and result tables. `paper/main.tex` is the full
-  manuscript source.
-- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full 36-page LaTeX-built
+- `results/neural_credit_generalization_seedset.md` - tiny neural
+  held-out-threshold audit showing value-critic generalization.
+- `public/trajectory_rewards_are_not_token_credit.pdf` - canonical LaTeX-built
   paper with generated result appendices.
-- `public/latex_artifact_manifest.json` - SHA-256 manifest for the full LaTeX
-  paper artifact.
-- `public/artifact_manifest.json` - SHA-256 manifest for the rendered
-  artifacts and source experiment JSON.
+- `public/paper_manifest.json` - SHA-256 manifest for the canonical PDF.
 - `tests/` - unit tests for the toy experiment and CLI artifact.
 - `scripts/run_smoke.sh` - one-command smoke runner.
-- `scripts/build_public_artifacts.py` - PDF/DOCX/chart builder. The core
-  experiments are dependency-free; artifact generation uses `reportlab`,
-  `python-docx`, and `Pillow`.
 - `docs/research-roadmap.md` - integration plan for Limes AutoResearch,
   nanoGPT, EuroBench, and Parameter Golf.
 
@@ -156,6 +163,10 @@ python3 -m experiments.token_cost_sensitivity \
 python3 -m experiments.closed_loop_credit_training \
   --output-json results/closed_loop_credit_training_10seed.json \
   --output-md results/closed_loop_credit_training_10seed.md
+
+python3 -m experiments.neural_credit_generalization \
+  --output-json results/neural_credit_generalization_seedset.json \
+  --output-md results/neural_credit_generalization_seedset.md
 ```
 
 Run the Limes AutoResearch hook from this repository root:
@@ -166,15 +177,6 @@ PYTHONPATH=/Users/francescogiannicola/Documents/LimesLabs/workstreams/limes-auto
   --ledger autoresearch/runs/closed_loop_ledger.jsonl
 ```
 
-Regenerate PDF/DOCX paper artifacts with a Python environment that includes
-`reportlab`, `python-docx`, and `Pillow`:
-
-```bash
-python3 scripts/build_public_artifacts.py \
-  --matrix-json results/deep_matrix_20seed.json \
-  --public-dir public
-```
-
 Build the full LaTeX paper:
 
 ```bash
@@ -183,9 +185,10 @@ Build the full LaTeX paper:
 
 The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
-`results/variance_credit_grid_seed17.json`, plus the length-imbalance and
-token-cost audit JSON files. It compiles the paper with `tectonic` and checks
-that the rendered PDF is at least 30 pages.
+`results/variance_credit_grid_seed17.json`, plus the length-imbalance,
+token-cost, closed-loop, and neural generalization audit JSON files. It
+compiles the paper with `tectonic` and checks that the rendered PDF is at least
+30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
@@ -215,10 +218,9 @@ when the critic is weak or unavailable. The committed matrix includes raw
 per-seed rows and 95% confidence intervals in `results/deep_matrix_20seed.csv`
 and `results/deep_matrix_20seed.md`.
 
-The PDF was rendered and visually inspected through PNG page renders. The DOCX
-is structurally checked for tables, text, and embedded charts; a full visual
-DOCX render was not run because LibreOffice/`soffice` is unavailable in the
-current local environment.
+The canonical PDF is rendered from LaTeX at
+`public/trajectory_rewards_are_not_token_credit.pdf` and tracked with
+`public/paper_manifest.json`.
 
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment
@@ -251,6 +253,13 @@ reaches `0.809`. In the low-coverage stress run, coverage-gated credit uses
 critic TD on about `64%` of final-batch steps and beats group total by `+0.008`
 return, but critic TD remains slightly higher. Treat this as a candidate design
 pattern, not a solved algorithm.
+
+The tiny neural generalization audit trains a one-hidden-layer value critic on
+thresholds `1` and `3`, then evaluates on held-out threshold `2`. Exact tabular
+state lookup cannot match the held-out threshold. In the canonical 3-seed run,
+group-relative broadcast reaches oracle-credit Pearson `r=0.364`, while neural
+critic TD reaches `r=0.842` with lower calibrated MSE and lower wait-token
+leakage. This is still a toy, but it is no longer pure table lookup.
 
 ## Working Thesis
 
