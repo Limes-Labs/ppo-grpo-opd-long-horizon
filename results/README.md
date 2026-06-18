@@ -13,6 +13,10 @@ Current artifacts:
 - `deep_matrix_20seed.csv` - raw case-by-seed rows for independent checking.
 - `deep_matrix_20seed.md` - human-readable multi-seed summary with 95%
   confidence intervals.
+- `variance_credit_grid_seed17.json` - estimator grid separating variance
+  reduction from credit assignment on the long-wait toy case.
+- `variance_credit_grid_seed17.md` - human-readable table and reading notes for
+  the same estimator grid.
 - `figures/deep_matrix_delta.svg` - critic-minus-group bar chart.
 - `figures/deep_matrix_coverage.svg` - critic coverage scatter plot.
 
@@ -33,6 +37,14 @@ python3 -m experiments.deep_matrix \
   --output-csv results/deep_matrix_20seed.csv \
   --output-md results/deep_matrix_20seed.md \
   --figures-dir results/figures
+```
+
+Regenerate the variance/credit grid with:
+
+```bash
+python3 -m experiments.variance_credit_grid \
+  --output-json results/variance_credit_grid_seed17.json \
+  --output-md results/variance_credit_grid_seed17.md
 ```
 
 Rendered public paper artifacts live under `public/` and are tracked with

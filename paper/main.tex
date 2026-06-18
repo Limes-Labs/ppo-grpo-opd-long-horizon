@@ -28,7 +28,7 @@
 
 \title{\vspace{-1.0cm}PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training}
 \author{Limes Labs Research Workstream}
-\date{Public draft v0.3, June 18, 2026}
+\date{Public draft v0.4, June 18, 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\opd}{\textsc{OPD}}
@@ -220,6 +220,38 @@ Method & Objective & Signal granularity & Extra signal & Main risk \\
 \end{tabularx}
 \end{table}
 
+\subsection{Variance reduction versus credit assignment}
+
+The critic in actor--critic \ppo\ does two jobs at once. It acts as a
+state-dependent baseline that can reduce policy-gradient variance, and it
+creates token- or state-indexed temporal credit. These are different
+mechanisms. A running global baseline can reduce variance without telling us
+which step helped; a structural group method can remain critic-free while
+recovering some step-level contrast; a sampled value method can estimate
+per-state credit without training a value network.
+
+\begin{table}[t]
+\centering
+\caption{Two separable axes: how the baseline is formed and where credit is
+assigned. ``SPO'' is overloaded in the literature, so the table spells out
+Single-stream Policy Optimization and Segment Policy Optimization.}
+\label{tab:variance-credit-taxonomy}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}p{2.6cm}XX@{}}
+\toprule
+Variance reduction & Trajectory-level credit & Step- or segment-level credit \\
+\midrule
+None & REINFORCE & -- \\
+Global/running & REINFORCE++; Single-stream Policy Optimization & Global baseline plus process rewards \\
+Sibling group/LOO & \grpo, RLOO, DAPO, Dr. \grpo & GiGPO, SALT, process-reward augmented \grpo \\
+Learned critic $V(s)$ & Usually unnecessary if only used at trajectory level & \ppo/GAE, ArCHer \\
+Sampled value & -- & VinePPO, OPPO, Segment Policy Optimization \\
+Redistribution & -- & RUDDER-style return decomposition \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \section{Related Work}
 
 \paragraph{PPO and actor--critic post-training.}
@@ -248,6 +280,31 @@ The practical attraction is real: \grpo\ removes critic memory and critic
 training, which can be decisive at large scale. The risk studied here is that a
 response-level group scalar can be information-wasteful inside long,
 heterogeneous rollouts.
+
+\paragraph{Baselines, sampled values, and step credit.}
+Recent work shows that the design space is broader than \ppo\ versus \grpo.
+REINFORCE-style and global-normalization methods reduce critic cost without
+necessarily solving intra-rollout credit \citep{ahmadian2024backtobasics,hu2025reinforcepp,xu2025singlestream}.
+VinePPO estimates values by branching Monte Carlo rollouts rather than fitting a
+value network \citep{kazemnejad2024vineppo}. ArCHer uses a hierarchical
+multi-turn value structure for language-model agents \citep{zhou2024archer}.
+OPPO is a very recent token-credit proposal based on Bayesian value recursion
+and should be read as a promising taxonomy anchor rather than settled evidence
+\citep{li2026oppo}. RUDDER and Segment Policy Optimization connect the same
+question to delayed-reward redistribution and segment-level credit
+\citep{arjona2018rudder,guo2025segmentpo}.
+
+\paragraph{Dense and structural step signals.}
+Process supervision is another way to avoid a pure terminal broadcast. Stepwise
+verification and process reward models provide direct intermediate feedback
+\citep{lightman2023verify,wang2023mathshepherd}, while implicit process rewards
+try to recover denser signals from cheaper outcome supervision
+\citep{yuan2024freeprocess}. GiGPO and SALT are especially relevant because
+they preserve critic-free or group-based structure while constructing
+finer-grained comparisons across repeated states or trajectory graphs
+\citep{feng2025gigpo,li2025salt}. These methods make the main point sharper:
+``critic-free'' does not have to mean ``trajectory-only,'' and ``critic-based''
+does not automatically mean correct credit.
 
 \paragraph{On-policy distillation.}
 \opd\ and related generalized knowledge distillation methods train on
@@ -343,6 +400,14 @@ correlation with the oracle advantage, calibrated MSE after affine rescaling,
 raw MSE, sign accuracy, wait-token leakage, within-trajectory variance,
 zero-variance group fraction, and exact critic-state hit rate.
 
+The variance-credit grid adds six non-oracle estimators on the same toy
+dynamics: raw REINFORCE returns, a global return baseline, sibling group
+normalization, leave-one-out group centering, a dense progress-reward proxy, a
+learned critic TD estimator, and a sampled Monte Carlo value estimator. The
+purpose is not to simulate every cited algorithm, but to test the mechanism
+classes in Table \ref{tab:variance-credit-taxonomy}: baseline-only variance
+reduction versus step-level credit.
+
 This is not a closed-loop \ppo-vs-\grpo\ training benchmark. It is an estimator
 fidelity experiment under controlled dynamics.
 
@@ -430,6 +495,30 @@ response-level group scalars. The result also protects against dogma. In the
 coverage-limited case, the confidence interval crosses zero; in the blind and
 undercovered case, group-relative terminal outcome information is better than a
 poor value table.
+
+\begin{table}[t]
+\centering
+\caption{Variance-reduction versus credit-assignment grid on the long-wait toy
+case. Baseline-only methods can lower second moment, but they do not create
+within-trajectory credit variation. The table is generated from
+\texttt{results/variance\_credit\_grid\_seed17.json}.}
+\label{tab:variance-credit-grid}
+\small
+\input{generated/variance_credit_table.tex}
+\end{table}
+
+\paragraph{Variance-credit decomposition.}
+Table \ref{tab:variance-credit-grid} makes the decomposition explicit. The
+global baseline reduces the second moment of the trajectory-level policy
+gradient signal relative to raw REINFORCE returns, but it leaves
+within-trajectory variance at zero because every token in a trajectory still
+receives the same scalar. Sibling group normalization is memory-light and
+critic-free, but in this long-wait setting it also remains a trajectory-level
+broadcast. The learned critic TD and sampled Monte Carlo value estimators both
+create step-level variation and substantially improve correlation with the
+oracle advantage. The dense progress-reward proxy sits between them: it gives a
+step signal, but because it lacks horizon and threshold information, it is not a
+full value estimate.
 
 \FloatBarrier
 
@@ -521,7 +610,9 @@ should help \grpo\ only when it increases meaningful reward dispersion. Adding
 process rewards should narrow the \ppo/\grpo\ credit gap. Degrading critic
 observability should produce regimes where \grpo\ wins. \opd/\opsd\ should be
 most token-efficient when teacher signals are novel and rollout lengths are
-controlled.
+controlled. Sampled-value methods should approach critic-like credit when the
+branching budget is high enough, but their inference cost should dominate in
+long agentic traces unless branch reuse or state sharing is available.
 
 \section{Threats to Validity}
 
@@ -569,6 +660,9 @@ python3 -m experiments.deep_matrix \
   --output-csv results/deep_matrix_20seed.csv \
   --output-md results/deep_matrix_20seed.md \
   --figures-dir results/figures
+python3 -m experiments.variance_credit_grid \
+  --output-json results/variance_credit_grid_seed17.json \
+  --output-md results/variance_credit_grid_seed17.md
 ./scripts/build_latex_paper.sh
 \end{verbatim}
 The LaTeX paper is built with Tectonic when available and emitted as the full

@@ -18,10 +18,10 @@ drop-in replacements for policy optimization.
 
 ## What Is Here
 
-- `PAPER.md` - full public draft with formal setup, equations, taxonomy,
+- `PAPER.md` - Markdown working draft with formal setup, equations, taxonomy,
   cost accounting, toy results, limitations, and references.
 - `paper/main.tex` and `paper/references.bib` - LaTeX manuscript source for
-  the real paper-formatted artifact.
+  the canonical full paper-formatted artifact.
 - `experiments/toy_credit_assignment.py` - CPU-only toy experiment comparing a
   GRPO-style group-relative advantage with a learned critic-style TD estimator
   on variable-length trajectories.
@@ -29,13 +29,17 @@ drop-in replacements for policy optimization.
   critic-favorable regimes and a group-favorable counterexample.
 - `experiments/deep_matrix.py` - 20-seed, 18-case matrix over horizon length,
   group size, critic budget, observability, and sparse rewards.
+- `experiments/variance_credit_grid.py` - estimator grid separating variance
+  reduction mechanisms from step-level credit assignment.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
 - `results/deep_matrix_20seed.md` - canonical multi-seed result table used for
   the public PDF/DOCX paper artifacts.
+- `results/variance_credit_grid_seed17.md` - canonical result table for the
+  variance-reduction versus credit-assignment grid.
 - `public/ppo_grpo_opd_long_horizon.pdf` and
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
-  artifacts with charts and result tables. `PAPER.md` remains the full
-  manuscript draft.
+  artifacts with charts and result tables. `paper/main.tex` is the full
+  manuscript source.
 - `public/ppo_grpo_opd_long_horizon_latex.pdf` - full 30-page LaTeX-built
   paper with generated result appendices.
 - `public/latex_artifact_manifest.json` - SHA-256 manifest for the full LaTeX
@@ -101,6 +105,14 @@ python3 -m experiments.deep_matrix \
   --figures-dir results/figures
 ```
 
+Regenerate the variance-reduction versus credit-assignment grid:
+
+```bash
+python3 -m experiments.variance_credit_grid \
+  --output-json results/variance_credit_grid_seed17.json \
+  --output-md results/variance_credit_grid_seed17.md
+```
+
 Regenerate PDF/DOCX paper artifacts with a Python environment that includes
 `reportlab`, `python-docx`, and `Pillow`:
 
@@ -117,8 +129,9 @@ Build the full LaTeX paper:
 ```
 
 The LaTeX build regenerates the result macros and appendix tables from
-`results/deep_matrix_20seed.json`, compiles the paper with `tectonic`, and
-checks that the rendered PDF is at least 30 pages.
+`results/deep_matrix_20seed.json` and
+`results/variance_credit_grid_seed17.json`, compiles the paper with `tectonic`,
+and checks that the rendered PDF is at least 30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
@@ -152,6 +165,12 @@ The PDF was rendered and visually inspected through PNG page renders. The DOCX
 is structurally checked for tables, text, and embedded charts; a full visual
 DOCX render was not run because LibreOffice/`soffice` is unavailable in the
 current local environment.
+
+The variance-credit grid adds the missing mechanism decomposition. In the
+canonical long-wait run, a global baseline reduces the REINFORCE second moment
+without creating within-trajectory credit variation, while learned critic TD
+and sampled Monte Carlo value estimates create step-level variation and improve
+oracle-advantage correlation over sibling group normalization.
 
 ## Working Thesis
 
@@ -194,6 +213,10 @@ Primary and near-primary sources covered in the first outline include:
   <https://arxiv.org/abs/2606.06058>
 - GLM-5.2 as a vendor case study for critic-based PPO returning in compacted
   long-horizon agentic RL: Z.ai, 2026, <https://z.ai/blog/glm-5.2>
+- Variance-reduction and step-credit references added in the LaTeX paper:
+  REINFORCE++, RLOO/Back to Basics, Single-stream Policy Optimization,
+  VinePPO, ArCHer, process supervision, GiGPO, SALT, RUDDER, Segment Policy
+  Optimization, and OPPO.
 
 ## Non-Claims
 

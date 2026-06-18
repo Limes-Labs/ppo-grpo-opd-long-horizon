@@ -15,7 +15,9 @@ AXIS_TABLE = ROOT / "paper/generated/axis_summary_table.tex"
 FULL_CASE_TABLE = ROOT / "paper/generated/full_case_table.tex"
 RAW_SEED_TABLE = ROOT / "paper/generated/raw_seed_table.tex"
 RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
+VARIANCE_CREDIT_TABLE = ROOT / "paper/generated/variance_credit_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
+VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -27,6 +29,7 @@ class LatexPaperTests(unittest.TestCase):
             r"\begin{abstract}",
             r"\section{Introduction}",
             r"\section{Definitions and Method Taxonomy}",
+            r"\subsection{Variance reduction versus credit assignment}",
             r"\section{Cost Accounting}",
             r"\section{Toy Experiment}",
             r"\section{Results}",
@@ -46,6 +49,7 @@ class LatexPaperTests(unittest.TestCase):
 
         self.assertIn(r"\includegraphics[width=\linewidth]{deep_matrix_delta.png}", text)
         self.assertIn(r"\DeepClearCriticCases\ clear critic-favorable cases", text)
+        self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
         self.assertIn("near tie", text)
         self.assertIn("not independent causal evidence", text)
         self.assertIn("not a closed-loop", text)
@@ -81,6 +85,16 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("Group MSE", raw_error)
         self.assertGreaterEqual(raw_error.count(r"\\"), 360)
 
+        variance_credit = json.loads(VARIANCE_CREDIT.read_text())
+        variance_table = VARIANCE_CREDIT_TABLE.read_text()
+        self.assertIn("Learned critic TD", variance_table)
+        self.assertIn("Sampled MC value", variance_table)
+        self.assertIn(r"\begin{tabularx}", variance_table)
+        self.assertEqual(
+            variance_credit["summary"]["best_non_oracle_by_correlation"],
+            "critic_td",
+        )
+
     def test_bibliography_covers_required_sources(self) -> None:
         bib = BIB.read_text()
         for key in [
@@ -90,6 +104,19 @@ class LatexPaperTests(unittest.TestCase):
             "zhao2026opsd",
             "li2026opd",
             "luo2026opd",
+            "hu2025reinforcepp",
+            "ahmadian2024backtobasics",
+            "xu2025singlestream",
+            "kazemnejad2024vineppo",
+            "zhou2024archer",
+            "lightman2023verify",
+            "wang2023mathshepherd",
+            "yuan2024freeprocess",
+            "feng2025gigpo",
+            "li2025salt",
+            "arjona2018rudder",
+            "guo2025segmentpo",
+            "li2026oppo",
             "zai2026glm52",
         ]:
             self.assertRegex(bib, rf"@\w+\{{{re.escape(key)},")
@@ -110,6 +137,8 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("results/deep_matrix_20seed.json", manifest["inputs"])
         self.assertIn("paper/generated/raw_seed_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/raw_error_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/variance_credit_table.tex", manifest["inputs"])
+        self.assertIn("results/variance_credit_grid_seed17.json", manifest["inputs"])
 
 
 if __name__ == "__main__":
