@@ -29,7 +29,7 @@
 
 \title{\vspace{-1.0cm}Trajectory Rewards Are Not Token Credit: Advantage Estimator Fidelity for Long-Horizon Post-Training}
 \author{Limes Labs Research Workstream}
-\date{Public draft v0.6, June 18, 2026}
+\date{Public draft v0.7, June 18, 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\opd}{\textsc{OPD}}
@@ -61,16 +61,16 @@ covered, while \grpo\ remains compelling when group reward contrast is reliable
 and value modeling is weak or too expensive. \opd\ and \opsd\ are treated as
 complementary on-policy distillation objectives. The paper contributes a
 variance-reduction/credit-assignment taxonomy, a CPU-only estimator-fidelity
-testbed with known oracle advantages, and an exploratory coverage-gated credit
-estimator that falls back to group-relative credit when critic coverage is
-weak. Across a \DeepSeedCount-seed, \DeepCaseCount-case matrix, critic-style
-temporal-difference advantages have higher mean oracle-advantage correlation in
-\DeepMeanCriticWins\ cases; a confidence-interval reading gives
-\DeepClearCriticCases\ clear critic-favorable cases, \DeepNearTieCases\ near
-tie, and \DeepClearGroupCases\ clear group-favorable counterexample. Closed-loop
-tabular policy training shows the same ordering direction but smaller
-downstream gaps. The result is mechanism evidence, not a frontier-model
-leaderboard claim.
+testbed with known oracle advantages, a structural critic-free anchor-action
+contrast baseline, an exploratory coverage-gated credit estimator, and a
+tabular closed-loop training audit. Across a \DeepSeedCount-seed,
+\DeepCaseCount-case matrix, critic-style temporal-difference advantages have
+higher mean oracle-advantage correlation in \DeepMeanCriticWins\ cases; a
+confidence-interval reading gives \DeepClearCriticCases\ clear critic-favorable
+cases, \DeepNearTieCases\ near tie, and \DeepClearGroupCases\ clear
+group-favorable counterexample. Closed-loop tabular policy training shows the
+same ordering direction but smaller downstream gaps. The result is mechanism
+evidence, not a frontier-model leaderboard claim.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -101,13 +101,17 @@ group-wise optimization to critic-based \ppo\ with token-level advantages
 \grpo; it is a motivating example of the problem structure studied here.
 
 \paragraph{Contributions.}
-We make four contributions. First, we separate \ppo, \grpo, \opd, and \opsd\ by
-objective, signal granularity, and extra-model cost. Second, we give a cost and
-failure-mode checklist for fair post-training comparisons. Third, we introduce
-a small deterministic toy environment with oracle advantages and compare
-group-relative and critic-style advantage estimators across a multi-seed matrix.
-Fourth, we state testable predictions for future neural and agentic
-experiments.
+We make five contributions. First, we separate reward optimization methods such
+as \ppo\ and \grpo\ from on-policy distillation methods such as \opd\ and
+\opsd, then classify them by variance reduction, credit granularity, and
+extra-model cost. Second, we give a cost and failure-mode checklist for fair
+long-horizon post-training comparisons. Third, we introduce a deterministic toy
+environment with known oracle advantages and use it for a multi-seed
+estimator-fidelity matrix. Fourth, we add two baselines beyond trajectory
+broadcasts: anchor-action contrast, a critic-free structural control, and
+coverage-gated credit, an adaptive estimator. Fifth, we run robustness audits
+and a tabular closed-loop training sanity check, showing that alignment gains
+survive downstream optimization only modestly.
 
 \paragraph{Scope discipline.}
 The paper makes a narrow claim about credit-assignment mechanisms. It does not
@@ -161,7 +165,7 @@ where
 In actor-critic use, a value model $V_\phi$ can estimate one-step temporal
 difference errors
 \begin{equation}
-  \delta_t = \mathcal{r}_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t),
+  \delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t),
 \end{equation}
 or generalized advantage estimates \citep{schulman2015gae}:
 \begin{equation}
@@ -215,14 +219,14 @@ optimization.
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{\linewidth}{@{}L{1.45cm}L{2.35cm}L{1.65cm}L{2.25cm}Y@{}}
+\begin{tabularx}{\linewidth}{@{}L{1.65cm}L{1.95cm}L{1.75cm}L{2.2cm}Y@{}}
 \toprule
 Method & Objective & Granularity & Extra signal & Main risk \\
 \midrule
-\ppo\ + critic & reward/KL opt. & tok./state & value, reward, ref. & critic cost; value miscalibration \\
-\grpo & group-normalized RL & resp./group & verifier; no critic & weak intra-rollout credit \\
-\opd & teacher distillation & token logits & teacher model & teacher mismatch; teacher cost \\
-\opsd & privileged self-distillation & token logits & privileged traces & leakage; truncation collapse \\
+\ppo\ critic & reward/KL opt. & token/state & value; reward; ref. & critic cost; value miscalibration \\
+\grpo & group RL & resp./group & verifier; no critic & weak intra-rollout credit \\
+\opd & teacher KL & token logits & teacher model & teacher mismatch; teacher cost \\
+\opsd & self-KL & token logits & privileged traces & leakage; truncation collapse \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -246,12 +250,12 @@ Policy Optimization and Segment Policy Optimization.}
 \scriptsize
 \setlength{\tabcolsep}{2pt}
 \renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{0.98\linewidth}{@{}L{2.0cm}YY@{}}
+\begin{tabularx}{0.96\linewidth}{@{}L{2.0cm}YY@{}}
 \toprule
 Baseline source & Trajectory-level credit & Step-/segment-level credit \\
 \midrule
 None & REINFORCE & -- \\
-Global/running & REINFORCE++; Single-stream PO & add process rewards \\
+Global & REINFORCE++; Single-stream PO & add process rewards \\
 \addlinespace[2pt]
 Sibling/LOO & \grpo; RLOO; DAPO; Dr. \grpo & GiGPO; SALT; anchor contrast; PRM+\grpo \\
 \addlinespace[2pt]
@@ -1009,11 +1013,20 @@ zero-variance group frequency, or success-rate mix.
 
 \section{Next Experiments}
 
-\paragraph{Closed-loop toy training.}
-The next toy should train parameterized policies with a shared reward and
-compare closed-loop \ppo, \grpo, and corrected \grpo\ variants under equal
-generated-token budgets. This will test whether estimator fidelity predicts
-policy improvement.
+\paragraph{Full clipped \ppo/\grpo\ training.}
+The current closed-loop audit is tabular and unclipped. The next controlled RL
+experiment should implement full clipped \ppo, response-level \grpo, and
+corrected \grpo\ variants such as length-normalized, leave-one-out, DAPO-style,
+and Dr. \grpo-style updates under equal generated-token and optimizer budgets.
+This will test whether the estimator-fidelity and tabular-policy findings
+survive the optimizer details used in modern post-training stacks.
+
+\paragraph{Tiny neural policy.}
+The strongest next upgrade is a small neural benchmark, preferably in
+\texttt{limes-nanogpt} or an equivalent tiny sequence-policy setup, where the
+environment remains controlled but the value model must generalize rather than
+look up exact tabular states. This is the bridge from workshop-strength
+mechanism evidence toward a stronger ML paper.
 
 \paragraph{Process rewards.}
 Adding process labels or subgoal rewards should narrow the gap between

@@ -1,10 +1,10 @@
 {
   "artifact_scope": "abridged public PDF/DOCX report derived from the canonical matrix, not a full PAPER.md export",
-  "generated_at_utc": "2026-06-18T09:26:49.303493+00:00",
+  "generated_at_utc": "2026-06-18T12:44:28.240990+00:00",
   "generator": "scripts/build_public_artifacts.py",
-  "git_commit": "5cf26622fecbe5d5a0582aca8fe03a9b9b471906",
+  "git_commit": "ae9c5ef9d3e1eb8badb15c8e21bae6dd2fbcc971",
   "git_context_note": "The manifest records the worktree at generation time. When generated artifacts are committed together with this manifest, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
-  "git_status_short": "M .gitignore\n M PAPER.md\n M README.md\n M experiments/toy_credit_assignment.py\n M results/README.md\n?? experiments/deep_matrix.py\n?? public/\n?? results/deep_matrix_20seed.csv\n?? results/deep_matrix_20seed.json\n?? results/deep_matrix_20seed.md\n?? results/figures/\n?? scripts/build_public_artifacts.py\n?? tests/test_deep_matrix.py\n?? tests/test_public_artifacts.py",
+  "git_status_short": "M PAPER.md\n M README.md\n M paper/README.md\n M paper/main.tex\n M public/artifact_manifest.json\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon.docx\n M public/ppo_grpo_opd_long_horizon.pdf\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M scripts/build_public_artifacts.py\n M tests/test_latex_paper.py",
   "inputs": {
     "results/deep_matrix_20seed.json": "9effd3b0fc704b019e601749cb1708a074520efdec1d0c7240a3079580af7c5e"
   },
@@ -18,27 +18,29 @@
       "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
     },
     "public/ppo_grpo_opd_long_horizon.docx": {
-      "bytes": 125357,
-      "sha256": "4e701c8be84caa2a86896b7f8372584712b790d252124a26b00675f497d636c0"
+      "bytes": 125437,
+      "sha256": "b74eb4e975f87ca1847d755cdfa0e614e41deeadbf3c33c46fafc50e9d62bde5"
     },
     "public/ppo_grpo_opd_long_horizon.pdf": {
-      "bytes": 125635,
-      "sha256": "f9cee386a75f82d3d44f709b0868a3858669d8b7296a4ae28f5849cb5238cab9"
+      "bytes": 125726,
+      "sha256": "6754df9a6a19f8fbcd931d956ae56e03e87a9f8c1aa9bcf1b55783d977d47e6f"
     }
   },
   "render_checks": {
     "docx": {
-      "bytes": 125357,
+      "bytes": 125437,
       "generated": true,
       "inline_shape_count": 2,
       "media_count": 2,
       "paragraph_count": 26,
       "table_count": 2,
       "text_check": {
-        "character_count": 2975,
+        "character_count": 3124,
         "missing_phrases": [],
         "required_phrases": [
-          "PPO, GRPO",
+          "Trajectory Rewards",
+          "PPO-style",
+          "GRPO-style",
           "16 clear",
           "near tie",
           "Z.ai",
@@ -48,14 +50,16 @@
       "visual_render": "not_run_soffice_unavailable"
     },
     "pdf": {
-      "bytes": 125635,
+      "bytes": 125726,
       "generated": true,
       "page_count": 4,
       "text_check": {
-        "character_count": 5117,
+        "character_count": 5241,
         "missing_phrases": [],
         "required_phrases": [
-          "PPO, GRPO",
+          "Trajectory Rewards",
+          "PPO-style",
+          "GRPO-style",
           "16 clear",
           "near tie",
           "Z.ai",

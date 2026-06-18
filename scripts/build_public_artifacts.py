@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import zipfile
@@ -14,12 +15,28 @@ from pathlib import Path
 from typing import Any
 
 
-TITLE = "PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training"
-SUBTITLE = "A Limes Labs public research report on temporal credit assignment"
+TITLE = "Trajectory Rewards Are Not Token Credit"
+SUBTITLE = "Advantage estimator fidelity for long-horizon post-training"
 RUNTIME_NOTE = "Generated from canonical JSON experiment artifacts."
 GLM_SOURCE_URL = "https://z.ai/blog/glm-5.2"
+ABSTRACT_TEXT = (
+    "We compare PPO-style critic/value-model advantage estimation with "
+    "GRPO-style group-relative advantages for long-horizon post-training, "
+    "while situating OPD/OPSD as complementary distillation tools rather than "
+    "policy-gradient replacements. In a multi-seed toy matrix with known "
+    "oracle advantages, critic-style TD has the higher mean correlation in "
+    "17/18 fixed regimes; a confidence-interval reading gives 16 clear "
+    "critic-favorable cases, 1 near tie, and 1 clear group-favorable "
+    "counterexample. Additional audits test anchor-action contrast, "
+    "coverage-gated credit, and tabular closed-loop training. The conclusion "
+    "is conditional: PPO-style critics look better when temporal state "
+    "information is observable and learnable; GRPO remains attractive when "
+    "reward contrast is reliable and critic coverage/cost is poor."
+)
 REQUIRED_TEXT_PHRASES = [
-    "PPO, GRPO",
+    "Trajectory Rewards",
+    "PPO-style",
+    "GRPO-style",
     "16 clear",
     "near tie",
     "Z.ai",
@@ -51,9 +68,14 @@ def fmt(value: float, digits: int = 3) -> str:
 
 
 def text_check_payload(text: str, required_phrases: list[str]) -> dict[str, Any]:
+    normalized_text = re.sub(r"\s+", " ", text)
     return {
         "required_phrases": required_phrases,
-        "missing_phrases": [phrase for phrase in required_phrases if phrase not in text],
+        "missing_phrases": [
+            phrase
+            for phrase in required_phrases
+            if re.sub(r"\s+", " ", phrase) not in normalized_text
+        ],
         "character_count": len(text),
     }
 
@@ -249,7 +271,7 @@ def build_pdf(result: dict[str, Any], charts: list[Path], output: Path) -> None:
     story.append(Spacer(1, 10))
     story.append(
         Paragraph(
-            "Abstract. We compare PPO-style critic/value-model advantage estimation, GRPO-style group-relative advantages, and OPD/OPSD distillation for long-horizon post-training. In a multi-seed toy matrix with known oracle advantages, critic-style TD has the higher mean correlation in 17/18 fixed regimes; a confidence-interval reading gives 16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable counterexample. The conclusion is conditional: PPO-style critics look better when temporal state information is observable and learnable; GRPO remains attractive when reward contrast is reliable and critic coverage/cost is poor.",
+            "Abstract. " + ABSTRACT_TEXT,
             styles["BodyTight"],
         )
     )
@@ -375,7 +397,7 @@ def build_pdf(result: dict[str, Any], charts: list[Path], output: Path) -> None:
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#666666"))
-        canvas.drawString(0.78 * inch, 0.42 * inch, "Limes Labs | PPO-GRPO-OPD Long-Horizon Workstream")
+        canvas.drawString(0.78 * inch, 0.42 * inch, "Limes Labs | Long-Horizon Credit Workstream")
         canvas.drawRightString(7.72 * inch, 0.42 * inch, f"Page {doc_obj.page}")
         canvas.restoreState()
 
@@ -431,9 +453,7 @@ def build_docx(result: dict[str, Any], charts: list[Path], output: Path) -> None
     doc.add_paragraph("Limes Labs Research Workstream | Public draft | 2026-06-18")
 
     doc.add_heading("Abstract", level=1)
-    doc.add_paragraph(
-        "We compare PPO-style critic/value-model advantage estimation, GRPO-style group-relative advantages, and OPD/OPSD distillation for long-horizon post-training. In a multi-seed toy matrix with known oracle advantages, critic-style TD has the higher mean correlation in 17/18 fixed regimes; a confidence-interval reading gives 16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable counterexample. The conclusion is conditional: PPO-style critics look better when temporal state information is observable and learnable; GRPO remains attractive when reward contrast is reliable and critic coverage/cost is poor."
-    )
+    doc.add_paragraph(ABSTRACT_TEXT)
 
     doc.add_heading("Key Results", level=1)
     key_table = doc.add_table(rows=2, cols=6)
@@ -515,7 +535,7 @@ def build_docx(result: dict[str, Any], charts: list[Path], output: Path) -> None
         doc.add_paragraph(ref)
 
     footer = section.footer.paragraphs[0]
-    footer.text = "Limes Labs | PPO-GRPO-OPD Long-Horizon Workstream"
+    footer.text = "Limes Labs | Long-Horizon Credit Workstream"
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.save(output)
 

@@ -1,4 +1,4 @@
-# PPO, GRPO, OPD For Long-Horizon Post-Training
+# Trajectory Rewards Are Not Token Credit
 
 This is a public Limes Labs research workstream on long-horizon post-training
 methods for language-model agents and reasoning systems. The focus is the method
@@ -15,6 +15,11 @@ training can be unstable, reward/process supervision can be wrong, and
 trajectory storage is expensive. OPD and OPSD belong in the comparison as
 complementary on-policy distillation/self-distillation tools, not as direct
 drop-in replacements for policy optimization.
+
+The repository now includes estimator-fidelity audits, structural critic-free
+baselines, an exploratory coverage-gated credit estimator, and tabular
+closed-loop training. The main remaining upgrade toward a stronger ML paper is
+a tiny neural policy or nanoGPT-scale synthetic benchmark.
 
 ## What Is Here
 
@@ -60,7 +65,7 @@ drop-in replacements for policy optimization.
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
   artifacts with charts and result tables. `paper/main.tex` is the full
   manuscript source.
-- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full 30-page LaTeX-built
+- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full 36-page LaTeX-built
   paper with generated result appendices.
 - `public/latex_artifact_manifest.json` - SHA-256 manifest for the full LaTeX
   paper artifact.

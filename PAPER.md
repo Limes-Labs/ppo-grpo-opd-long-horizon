@@ -1,9 +1,12 @@
-# PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training
+# Trajectory Rewards Are Not Token Credit
 
-**Status:** public draft v0.2, 2026-06-18  
-**Repository:** `Limes-Labs/ppo-grpo-opd-long-horizon`  
+**Status:** Markdown companion summary for public draft v0.7, 2026-06-18
+**Repository:** `Limes-Labs/ppo-grpo-opd-long-horizon`
 **Scope:** method research for long-horizon language-model post-training, not a
 model-specific report.
+
+The canonical full paper artifact is `paper/main.tex` and the rendered LaTeX
+PDF under `public/`. This Markdown file is kept as a readable companion summary.
 
 ## Abstract
 
@@ -23,30 +26,36 @@ post-training objectives: they can transfer dense teacher/self-teacher signals
 on student-visited trajectories, but they are not the same objective as reward
 optimization.
 
-We contribute a taxonomy, cost-accounting checklist, failure-mode table, and a
-dependency-free toy experiment. In a 20-seed, 18-case matrix with known oracle
-advantages, a critic-style TD estimator has higher mean oracle-advantage
-correlation in 17 regimes. A confidence-interval reading makes that 16 clear
-critic-favorable cases, 1 near tie, and 1 clear group-favorable counterexample
-where the critic is blind and undercovered. The result supports a conditional
-thesis: critic methods are promising for long heterogeneous rollouts, but GRPO
-remains scientifically plausible and often cheaper when reward contrast is
-reliable and value modeling is weak.
+We contribute a taxonomy, cost-accounting checklist, failure-mode table,
+dependency-free estimator audits, a structural critic-free anchor-action
+contrast baseline, an exploratory coverage-gated credit estimator, and a
+tabular closed-loop training audit. In a 20-seed, 18-case matrix with known
+oracle advantages, a critic-style TD estimator has higher mean
+oracle-advantage correlation in 17 regimes. A confidence-interval reading makes
+that 16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable
+counterexample where the critic is blind and undercovered. The result supports
+a conditional thesis: critic methods are promising for long heterogeneous
+rollouts, but GRPO remains scientifically plausible and often cheaper when
+reward contrast is reliable and value modeling is weak.
 
 ## 1. Contributions
 
-1. **Method taxonomy.** We separate PPO-style policy optimization, GRPO-style
-   group-relative policy optimization, OPD, and OPSD by objective, signal
-   granularity, and extra-model cost.
+1. **Method taxonomy.** We separate PPO-style and GRPO-style reward
+   optimization from OPD/OPSD distillation by objective, signal granularity,
+   variance-reduction mechanism, and extra-model cost.
 2. **Conditional thesis.** We argue against a blanket "PPO beats GRPO" claim.
    The practical question is when temporal state information is more valuable
    than the critic's cost and instability.
 3. **Cost accounting.** We list the model, rollout, verifier, teacher, and
    storage costs that should be charged before comparing methods.
-4. **Toy evidence.** We provide a fast CPU experiment with a known oracle
-   advantage, a six-case smoke sweep, and a 20-seed matrix that includes both
-   critic-favorable and group-favorable regimes.
-5. **Research protocol.** We define testable predictions for future Limes Labs
+4. **Toy evidence.** We provide fast CPU experiments with known oracle
+   advantages, including a 20-seed matrix, variance/credit decomposition,
+   anchor-coverage audit, length and token-cost robustness checks, and tabular
+   closed-loop training.
+5. **New baseline ideas.** We test anchor-action contrast and coverage-gated
+   credit as modest candidate mechanisms, not as solved replacements for PPO or
+   GRPO.
+6. **Research protocol.** We define testable predictions for future Limes Labs
    work in `limes-autoresearch`, `limes-nanogpt`, EuroBench, and Parameter Golf.
 
 ## 2. Operational Definition of Long Horizon
@@ -105,7 +114,7 @@ where
 In actor-critic use, the advantage can be estimated from a value model:
 
 ```math
-\delta_t = \mathcal{r}_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
+\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
 ```
 
 or with generalized advantage estimation [2]:

@@ -57,7 +57,8 @@ class LatexPaperTests(unittest.TestCase):
             self.assertIn(required, text)
 
         self.assertIn(r"\includegraphics[width=\linewidth]{deep_matrix_delta.png}", text)
-        self.assertIn(r"\DeepClearCriticCases\ clear critic-favorable cases", text)
+        self.assertIn(r"\DeepClearCriticCases", text)
+        self.assertIn("clear critic-favorable", text)
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
         self.assertIn(r"\input{generated/anchor_coverage_table.tex}", text)
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
@@ -68,6 +69,14 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("not independent causal evidence", text)
         self.assertIn("not a production", text)
         self.assertIn("controlled estimator-fidelity toy", text)
+        self.assertIn("anchor-action contrast", text)
+        self.assertIn("coverage-gated credit", text)
+        self.assertIn("tabular closed-loop training", text)
+        self.assertIn(r"\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)", text)
+        self.assertIn(r"\paragraph{Full clipped \ppo/\grpo\ training.}", text)
+        self.assertIn(r"\paragraph{Tiny neural policy.}", text)
+        self.assertNotIn(r"\paragraph{Closed-loop toy training.}", text)
+        self.assertNotIn(r"\mathcal{r}_t + \gamma V_\phi", text)
 
     def test_generated_latex_inputs_match_matrix_json(self) -> None:
         matrix = json.loads(MATRIX.read_text())
