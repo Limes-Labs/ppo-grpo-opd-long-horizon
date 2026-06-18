@@ -48,8 +48,10 @@ Use Parameter Golf for efficiency pressure:
 
 ## First Milestones
 
-1. Stabilize this repo's toy experiment and source outline.
-2. Add AutoResearch configs that replay toy ablations.
+1. Keep `paper/main.tex` and the canonical PDF as the source of truth for the
+   public report.
+2. Replay toy ablations and the neural generalization audit through
+   AutoResearch configs.
 3. Port one tiny PPO-vs-GRPO comparison into `limes-nanogpt`.
 4. Draft one EuroBench long-horizon task schema with process labels.
 5. Publish a result card with limitations and at least one negative finding.
@@ -61,9 +63,10 @@ The next scientific goal is a phase diagram, not a single winner.
 1. **Toy estimator phase:** sweep horizon, wait/no-op load, reward sparsity,
    group size, critic state coverage, structural-anchor coverage, and critic
    data budget. Keep oracle advantages so estimator quality is measurable.
-2. **Tiny neural phase:** move the same dynamics into `limes-nanogpt` with
-   actual learned policies, PPO-style value heads, and GRPO-style group
-   objectives under identical generated-token budgets.
+2. **Tiny neural phase:** extend the current held-out-threshold value-critic
+   audit into `limes-nanogpt` with actual learned sequence policies,
+   PPO-style value heads, and GRPO-style group objectives under identical
+   generated-token budgets.
 3. **Distillation phase:** add OPD/OPSD-style teacher signals only after PPO and
    GRPO baselines are stable. Charge teacher/self-teacher compute explicitly.
 4. **Benchmark phase:** use EuroBench tasks with verifiable subgoals, tool

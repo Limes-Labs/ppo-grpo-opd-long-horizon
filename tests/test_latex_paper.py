@@ -7,8 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TEX = ROOT / "paper/main.tex"
 BIB = ROOT / "paper/references.bib"
-LATEX_PDF = ROOT / "public/ppo_grpo_opd_long_horizon_latex.pdf"
-LATEX_MANIFEST = ROOT / "public/latex_artifact_manifest.json"
+LATEX_PDF = ROOT / "public/trajectory_rewards_are_not_token_credit.pdf"
+LATEX_MANIFEST = ROOT / "public/paper_manifest.json"
 MACROS = ROOT / "paper/generated/result_macros.tex"
 TABLE = ROOT / "paper/generated/deep_matrix_table.tex"
 AXIS_TABLE = ROOT / "paper/generated/axis_summary_table.tex"
@@ -20,6 +20,7 @@ ANCHOR_COVERAGE_TABLE = ROOT / "paper/generated/anchor_coverage_table.tex"
 LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
 TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
 CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
+NEURAL_TABLE = ROOT / "paper/generated/neural_generalization_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
 ANCHOR_COVERAGE = ROOT / "results/anchor_coverage_audit_seedset.json"
@@ -27,6 +28,7 @@ LENGTH_IMBALANCE = ROOT / "results/length_imbalance_audit_seedset.json"
 TOKEN_COST = ROOT / "results/token_cost_sensitivity_20seed.json"
 CLOSED_LOOP = ROOT / "results/closed_loop_credit_training_10seed.json"
 CLOSED_LOOP_LOW = ROOT / "results/closed_loop_credit_training_low_coverage_10seed.json"
+NEURAL = ROOT / "results/neural_credit_generalization_seedset.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -64,6 +66,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
         self.assertIn(r"\input{generated/token_cost_table.tex}", text)
         self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
+        self.assertIn(r"\input{generated/neural_generalization_table.tex}", text)
         self.assertIn("coverage-gated credit", text)
         self.assertIn("near tie", text)
         self.assertIn("not independent causal evidence", text)
@@ -72,9 +75,10 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("anchor-action contrast", text)
         self.assertIn("coverage-gated credit", text)
         self.assertIn("tabular closed-loop training", text)
+        self.assertIn("tiny neural value-critic generalization", text)
         self.assertIn(r"\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)", text)
         self.assertIn(r"\paragraph{Full clipped \ppo/\grpo\ training.}", text)
-        self.assertIn(r"\paragraph{Tiny neural policy.}", text)
+        self.assertIn(r"\paragraph{Tiny sequence-policy benchmark.}", text)
         self.assertNotIn(r"\paragraph{Closed-loop toy training.}", text)
         self.assertNotIn(r"\mathcal{r}_t + \gamma V_\phi", text)
 
@@ -176,6 +180,19 @@ class LatexPaperTests(unittest.TestCase):
             0.0,
         )
 
+        neural = json.loads(NEURAL.read_text())
+        neural_table = NEURAL_TABLE.read_text()
+        self.assertIn("Neural TD", neural_table)
+        self.assertIn("Held-out exact-state fraction", neural_table)
+        self.assertGreaterEqual(
+            neural["aggregate"]["sample_counts"]["heldout_exact_state_fraction"],
+            0.99,
+        )
+        self.assertGreater(
+            neural["aggregate"]["estimators"]["neural_critic_td"]["pearson_correlation"],
+            neural["aggregate"]["estimators"]["group_relative"]["pearson_correlation"] + 0.30,
+        )
+
     def test_bibliography_covers_required_sources(self) -> None:
         bib = BIB.read_text()
         for key in [
@@ -208,7 +225,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertEqual(LATEX_PDF.read_bytes()[:4], b"%PDF")
 
         manifest = json.loads(LATEX_MANIFEST.read_text())
-        output = manifest["outputs"]["public/ppo_grpo_opd_long_horizon_latex.pdf"]
+        output = manifest["outputs"]["public/trajectory_rewards_are_not_token_credit.pdf"]
         self.assertEqual(output["bytes"], LATEX_PDF.stat().st_size)
         self.assertEqual(manifest["checks"]["pdf_header"], "%PDF")
         self.assertTrue(manifest["checks"]["pdf_generated"])
@@ -225,10 +242,12 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/length_imbalance_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/token_cost_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/closed_loop_training_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/neural_generalization_table.tex", manifest["inputs"])
         self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
         self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_10seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_low_coverage_10seed.json", manifest["inputs"])
+        self.assertIn("results/neural_credit_generalization_seedset.json", manifest["inputs"])
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ tectonic \
   --outdir paper/build \
   paper/main.tex
 
-cp paper/build/main.pdf public/ppo_grpo_opd_long_horizon_latex.pdf
+cp paper/build/main.pdf public/trajectory_rewards_are_not_token_credit.pdf
 python3 scripts/build_latex_manifest.py
 
-echo "wrote public/ppo_grpo_opd_long_horizon_latex.pdf"
+echo "wrote public/trajectory_rewards_are_not_token_credit.pdf"

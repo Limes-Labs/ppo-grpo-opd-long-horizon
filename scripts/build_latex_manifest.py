@@ -68,6 +68,7 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("paper/generated/length_imbalance_table.tex"),
         Path("paper/generated/token_cost_table.tex"),
         Path("paper/generated/closed_loop_training_table.tex"),
+        Path("paper/generated/neural_generalization_table.tex"),
         Path("results/deep_matrix_20seed.json"),
         Path("results/variance_credit_grid_seed17.json"),
         Path("results/anchor_coverage_audit_seedset.json"),
@@ -75,6 +76,7 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("results/token_cost_sensitivity_20seed.json"),
         Path("results/closed_loop_credit_training_10seed.json"),
         Path("results/closed_loop_credit_training_low_coverage_10seed.json"),
+        Path("results/neural_credit_generalization_seedset.json"),
         Path("public/figures/deep_matrix_delta.png"),
         Path("public/figures/deep_matrix_coverage.png"),
     ]
@@ -85,12 +87,11 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         "generator": "scripts/build_latex_paper.sh",
         "tex_engine": command_value(["tectonic", "--version"], repo),
         "git_commit": command_value(["git", "rev-parse", "HEAD"], repo),
-        "git_status_short": command_value(["git", "status", "--short"], repo),
         "git_context_note": (
-            "The manifest records the worktree at generation time. When the "
-            "LaTeX source, PDF, and manifest are committed together, the final "
-            "commit will necessarily differ; rebuild from a clean checkout to "
-            "refresh it."
+            "The manifest records content hashes and the source commit visible "
+            "at generation time. It intentionally omits dirty-worktree status "
+            "because generated artifacts are committed together with the "
+            "manifest; rebuild from a clean checkout to refresh provenance."
         ),
         "inputs": {
             str(path): file_payload(repo / path)
@@ -114,6 +115,7 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
             "token_cost_source": "results/token_cost_sensitivity_20seed.json",
             "closed_loop_source": "results/closed_loop_credit_training_10seed.json",
             "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
+            "neural_generalization_source": "results/neural_credit_generalization_seedset.json",
         },
     }
 
@@ -123,12 +125,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-pdf",
         type=Path,
-        default=Path("public/ppo_grpo_opd_long_horizon_latex.pdf"),
+        default=Path("public/trajectory_rewards_are_not_token_credit.pdf"),
     )
     parser.add_argument(
         "--manifest",
         type=Path,
-        default=Path("public/latex_artifact_manifest.json"),
+        default=Path("public/paper_manifest.json"),
     )
     parser.add_argument("--min-pages", type=int, default=30)
     return parser
