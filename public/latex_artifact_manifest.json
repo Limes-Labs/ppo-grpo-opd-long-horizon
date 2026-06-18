@@ -1,9 +1,11 @@
 {
   "artifact_scope": "full LaTeX paper artifact",
   "checks": {
+    "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
+    "closed_loop_source": "results/closed_loop_credit_training_10seed.json",
     "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
     "min_pages": 30,
-    "page_count": 33,
+    "page_count": 35,
     "page_count_ok": true,
     "pdf_generated": true,
     "pdf_header": "%PDF",
@@ -11,15 +13,19 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-18T11:18:08.398778+00:00",
+  "generated_at_utc": "2026-06-18T11:42:06.379585+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "f6bf596fff4ca11ff946fdae1f2d9c8210101d85",
+  "git_commit": "f6c2f07d7ab67e8821c8ab7c0840aa65adaa9adf",
   "git_context_note": "The manifest records the worktree at generation time. When the LaTeX source, PDF, and manifest are committed together, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
-  "git_status_short": "M README.md\n M paper/README.md\n M paper/generated/full_case_table.tex\n M paper/generated/raw_error_table.tex\n M paper/generated/raw_seed_table.tex\n M paper/generated/variance_credit_table.tex\n M paper/main.tex\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M results/README.md\n M scripts/build_latex_inputs.py\n M scripts/build_latex_manifest.py\n M scripts/run_smoke.sh\n M tests/test_latex_paper.py\n?? experiments/length_imbalance_audit.py\n?? experiments/token_cost_sensitivity.py\n?? paper/generated/length_imbalance_table.tex\n?? paper/generated/token_cost_table.tex\n?? results/length_imbalance_audit_seedset.json\n?? results/length_imbalance_audit_seedset.md\n?? results/token_cost_sensitivity_20seed.json\n?? results/token_cost_sensitivity_20seed.md\n?? tests/test_length_imbalance_audit.py\n?? tests/test_token_cost_sensitivity.py",
+  "git_status_short": "M README.md\n M paper/README.md\n M paper/main.tex\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M results/README.md\n M scripts/build_latex_inputs.py\n M scripts/build_latex_manifest.py\n M scripts/run_smoke.sh\n M tests/test_latex_paper.py\n?? autoresearch/\n?? experiments/closed_loop_credit_training.py\n?? paper/generated/closed_loop_training_table.tex\n?? results/closed_loop_credit_training_10seed.json\n?? results/closed_loop_credit_training_10seed.md\n?? results/closed_loop_credit_training_low_coverage_10seed.json\n?? results/closed_loop_credit_training_low_coverage_10seed.md\n?? tests/test_autoresearch_config.py\n?? tests/test_closed_loop_credit_training.py",
   "inputs": {
     "paper/generated/axis_summary_table.tex": {
       "bytes": 571,
       "sha256": "ef0fbd3f37860b05695906bc2347950dd698305d5110706f9cb4905f67469ee2"
+    },
+    "paper/generated/closed_loop_training_table.tex": {
+      "bytes": 742,
+      "sha256": "c6ce3225d8014d6111cb6b39a2a7a1d9f8e7d485c9f65bf01ba58713f7edcec3"
     },
     "paper/generated/deep_matrix_table.tex": {
       "bytes": 756,
@@ -54,8 +60,8 @@
       "sha256": "3b1f004ce50fda94535f0771dce81896ce2881b685c4686c813504bcbba209b4"
     },
     "paper/main.tex": {
-      "bytes": 48933,
-      "sha256": "988608bab7226a35bdd43feea9833b4aae2bcb9cf11a6edaf03afc09e79fe2a3"
+      "bytes": 52658,
+      "sha256": "0632a77a1a0eef3ced42f8de0517beafb39e6a72043d505f7c4694aca6918db7"
     },
     "paper/references.bib": {
       "bytes": 10404,
@@ -68,6 +74,14 @@
     "public/figures/deep_matrix_delta.png": {
       "bytes": 79640,
       "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
+    },
+    "results/closed_loop_credit_training_10seed.json": {
+      "bytes": 182302,
+      "sha256": "99b0adbca46d8832438c68c010284f5aa0d5bcdc034e25a162a64be75d2463de"
+    },
+    "results/closed_loop_credit_training_low_coverage_10seed.json": {
+      "bytes": 155781,
+      "sha256": "e556e6631f3df9e8ff69065f53c5f087ab9909276988dbc85e758c666bb636ff"
     },
     "results/deep_matrix_20seed.json": {
       "bytes": 231192,
@@ -88,8 +102,8 @@
   },
   "outputs": {
     "public/ppo_grpo_opd_long_horizon_latex.pdf": {
-      "bytes": 260598,
-      "sha256": "8259b50c32eb091e08faf9b22554fc563cf6302b4b2ae95e36c0e11681b9bf95"
+      "bytes": 268295,
+      "sha256": "e78574794ec76f69f065209aba1cd724d663caa216422608234ea0a40fdee18f"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

@@ -25,6 +25,15 @@ Current artifacts:
   baseline and long-wait scenarios.
 - `token_cost_sensitivity_20seed.md` - human-readable table for the same
   token-cost audit.
+- `closed_loop_credit_training_10seed.json` - tabular closed-loop policy
+  training audit for group, critic, length-normalized group, and coverage-gated
+  credit.
+- `closed_loop_credit_training_10seed.md` - human-readable table for the same
+  default closed-loop audit.
+- `closed_loop_credit_training_low_coverage_10seed.json` - low-replay-coverage
+  stress run for the coverage-gated credit proposal.
+- `closed_loop_credit_training_low_coverage_10seed.md` - human-readable table
+  for the same low-coverage run.
 - `figures/deep_matrix_delta.svg` - critic-minus-group bar chart.
 - `figures/deep_matrix_coverage.svg` - critic coverage scatter plot.
 
@@ -65,6 +74,25 @@ python3 -m experiments.length_imbalance_audit \
 python3 -m experiments.token_cost_sensitivity \
   --output-json results/token_cost_sensitivity_20seed.json \
   --output-md results/token_cost_sensitivity_20seed.md
+```
+
+Regenerate the closed-loop training artifacts with:
+
+```bash
+python3 -m experiments.closed_loop_credit_training \
+  --output-json results/closed_loop_credit_training_10seed.json \
+  --output-md results/closed_loop_credit_training_10seed.md
+
+python3 -m experiments.closed_loop_credit_training \
+  --critic-replay-limit 80 \
+  --gate-min-count 4 \
+  --train-iterations 50 \
+  --groups-per-iteration 16 \
+  --group-size 5 \
+  --max-steps 14 \
+  --eval-groups 60 \
+  --output-json results/closed_loop_credit_training_low_coverage_10seed.json \
+  --output-md results/closed_loop_credit_training_low_coverage_10seed.md
 ```
 
 Rendered public paper artifacts live under `public/` and are tracked with

@@ -27,9 +27,9 @@
 
 \graphicspath{{../public/figures/}{../results/figures/}}
 
-\title{\vspace{-1.0cm}PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training}
+\title{\vspace{-1.0cm}Trajectory Rewards Are Not Token Credit: Advantage Estimator Fidelity for Long-Horizon Post-Training}
 \author{Limes Labs Research Workstream}
-\date{Public draft v0.5, June 18, 2026}
+\date{Public draft v0.6, June 18, 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\opd}{\textsc{OPD}}
@@ -59,15 +59,18 @@ trajectories. Our working hypothesis is conditional: critic-based \ppo\ is a
 better candidate when token- or state-level temporal credit is observable and
 covered, while \grpo\ remains compelling when group reward contrast is reliable
 and value modeling is weak or too expensive. \opd\ and \opsd\ are treated as
-complementary on-policy distillation objectives, not direct replacements for
-policy optimization. We formalize the method taxonomy, cost accounting, and
-failure modes, and run a CPU-only toy benchmark with known oracle advantages.
-Across a \DeepSeedCount-seed, \DeepCaseCount-case matrix, critic-style
+complementary on-policy distillation objectives. The paper contributes a
+variance-reduction/credit-assignment taxonomy, a CPU-only estimator-fidelity
+testbed with known oracle advantages, and an exploratory coverage-gated credit
+estimator that falls back to group-relative credit when critic coverage is
+weak. Across a \DeepSeedCount-seed, \DeepCaseCount-case matrix, critic-style
 temporal-difference advantages have higher mean oracle-advantage correlation in
 \DeepMeanCriticWins\ cases; a confidence-interval reading gives
 \DeepClearCriticCases\ clear critic-favorable cases, \DeepNearTieCases\ near
-tie, and \DeepClearGroupCases\ clear group-favorable counterexample. The result
-is mechanism evidence, not a frontier-model leaderboard claim.
+tie, and \DeepClearGroupCases\ clear group-favorable counterexample. Closed-loop
+tabular policy training shows the same ordering direction but smaller
+downstream gaps. The result is mechanism evidence, not a frontier-model
+leaderboard claim.
 \end{abstract}
 
 \paragraph{Keywords.}
@@ -259,6 +262,25 @@ Redistribution & -- & RUDDER-style decomposition \\
 \end{tabularx}
 \end{table}
 
+\subsection{Coverage-gated credit}
+
+The counterexample in this paper suggests a simple adaptive estimator. A critic
+should not be used merely because a value model exists; it should be used where
+the value estimate is locally supported. Let $n_D(s_t)$ be a replay or batch
+coverage count for the critic state abstraction, $k$ a minimum support
+threshold, $\hat A^{\mathrm{TD}}_t$ a critic temporal-difference advantage, and
+$\hat A^{G}_i$ the group-relative scalar for trajectory $i$. Define
+\begin{equation}
+m_t = \mathbf{1}\{n_D(s_t) \ge k\}, \qquad
+\hat A^{\mathrm{CG}}_t =
+m_t \hat A^{\mathrm{TD}}_t + (1-m_t)\hat A^{G}_i .
+\end{equation}
+This coverage-gated estimator is intentionally modest. It does not solve
+critic blindness: if the state abstraction hides the causal feature, high
+coverage can still be misleading. Its purpose is to make critic readiness an
+explicit experimental variable and to preserve group-relative signal where the
+critic is locally undercovered.
+
 \section{Related Work}
 
 \paragraph{PPO and actor--critic post-training.}
@@ -423,8 +445,17 @@ each prompt group, and sweeps maximum horizon. The token-cost audit reruns
 baseline and long-wait settings with per-token costs $c \in \{0, 0.01, 0.02,
 0.05\}$, including the no-explicit-length-penalty case $c=0$.
 
-This is not a closed-loop \ppo-vs-\grpo\ training benchmark. It is an estimator
-fidelity experiment under controlled dynamics.
+The closed-loop training audit uses the same toy dynamics but trains a tabular
+softmax policy with policy-gradient updates under matched generated-token
+budgets. This is still not full \ppo\ or production \grpo: there is no neural
+policy, KL controller, minibatch optimizer, or clipped surrogate. It does test
+whether estimator-fidelity differences survive one downstream optimization
+loop. The compared signals are group total return, group return per token,
+critic TD from a replay value table, and coverage-gated credit.
+
+The oracle-alignment matrix remains an estimator-fidelity experiment under
+controlled dynamics. The closed-loop audit is a downstream tabular-policy
+stress test, not a production \ppo-vs-\grpo\ benchmark.
 
 \section{Experimental Protocol}
 
@@ -577,6 +608,27 @@ subtracting the 95\% interval. In the long-wait, zero-cost row, critic $r$ is
 0.888, group $r$ is 0.335, and the delta is 0.552. Removing the explicit length
 penalty therefore does not remove the temporal-credit gap.
 
+\begin{table}[!htbp]
+\centering
+\caption{Closed-loop tabular policy training under matched generated-token
+budgets. Default uses the standard replay budget; low cov. restricts replay and
+raises the coverage gate. Cov-gated is coverage-gated credit.}
+\label{tab:closed-loop}
+\scriptsize
+\input{generated/closed_loop_training_table.tex}
+\end{table}
+
+\paragraph{Closed-loop training.}
+Table \ref{tab:closed-loop} is the first downstream optimization check. The
+result is more conservative than the oracle-fidelity tables, as expected. In
+the default setting, group-total training improves mean return from 0.515 to
+0.785, while critic TD reaches 0.810 and coverage-gated credit reaches 0.809.
+In the low-coverage stress setting, group total reaches 0.769, critic TD reaches
+0.780, and coverage-gated credit reaches 0.777 while using critic credit on only
+64.4\% of final-batch steps. The adaptive estimator is therefore a candidate
+design pattern, not a claimed replacement for \ppo\ or \grpo: it preserves most
+critic benefit while making critic use explicit and auditable.
+
 \FloatBarrier
 
 \section{Mechanism Analysis}
@@ -728,10 +780,24 @@ python3 -m experiments.length_imbalance_audit \
 python3 -m experiments.token_cost_sensitivity \
   --output-json results/token_cost_sensitivity_20seed.json \
   --output-md results/token_cost_sensitivity_20seed.md
+python3 -m experiments.closed_loop_credit_training \
+  --output-json results/closed_loop_credit_training_10seed.json \
+  --output-md results/closed_loop_credit_training_10seed.md
 ./scripts/build_latex_paper.sh
 \end{verbatim}
 The LaTeX paper is built with Tectonic when available and emitted as the full
 paper PDF artifact under \texttt{public/}.
+
+The coverage-gated closed-loop proposal is also wired into Limes AutoResearch.
+From the repository root, set \texttt{PYTHONPATH} to the sibling
+\texttt{limes-autoresearch/repo} checkout and run:
+\begin{verbatim}
+python3 -m autoresearch_limes run \
+  autoresearch/closed_loop_credit_training_config.json \
+  --ledger autoresearch/runs/closed_loop_ledger.jsonl
+\end{verbatim}
+The committed result card records the promotion gate and the fact that the
+current run is a candidate, not a verified replay.
 
 \section{Limitations}
 
@@ -754,7 +820,9 @@ coverage results survive function approximation.
 For agentic research workflows, the key artifact is a trace schema that records
 tool state, compaction boundaries, blocked actions, reward calls, and process
 labels. Without that schema, value modeling and group-relative normalization
-cannot be audited fairly.
+cannot be audited fairly. The AutoResearch spec in this repository is a first
+hook: it turns coverage-gated credit into a bounded, ledgered research question
+with explicit baselines and promotion criteria.
 
 \paragraph{EuroBench and Parameter Golf.}
 Benchmark integrations should report cost-normalized improvement, not only

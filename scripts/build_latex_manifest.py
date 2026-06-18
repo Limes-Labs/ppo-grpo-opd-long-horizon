@@ -66,10 +66,13 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("paper/generated/variance_credit_table.tex"),
         Path("paper/generated/length_imbalance_table.tex"),
         Path("paper/generated/token_cost_table.tex"),
+        Path("paper/generated/closed_loop_training_table.tex"),
         Path("results/deep_matrix_20seed.json"),
         Path("results/variance_credit_grid_seed17.json"),
         Path("results/length_imbalance_audit_seedset.json"),
         Path("results/token_cost_sensitivity_20seed.json"),
+        Path("results/closed_loop_credit_training_10seed.json"),
+        Path("results/closed_loop_credit_training_low_coverage_10seed.json"),
         Path("public/figures/deep_matrix_delta.png"),
         Path("public/figures/deep_matrix_coverage.png"),
     ]
@@ -106,6 +109,8 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
             "variance_credit_source": "results/variance_credit_grid_seed17.json",
             "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
             "token_cost_source": "results/token_cost_sensitivity_20seed.json",
+            "closed_loop_source": "results/closed_loop_credit_training_10seed.json",
+            "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
         },
     }
 

@@ -18,10 +18,13 @@ RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
 VARIANCE_CREDIT_TABLE = ROOT / "paper/generated/variance_credit_table.tex"
 LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
 TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
+CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
 LENGTH_IMBALANCE = ROOT / "results/length_imbalance_audit_seedset.json"
 TOKEN_COST = ROOT / "results/token_cost_sensitivity_20seed.json"
+CLOSED_LOOP = ROOT / "results/closed_loop_credit_training_10seed.json"
+CLOSED_LOOP_LOW = ROOT / "results/closed_loop_credit_training_low_coverage_10seed.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -56,9 +59,11 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
         self.assertIn(r"\input{generated/token_cost_table.tex}", text)
+        self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
+        self.assertIn("coverage-gated credit", text)
         self.assertIn("near tie", text)
         self.assertIn("not independent causal evidence", text)
-        self.assertIn("not a closed-loop", text)
+        self.assertIn("not a production", text)
         self.assertIn("controlled estimator-fidelity toy", text)
 
     def test_generated_latex_inputs_match_matrix_json(self) -> None:
@@ -118,6 +123,23 @@ class LatexPaperTests(unittest.TestCase):
             token_cost["summary"]["row_count"],
         )
 
+        closed_loop = json.loads(CLOSED_LOOP.read_text())
+        closed_loop_low = json.loads(CLOSED_LOOP_LOW.read_text())
+        closed_table = CLOSED_LOOP_TABLE.read_text()
+        self.assertIn("Cov-gated", closed_table)
+        self.assertEqual(
+            closed_loop["summary"]["best_by_final_return"],
+            "critic_td",
+        )
+        self.assertGreater(
+            closed_loop["summary"]["coverage_minus_group_return"],
+            0.0,
+        )
+        self.assertGreater(
+            closed_loop_low["summary"]["coverage_minus_group_return"],
+            0.0,
+        )
+
     def test_bibliography_covers_required_sources(self) -> None:
         bib = BIB.read_text()
         for key in [
@@ -164,8 +186,11 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("results/variance_credit_grid_seed17.json", manifest["inputs"])
         self.assertIn("paper/generated/length_imbalance_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/token_cost_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/closed_loop_training_table.tex", manifest["inputs"])
         self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
         self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])
+        self.assertIn("results/closed_loop_credit_training_10seed.json", manifest["inputs"])
+        self.assertIn("results/closed_loop_credit_training_low_coverage_10seed.json", manifest["inputs"])
 
 
 if __name__ == "__main__":

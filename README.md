@@ -35,6 +35,10 @@ drop-in replacements for policy optimization.
   under increasing within-group trajectory-length imbalance.
 - `experiments/token_cost_sensitivity.py` - reward-shaping robustness check
   over token costs, including the zero-cost case.
+- `experiments/closed_loop_credit_training.py` - tabular closed-loop training
+  audit plus the exploratory coverage-gated credit estimator.
+- `autoresearch/` - Limes AutoResearch spec/config for ledgered replay of the
+  coverage-gated closed-loop proposal.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
 - `results/deep_matrix_20seed.md` - canonical multi-seed result table used for
   the public PDF/DOCX paper artifacts.
@@ -44,6 +48,10 @@ drop-in replacements for policy optimization.
   audit table.
 - `results/token_cost_sensitivity_20seed.md` - canonical token-cost
   sensitivity table.
+- `results/closed_loop_credit_training_10seed.md` - closed-loop tabular policy
+  training audit under the default replay budget.
+- `results/closed_loop_credit_training_low_coverage_10seed.md` - low-coverage
+  stress run for coverage-gated credit.
 - `public/ppo_grpo_opd_long_horizon.pdf` and
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
   artifacts with charts and result tables. `paper/main.tex` is the full
@@ -131,6 +139,18 @@ python3 -m experiments.length_imbalance_audit \
 python3 -m experiments.token_cost_sensitivity \
   --output-json results/token_cost_sensitivity_20seed.json \
   --output-md results/token_cost_sensitivity_20seed.md
+
+python3 -m experiments.closed_loop_credit_training \
+  --output-json results/closed_loop_credit_training_10seed.json \
+  --output-md results/closed_loop_credit_training_10seed.md
+```
+
+Run the Limes AutoResearch hook from this repository root:
+
+```bash
+PYTHONPATH=/Users/francescogiannicola/Documents/LimesLabs/workstreams/limes-autoresearch/repo \
+  python3 -m autoresearch_limes run autoresearch/closed_loop_credit_training_config.json \
+  --ledger autoresearch/runs/closed_loop_ledger.jsonl
 ```
 
 Regenerate PDF/DOCX paper artifacts with a Python environment that includes
@@ -200,6 +220,14 @@ while group total return is `r=0.266` and length-adjusted group return is
 `r=0.260`. The token-cost audit checks that this is not just the explicit
 per-token penalty: in the long-wait zero-cost row, critic-minus-group
 correlation is `+0.552` over 20 seeds.
+
+The closed-loop audit trains a tabular softmax policy under matched generated
+token budgets. In the default 10-seed run, group total return reaches final
+mean return `0.785`, critic TD reaches `0.810`, and coverage-gated credit
+reaches `0.809`. In the low-coverage stress run, coverage-gated credit uses
+critic TD on about `64%` of final-batch steps and beats group total by `+0.008`
+return, but critic TD remains slightly higher. Treat this as a candidate design
+pattern, not a solved algorithm.
 
 ## Working Thesis
 
