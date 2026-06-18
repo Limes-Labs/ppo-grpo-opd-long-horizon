@@ -442,11 +442,14 @@ not to simulate every cited algorithm, but to test the mechanism classes in
 Table \ref{tab:variance-credit-taxonomy}: baseline-only variance reduction,
 structural critic-free step credit, and value-estimation-based step credit.
 
-Two robustness audits test likely objections. The length-imbalance audit adds a
-length-adjusted group scalar, computed by normalizing return per token inside
-each prompt group, and sweeps maximum horizon. The token-cost audit reruns
-baseline and long-wait settings with per-token costs $c \in \{0, 0.01, 0.02,
-0.05\}$, including the no-explicit-length-penalty case $c=0$.
+Three robustness audits test likely objections. The anchor-coverage audit
+sweeps evaluation batch size to change how often exact state-action anchors
+repeat, testing whether the structural critic-free baseline is coverage-bound.
+The length-imbalance audit adds a length-adjusted group scalar, computed by
+normalizing return per token inside each prompt group, and sweeps maximum
+horizon. The token-cost audit reruns baseline and long-wait settings with
+per-token costs $c \in \{0, 0.01, 0.02, 0.05\}$, including the
+no-explicit-length-penalty case $c=0$.
 
 The closed-loop training audit uses the same toy dynamics but trains a tabular
 softmax policy with policy-gradient updates under matched generated-token
@@ -581,6 +584,29 @@ this grid is therefore not that every critic-free method is weak; it is that
 long-horizon tasks need some mechanism for state-sensitive step credit, and in
 this toy the value-estimation mechanisms still carry the highest oracle
 alignment.
+
+\begin{table}[!htbp]
+\centering
+\caption{Anchor-coverage audit over five seeds. Groups is the number of
+evaluation prompt groups in the estimator batch; Support is the fraction of
+steps with leave-one-out state-action anchor support. $A-G$ is anchor $r$ minus
+group $r$; $C-A$ is critic $r$ minus anchor $r$.}
+\label{tab:anchor-coverage}
+\scriptsize
+\input{generated/anchor_coverage_table.tex}
+\end{table}
+
+\paragraph{Anchor coverage audit.}
+Table \ref{tab:anchor-coverage} checks the assumption behind the structural
+critic-free baseline. At two evaluation groups, only 41.3\% of steps have
+supported repeated anchors and anchor contrast is worse than sibling grouping
+($r=0.134$ versus $r=0.361$). The method crosses the sibling baseline at eight
+groups, reaches support above 0.80 at 16 groups, and climbs to $r=0.751$ at 64
+groups. Critic TD remains higher in every row. This is a useful negative and
+positive result at once: structural critic-free step credit can be real, but it
+is not free. It needs repeated comparable states, and sparse-anchor regimes
+should fall back to group or critic signals rather than pretending a local
+contrast exists.
 
 \begin{table}[!htbp]
 \centering

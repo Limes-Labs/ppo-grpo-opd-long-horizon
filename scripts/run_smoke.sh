@@ -32,6 +32,16 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/variance_credit_grid_smoke.json" \
   --output-md "$SMOKE_DIR/variance_credit_grid_smoke.md"
 
+"$PYTHON_BIN" -m experiments.anchor_coverage_audit \
+  --seeds 11 29 \
+  --eval-groups-values 2 8 24 \
+  --train-groups 40 \
+  --group-size 4 \
+  --max-steps 10 \
+  --branches-per-state 6 \
+  --output-json "$SMOKE_DIR/anchor_coverage_smoke.json" \
+  --output-md "$SMOKE_DIR/anchor_coverage_smoke.md"
+
 "$PYTHON_BIN" -m experiments.length_imbalance_audit \
   --seeds 11 29 \
   --horizons 4 12 20 \
@@ -127,6 +137,15 @@ if estimators["anchor_action_contrast"]["metrics"]["within_trajectory_variance"]
     raise SystemExit("anchor action contrast did not create step-level variation")
 if estimators["critic_td"]["metrics"]["within_trajectory_variance"] <= 0.0:
     raise SystemExit("critic TD did not create step-level variation")
+
+anchor = json.loads((smoke_dir / "anchor_coverage_smoke.json").read_text())
+anchor_rows = anchor["aggregate_rows"]
+if anchor_rows[-1]["supported_step_fraction"] <= anchor_rows[0]["supported_step_fraction"]:
+    raise SystemExit("anchor support did not increase across coverage smoke")
+if anchor_rows[-1]["anchor_minus_sibling_r"] <= anchor_rows[0]["anchor_minus_sibling_r"]:
+    raise SystemExit("anchor advantage over sibling did not improve with coverage")
+if anchor_rows[-1]["critic_minus_anchor_r"] <= 0.0:
+    raise SystemExit("critic did not remain above high-coverage anchor contrast")
 
 length = json.loads((smoke_dir / "length_imbalance_smoke.json").read_text())
 short = length["horizon_summaries"][0]

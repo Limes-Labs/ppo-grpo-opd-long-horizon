@@ -18,6 +18,10 @@ Current artifacts:
   critic-free anchor-action contrast baseline over repeated toy states.
 - `variance_credit_grid_seed17.md` - human-readable table and reading notes for
   the same estimator grid.
+- `anchor_coverage_audit_seedset.json` - coverage sweep for the critic-free
+  anchor-action contrast estimator over repeated exact toy states.
+- `anchor_coverage_audit_seedset.md` - human-readable table for the same
+  anchor-coverage audit.
 - `length_imbalance_audit_seedset.json` - horizon sweep testing within-group
   length imbalance and a length-adjusted group baseline.
 - `length_imbalance_audit_seedset.md` - human-readable table for the same
@@ -68,6 +72,10 @@ python3 -m experiments.variance_credit_grid \
 Regenerate the robustness audits with:
 
 ```bash
+python3 -m experiments.anchor_coverage_audit \
+  --output-json results/anchor_coverage_audit_seedset.json \
+  --output-md results/anchor_coverage_audit_seedset.md
+
 python3 -m experiments.length_imbalance_audit \
   --output-json results/length_imbalance_audit_seedset.json \
   --output-md results/length_imbalance_audit_seedset.md

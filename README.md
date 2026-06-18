@@ -31,6 +31,8 @@ drop-in replacements for policy optimization.
   group size, critic budget, observability, and sparse rewards.
 - `experiments/variance_credit_grid.py` - estimator grid separating variance
   reduction mechanisms from step-level credit assignment.
+- `experiments/anchor_coverage_audit.py` - coverage sweep for the critic-free
+  anchor-action contrast baseline.
 - `experiments/length_imbalance_audit.py` - audit of group-relative estimators
   under increasing within-group trajectory-length imbalance.
 - `experiments/token_cost_sensitivity.py` - reward-shaping robustness check
@@ -44,6 +46,8 @@ drop-in replacements for policy optimization.
   the public PDF/DOCX paper artifacts.
 - `results/variance_credit_grid_seed17.md` - canonical result table for the
   variance-reduction versus credit-assignment grid.
+- `results/anchor_coverage_audit_seedset.md` - canonical coverage sweep for
+  anchor-action contrast.
 - `results/length_imbalance_audit_seedset.md` - canonical length-imbalance
   audit table.
 - `results/token_cost_sensitivity_20seed.md` - canonical token-cost
@@ -129,9 +133,13 @@ python3 -m experiments.variance_credit_grid \
   --output-md results/variance_credit_grid_seed17.md
 ```
 
-Regenerate the length-imbalance and token-cost audits:
+Regenerate the anchor-coverage, length-imbalance, and token-cost audits:
 
 ```bash
+python3 -m experiments.anchor_coverage_audit \
+  --output-json results/anchor_coverage_audit_seedset.json \
+  --output-md results/anchor_coverage_audit_seedset.md
+
 python3 -m experiments.length_imbalance_audit \
   --output-json results/length_imbalance_audit_seedset.json \
   --output-md results/length_imbalance_audit_seedset.md
@@ -216,6 +224,12 @@ oracle-advantage correlation from sibling group normalization's `r=0.319` to
 value estimates reach `r=0.849`. This makes the middle ground explicit:
 critic-free does not have to mean trajectory-only, but value estimation remains
 the strongest signal in this toy setting.
+
+The anchor-coverage audit turns that caveat into a measurable phase line. With
+only two evaluation prompt groups, anchor support is `0.413` and anchor
+contrast trails sibling grouping (`r=0.134` vs `r=0.361`). It first beats the
+sibling baseline at eight groups, crosses `0.80` support at 16 groups, and
+reaches `r=0.751` at 64 groups while critic TD remains higher in every row.
 
 The length-imbalance audit tests a simple length-adjusted group baseline. As
 maximum horizon grows from 4 to 20, mean within-group length range grows from

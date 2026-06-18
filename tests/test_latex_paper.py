@@ -16,11 +16,13 @@ FULL_CASE_TABLE = ROOT / "paper/generated/full_case_table.tex"
 RAW_SEED_TABLE = ROOT / "paper/generated/raw_seed_table.tex"
 RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
 VARIANCE_CREDIT_TABLE = ROOT / "paper/generated/variance_credit_table.tex"
+ANCHOR_COVERAGE_TABLE = ROOT / "paper/generated/anchor_coverage_table.tex"
 LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
 TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
 CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
+ANCHOR_COVERAGE = ROOT / "results/anchor_coverage_audit_seedset.json"
 LENGTH_IMBALANCE = ROOT / "results/length_imbalance_audit_seedset.json"
 TOKEN_COST = ROOT / "results/token_cost_sensitivity_20seed.json"
 CLOSED_LOOP = ROOT / "results/closed_loop_credit_training_10seed.json"
@@ -57,6 +59,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\includegraphics[width=\linewidth]{deep_matrix_delta.png}", text)
         self.assertIn(r"\DeepClearCriticCases\ clear critic-favorable cases", text)
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
+        self.assertIn(r"\input{generated/anchor_coverage_table.tex}", text)
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
         self.assertIn(r"\input{generated/token_cost_table.tex}", text)
         self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
@@ -117,6 +120,18 @@ class LatexPaperTests(unittest.TestCase):
         self.assertLess(
             variance_estimators["anchor_action_contrast"]["pearson_correlation"],
             variance_estimators["critic_td"]["pearson_correlation"],
+        )
+
+        anchor_coverage = json.loads(ANCHOR_COVERAGE.read_text())
+        anchor_table = ANCHOR_COVERAGE_TABLE.read_text()
+        self.assertIn("Anchor $r$", anchor_table)
+        self.assertEqual(
+            anchor_coverage["summary"]["first_eval_groups_anchor_beats_sibling"],
+            8,
+        )
+        self.assertEqual(
+            anchor_coverage["summary"]["critic_above_anchor_rows"],
+            len(anchor_coverage["aggregate_rows"]),
         )
 
         length = json.loads(LENGTH_IMBALANCE.read_text())
@@ -196,6 +211,8 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/raw_error_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/variance_credit_table.tex", manifest["inputs"])
         self.assertIn("results/variance_credit_grid_seed17.json", manifest["inputs"])
+        self.assertIn("paper/generated/anchor_coverage_table.tex", manifest["inputs"])
+        self.assertIn("results/anchor_coverage_audit_seedset.json", manifest["inputs"])
         self.assertIn("paper/generated/length_imbalance_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/token_cost_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/closed_loop_training_table.tex", manifest["inputs"])
