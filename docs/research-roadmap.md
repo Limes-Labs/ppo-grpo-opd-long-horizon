@@ -52,3 +52,21 @@ Use Parameter Golf for efficiency pressure:
 4. Draft one EuroBench long-horizon task schema with process labels.
 5. Publish a result card with limitations and at least one negative finding.
 
+## Experiment Ladder
+
+The next scientific goal is a phase diagram, not a single winner.
+
+1. **Toy estimator phase:** sweep horizon, wait/no-op load, reward sparsity,
+   group size, critic state coverage, and critic data budget. Keep oracle
+   advantages so estimator quality is measurable.
+2. **Tiny neural phase:** move the same dynamics into `limes-nanogpt` with
+   actual learned policies, PPO-style value heads, and GRPO-style group
+   objectives under identical generated-token budgets.
+3. **Distillation phase:** add OPD/OPSD-style teacher signals only after PPO and
+   GRPO baselines are stable. Charge teacher/self-teacher compute explicitly.
+4. **Benchmark phase:** use EuroBench tasks with verifiable subgoals, tool
+   state, retries, and process labels. Report failures by category rather than
+   only aggregate score.
+5. **Efficiency phase:** use Parameter Golf-style accounting to ask which method
+   improves reward per byte, generated token, wall-clock minute, and extra model
+   multiplier.

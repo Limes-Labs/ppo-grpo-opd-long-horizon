@@ -1,150 +1,506 @@
-# PPO vs GRPO vs OPD/OPSD For Long-Horizon Post-Training
+# PPO, GRPO, and On-Policy Distillation for Long-Horizon Post-Training
 
-Status: first public outline, 2026-06-18.
+**Status:** public draft v0.2, 2026-06-18  
+**Repository:** `Limes-Labs/ppo-grpo-opd-long-horizon`  
+**Scope:** method research for long-horizon language-model post-training, not a
+model-specific report.
 
 ## Abstract
 
-Recent reasoning-model post-training has made critic-free methods such as Group
-Relative Policy Optimization (GRPO) highly visible. GRPO is attractive because
-it removes the value model used in PPO-style actor-critic training and can work
-well with verifier rewards. This outline asks where that trade changes: in
-long-horizon, variable-length, agentic trajectories, response-level
-group-relative advantages may discard useful temporal structure. The working
-hypothesis is that critic-based PPO becomes more attractive when state/token
-credit assignment matters, while GRPO remains useful for memory-efficient
-verifier-driven training and OPD/OPSD provide complementary distillation signals.
+Recent reasoning-model training has made critic-free reinforcement learning,
+especially Group Relative Policy Optimization (GRPO), a central public topic.
+GRPO is attractive because it avoids a learned value model and has produced
+strong results in verifier-heavy math and reasoning settings. This paper studies
+where that trade may change. In long-horizon, variable-length, agentic
+trajectories, a single response-level group-relative advantage can blur
+heterogeneous token roles: useful subgoals, harmful detours, retries, tool
+calls, and no-op padding may all receive the same scalar update. Critic-based
+PPO can in principle use token/state-level value estimates to recover temporal
+credit, but only when the value target is learnable, sufficiently covered, and
+worth its memory and stability cost. On-policy distillation (OPD) and
+on-policy self-distillation (OPSD) are best treated as complementary
+post-training objectives: they can transfer dense teacher/self-teacher signals
+on student-visited trajectories, but they are not the same objective as reward
+optimization.
 
-## Definitions
+We contribute a taxonomy, cost-accounting checklist, failure-mode table, and a
+dependency-free toy experiment. In a six-case deterministic toy sweep, a
+critic-style TD estimator is closer to the oracle advantage in five regimes with
+adequate state information, while a group-relative estimator wins in a
+counterexample where the critic is blind and undercovered. The result supports a
+conditional thesis: critic methods are promising for long heterogeneous
+rollouts, but GRPO remains scientifically plausible and often cheaper when
+reward contrast is reliable and value modeling is weak.
 
-**PPO.** Proximal Policy Optimization optimizes a clipped policy-gradient
-surrogate over on-policy samples. In actor-critic RLHF-style use, a value model
-estimates returns and supports advantage estimates, often with temporal
-difference or GAE-style credit assignment. Source: Schulman et al. 2017.
+## 1. Contributions
 
-**GRPO.** Group Relative Policy Optimization samples multiple completions for a
-prompt and normalizes rewards within the group, avoiding a separate value model.
-DeepSeekMath introduced GRPO as a PPO variant for mathematical reasoning, and
-DeepSeek-R1 used GRPO-style RL for reasoning models.
+1. **Method taxonomy.** We separate PPO-style policy optimization, GRPO-style
+   group-relative policy optimization, OPD, and OPSD by objective, signal
+   granularity, and extra-model cost.
+2. **Conditional thesis.** We argue against a blanket "PPO beats GRPO" claim.
+   The practical question is when temporal state information is more valuable
+   than the critic's cost and instability.
+3. **Cost accounting.** We list the model, rollout, verifier, teacher, and
+   storage costs that should be charged before comparing methods.
+4. **Toy evidence.** We provide a fast CPU experiment with a known oracle
+   advantage and a six-case scenario sweep that includes both critic-favorable
+   and group-favorable regimes.
+5. **Research protocol.** We define testable predictions for future Limes Labs
+   work in `limes-autoresearch`, `limes-nanogpt`, EuroBench, and Parameter Golf.
 
-**OPD.** On-policy distillation lets the student generate trajectories under its
-own policy, then uses a teacher signal on those student-visited states. The
-signal can be token-level KL, outcome-guided, representation-level, or hybrid.
+## 2. Operational Definition of Long Horizon
 
-**OPSD.** On-policy self-distillation is a self-teaching variant where a single
-model plays teacher and student under different contexts, for example teacher
-access to privileged verified traces and student access only to the question.
+For this workstream, a trajectory is long-horizon when at least one of the
+following holds:
 
-## Taxonomy
+- The response has many decision tokens or tool actions before reward arrives.
+- Reward is delayed until a final answer, test result, verifier call, or human
+  preference judgment.
+- Intermediate tokens have mixed causal roles: useful substeps, mistakes,
+  corrections, retrieval/tool calls, no-op waiting, formatting, or repetition.
+- The task state changes over time through files, tools, memory, environment
+  observations, or compacted summaries.
+- Credit assignment must distinguish "the trace eventually succeeded" from
+  "this token/action helped the trace succeed."
 
-| Method | Main objective | Typical signal granularity | Extra model | Strength | Long-horizon risk |
+This definition is intentionally broader than context length. A short trace with
+tool state and delayed reward can be long-horizon; a long monologue with dense
+teacher labels may not be.
+
+## 3. Formal Setup
+
+Let a policy model generate a trajectory
+
+```text
+tau = (s_0, a_0, s_1, a_1, ..., s_T)
+```
+
+where states may include prompt context, partial response, tool outputs, memory,
+or verifier state. Let `R(tau)` be an outcome reward, possibly combined with
+per-token KL or process rewards. The central question is how to estimate an
+advantage signal for updating the policy.
+
+### 3.1 PPO With A Critic
+
+PPO optimizes a clipped policy-gradient surrogate [1]:
+
+```math
+L^{PPO}(\theta) =
+E_t \left[
+  \min \left(
+    r_t(\theta) A_t,
+    \operatorname{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t
+  \right)
+\right],
+```
+
+where
+
+```math
+r_t(\theta) =
+\frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{old}}(a_t | s_t)}.
+```
+
+In actor-critic use, the advantage can be estimated from a value model:
+
+```math
+\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
+```
+
+or with generalized advantage estimation [2]:
+
+```math
+A_t^{GAE(\gamma,\lambda)}
+= \sum_{l=0}^{\infty}(\gamma\lambda)^l \delta_{t+l}.
+```
+
+The critic is not free. It adds parameters, memory, training targets, forward
+passes, and a new failure mode: a wrong value model can confidently assign wrong
+credit.
+
+### 3.2 GRPO
+
+GRPO samples a group of completions for the same prompt, scores them, and
+normalizes reward within the group [5, 6]. A simplified response-level advantage
+for completion `i` is:
+
+```math
+\hat{A}_i^{GRPO} =
+\frac{R_i - \mu_G}{\sigma_G + \epsilon},
+```
+
+where `mu_G` and `sigma_G` are computed over the sampled group. In common
+language-model implementations, this scalar is then applied across the tokens of
+that completion, often alongside KL regularization.
+
+This critic-free design is memory-efficient and can work well with verifiable
+rewards. But in terminal-reward, long-response settings, it may not distinguish
+which parts of a successful response helped.
+
+### 3.3 OPD
+
+On-policy distillation trains the student on its own sampled outputs, with a
+teacher providing dense supervision on those student-visited states. A typical
+objective minimizes a divergence such as:
+
+```math
+L^{OPD} =
+E_{x \sim D,\; y \sim \pi_s(\cdot|x)}
+\left[
+  \sum_t D_{KL}\left(
+    \pi_t(\cdot | x, y_{<t})
+    \;\|\;
+    \pi_s(\cdot | x, y_{<t})
+  \right)
+\right].
+```
+
+GKD and related work motivate this on-policy framing as a way to reduce
+train/inference distribution mismatch in autoregressive distillation [12].
+Recent OPD papers study when the teacher actually provides new useful
+information and when training becomes unstable [14, 15].
+
+### 3.4 OPSD
+
+OPSD removes the separate teacher model but not the teacher signal. A single
+model plays two contextual roles: a teacher role conditioned on privileged
+verified traces or solution information, and a student role conditioned on the
+ordinary problem. Training minimizes a per-token divergence between those roles
+over student rollouts [13]. This can be token-efficient, but it relies on
+privileged traces and remains a distillation objective rather than direct reward
+optimization.
+
+## 4. Method Comparison
+
+| Method | Objective | Signal granularity | Extra model/signal | Main strength | Main risk |
 | --- | --- | --- | --- | --- | --- |
-| PPO with critic | Policy optimization against reward/KL | token, state, trajectory | value/critic, often reward/reference | temporal credit assignment | critic cost and miscalibration |
-| GRPO | Policy optimization with group-normalized rewards | usually response/group scalar broadcast to tokens | reference/reward, no critic | memory-efficient verifier RL | group variance, length bias, weak intra-rollout credit |
-| OPD | Distill teacher behavior on student rollouts | token/logit or representation | teacher | dense supervision on visited states | teacher cost, mismatch, length inflation |
-| OPSD | Distill privileged self-teacher into ordinary self-student | token/logit | same model in teacher/student roles | no external teacher, uses verified traces | privileged-context leakage, not reward optimization |
+| PPO + critic | Optimize policy against reward/KL | token, state, trajectory | value model, reward/reference | temporal credit assignment | critic cost and miscalibration |
+| GRPO | Optimize policy with group-normalized rewards | group/response scalar, sometimes token-broadcast | reward/verifier/reference, no critic | memory-efficient RLVR | weak intra-rollout credit, group pathologies |
+| OPD | Distill teacher on student rollouts | token/logit/representation | teacher model | dense supervision on visited states | teacher mismatch, teacher cost |
+| OPSD | Distill privileged self-teacher into ordinary student | token/logit | privileged traces, same model roles | no separate teacher model | privileged-context leakage, length/truncation issues |
 
-## Cost Accounting
+## 5. Related Work
 
-Any fair comparison should charge:
+PPO was introduced as a simpler trust-region-like policy optimization method
+[1], building on trust-region policy optimization [3]. PPO became central to
+public RLHF practice in summarization and instruction-following systems [4, 16].
 
-- policy forward/backward cost and optimizer state
-- reference-policy log-prob cost for KL control
-- reward/verifier calls and reward-model training
-- group size and number of rollouts per prompt
-- value-model parameters, forward passes, training targets, and memory for PPO
-- teacher forward passes and logits/hidden states for OPD/OPSD
-- trajectory length, truncation, KV cache, and storage
-- failed rollouts, retries, and dynamic sampling filters
+DeepSeekMath introduced GRPO as a PPO variant that removes the critic and
+reduces memory usage for mathematical reasoning [5]. DeepSeek-R1 used
+GRPO-style RL with rule-based rewards for reasoning, while also documenting
+readability and language-mixing issues in pure RL and using multi-stage training
+for DeepSeek-R1 [6]. Subsequent GRPO work has analyzed effective losses and
+success amplification [7], response-length optimization bias and Dr. GRPO [8],
+DAPO-style dynamic sampling and clipping changes [9], U-statistic theory [10],
+and stabilized variants for low-dispersion or constrained reward settings
+[11, 17, 18].
 
-The first Limes experiments should report "tokens generated per useful gradient
-signal" and "additional model-memory multiplier" alongside task metrics.
+OPD and OPSD form a neighboring but distinct branch. Generalized Knowledge
+Distillation trains on student-generated outputs with teacher feedback [12].
+OPSD uses privileged self-teacher contexts over student rollouts [13].
+Recent OPD studies identify teacher/student compatibility, genuine teacher
+novelty, length inflation, and truncation collapse as central issues [14, 15].
 
-## Failure Modes
+## 6. Cost Accounting Checklist
 
-**PPO failure modes.** Value targets can be noisy or biased; critics can overfit
-reward-model artifacts; stale advantages can destabilize updates; process
-rewards can teach shortcuts; full actor-critic training can exceed small-lab
-memory budgets.
+A fair comparison must charge more than final benchmark score:
 
-**GRPO failure modes.** Homogeneous binary rewards can produce zero-variance
-groups; z-score normalization can amplify low-dispersion noise; response-level
-advantages can reward every token in a successful long trace, including delay or
-repetition; group composition can confound prompt difficulty with policy quality;
-length pressure can be biased if not handled carefully.
+- policy forward/backward passes and optimizer state
+- old-policy log probabilities for clipped objectives
+- reference-policy KL cost
+- reward model, verifier, or unit-test calls
+- group size and discarded/filtered samples
+- value-model parameters, training data, and inference passes
+- teacher/self-teacher logits or hidden states for OPD/OPSD
+- generated tokens, failed rollouts, retries, and overlong traces
+- trajectory storage, KV cache, and tool/environment state
+- human or synthetic process-label cost
+- engineering complexity and debugging cost
 
-**OPD/OPSD failure modes.** Teacher and student may share too little or too much
-behavioral support; a teacher may add no genuinely new capability; rollouts can
-inflate in length and hit truncation; token-level KL can copy teacher mistakes;
-privileged teacher contexts can leak solution structure unless controlled.
+For Limes Labs, the near-term reporting unit should be:
 
-## Toy Experiment
+```text
+reward improvement per generated token,
+per wall-clock minute,
+per extra model-memory multiplier,
+and per reproducible artifact.
+```
 
-The included toy experiment samples variable-length trajectories with helpful,
-harmful, and wait tokens. A terminal verifier gives success/failure; known
-dynamics give an oracle state-action advantage. Two estimators are compared:
+## 7. Toy Experiment
 
-- **group-relative:** normalize terminal returns within a prompt group and
-  broadcast the resulting scalar over all tokens in each trajectory.
-- **critic-style:** learn a tabular value model from sampled returns-to-go and
-  compute a one-step TD advantage.
+### 7.1 Environment
 
-The expected result is not "PPO wins"; it is narrower: when a trajectory contains
-heterogeneous token roles, a learned value estimator can recover more temporal
-structure than a response-level group scalar.
+The toy environment in `experiments/toy_credit_assignment.py` creates
+variable-length trajectories with three token/action types:
 
-## Testable Predictions
+- `help`: increases a hidden progress score.
+- `harm`: decreases the score.
+- `wait`: consumes a token without changing the score.
 
-1. On variable-length traces with many neutral or corrective tokens, critic-style
-   advantages should show higher correlation with process labels than
-   response-level group advantages.
-2. GRPO should improve when group sampling increases reward dispersion and when
-   rewards contain process or subgoal information.
-3. GRPO should struggle most when binary rewards are homogeneous within groups or
-   when long successful traces contain many irrelevant tokens.
-4. OPD/OPSD should be strongest when the teacher has genuinely new, reliable
-   token-level information on student-visited states.
-5. A hybrid recipe may be best: GRPO or rejection sampling for broad exploration,
-   PPO/value models for temporal credit, OPD/OPSD for distilling verified
-   successful behavior back into smaller or cheaper policies.
+A terminal verifier returns success if the final score reaches a prompt-specific
+threshold. The dynamics are known, so the experiment computes an oracle
+state-action advantage:
 
-## Roadmap For The Paper
+```math
+A^*(s_t,a_t) =
+-c + V^*(s_{t+1}, h-1) - V^*(s_t, h),
+```
 
-- Expand each source summary into a one-page evidence card.
-- Reproduce the toy experiment with ablations over group size, horizon length,
-  reward sparsity, and value-model data.
-- Move from tabular dynamics to tiny language/action policies in
-  `limes-nanogpt`.
-- Use `limes-autoresearch` to log runs and prevent cherry-picking.
-- Connect to EuroBench agentic tasks once they expose verifiable subgoals.
+where `c` is token cost and `h` is remaining horizon.
+
+### 7.2 Estimators
+
+The experiment compares:
+
+1. **Group-relative estimator.** Normalize terminal returns within a prompt
+   group and broadcast the scalar to every token in the trajectory.
+2. **Critic-style estimator.** Fit a tabular value model from sampled
+   returns-to-go, then compute a one-step TD advantage.
+
+This is not a PPO-vs-GRPO training benchmark. It is a measurement of advantage
+estimator quality under controlled dynamics.
+
+### 7.3 Metrics
+
+The report tracks:
+
+- Pearson correlation with the oracle advantage
+- calibrated MSE after affine rescaling
+- raw MSE
+- sign accuracy
+- mean absolute advantage on `wait` vs active tokens
+- within-trajectory estimator variance
+- zero-variance group fraction
+- critic exact-state hit rate
+
+### 7.4 Scenario Sweep
+
+The deterministic sweep in `results/toy_sweep_seed11.md` runs six regimes:
+
+| Case | Winner | Group r | Critic r | Group MSE | Critic MSE | Critic hit |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| short_dense_full_critic | critic | 0.442 | 0.974 | 0.04193 | 0.00271 | 1.00 |
+| baseline_full_critic | critic | 0.353 | 0.898 | 0.03329 | 0.00737 | 1.00 |
+| long_wait_full_critic | critic | 0.286 | 0.908 | 0.02060 | 0.00392 | 1.00 |
+| sparse_hard_full_critic | critic | 0.310 | 0.916 | 0.02240 | 0.00398 | 1.00 |
+| coarse_critic_partial_state | critic | 0.356 | 0.736 | 0.02268 | 0.01191 | 1.00 |
+| blind_critic_counterexample | group | 0.525 | 0.503 | 0.04634 | 0.04777 | 0.68 |
+
+The critic-style estimator wins in five cases where the value model has enough
+state information. The group-relative estimator wins when the critic is blind
+and undercovered. That counterexample is important: it prevents the paper from
+claiming that critics are intrinsically superior.
+
+### 7.5 Interpretation
+
+The toy supports three mechanism-level claims:
+
+1. **Long heterogeneous traces punish scalar broadcast.** As wait-heavy traces
+   grow, response-level group advantages correlate less with token-level oracle
+   credit.
+2. **Value estimates help when state is informative.** Full and coarse critics
+   recover temporal structure because the state contains progress information.
+3. **Critics fail when observability or coverage fails.** A blind, undercovered
+   critic can lose to group-relative terminal outcome information.
+
+## 8. What Is Better, And Why?
+
+The answer is conditional.
+
+**PPO-style critic methods are better candidates when:**
+
+- trajectories are long, variable-length, and internally heterogeneous;
+- there are meaningful states or prefixes from which future return can be
+  predicted;
+- the critic has enough coverage and is evaluated for calibration;
+- process rewards, tool states, or subgoal labels exist;
+- memory budget allows value-model training and rollout storage.
+
+**GRPO-style methods are better candidates when:**
+
+- rewards are verifiable, cheap, and have useful within-prompt variation;
+- trajectories are short or internally homogeneous;
+- value modeling is too expensive, unobserved, or undercovered;
+- group sampling can be scaled cheaply;
+- stabilized variants handle low dispersion, length bias, and clipping details.
+
+**OPD/OPSD are better candidates when:**
+
+- a teacher or privileged self-teacher has genuinely new token-level knowledge;
+- the goal is to transfer behavior rather than directly optimize an external
+  reward;
+- dense supervision is cheaper or more stable than RL;
+- rollout length and truncation are actively controlled.
+
+The likely best system is hybrid: use rejection sampling or GRPO-like RL to
+discover successes, use value/process models where temporal credit matters, and
+distill verified successful behaviors back into cheaper policies.
+
+## 9. Failure Modes
+
+### PPO / critic failures
+
+- value overfitting to reward artifacts
+- stale advantages after policy drift
+- process reward misspecification
+- critic collapse on long sparse trajectories
+- high memory and engineering cost
+- false confidence from calibrated-looking but wrong values
+
+### GRPO failures
+
+- zero-variance collapse when all group rewards match
+- low-variance amplification under z-score normalization
+- response-length bias and overlong incorrect answers
+- scalar reward broadcast over harmful or irrelevant tokens
+- group composition confounding prompt difficulty with policy quality
+- weak signal when semantic diversity receives identical reward
+
+### OPD / OPSD failures
+
+- teacher and student thinking patterns are incompatible
+- teacher provides no new information beyond the student
+- on-policy rollouts inflate in length and truncate
+- privileged traces leak solution structure
+- KL copying transfers teacher mistakes
+- dense token supervision hides high teacher-compute cost
+
+## 10. Testable Predictions
+
+1. Increasing horizon length and no-op padding should reduce the correlation of
+   response-level GRPO advantages with process labels.
+2. Increasing group size should help GRPO only when it increases meaningful
+   reward dispersion.
+3. Adding process or subgoal rewards should narrow the PPO/GRPO credit gap.
+4. Degrading critic observability should produce regimes where GRPO wins.
+5. OPD/OPSD should improve token efficiency when teacher signals are novel and
+   rollout lengths are controlled, but degrade when teacher/student support
+   diverges.
+6. Hybrid pipelines should outperform single-method pipelines when they charge
+   all teacher, critic, verifier, and rollout costs honestly.
+
+## 11. Reproducibility
+
+Run all tests:
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Run the smoke gate:
+
+```bash
+./scripts/run_smoke.sh
+```
+
+Regenerate the sweep:
+
+```bash
+python3 -m experiments.scenario_sweep \
+  --seed 11 \
+  --output-json results/toy_sweep_seed11.json \
+  --output-md results/toy_sweep_seed11.md
+```
+
+The code has no external Python dependencies. The published numbers are
+deterministic for the committed code and Python's `random.Random` behavior.
+
+## 12. Limitations
+
+This paper is not a claim about frontier-scale training. The toy environment has
+a finite known state, an oracle value function for evaluation, and a tabular
+critic. Real post-training adds neural approximation, KL controllers, reward
+model errors, truncation, tool failures, distributed rollout systems, stale
+policy samples, optimizer details, and data contamination risks. The toy
+therefore supports mechanism hypotheses, not leaderboard conclusions.
+
+The GRPO baseline is intentionally simple. Future work should compare
+leave-one-out baselines, length-normalized variants, DAPO/Dr. GRPO-style
+corrections, process rewards, and dynamic sampling before making stronger
+claims.
+
+## 13. Safety and Ethics
+
+Long-horizon agentic RL can improve tool use and reasoning, but it can also
+amplify reward hacking, deception, unsafe tool strategies, and benchmark
+overfitting. Public Limes experiments should start with toy and benchmark-safe
+settings, publish negative results, avoid hidden capability claims, and separate
+benign evaluation tasks from cyber, persuasion, or critical-infrastructure
+actions that could create misuse risk.
+
+## 14. Conclusion
+
+The evidence so far favors a conditional research program: critic-based PPO is a
+strong candidate for long heterogeneous trajectories when value targets are
+learnable and adequately covered; GRPO is attractive when group reward contrast
+is reliable and a critic is too costly or poorly observed; OPD/OPSD are
+complementary distillation tools that can transfer dense behavior signals but do
+not replace reward optimization as a concept. The next step is to move from this
+finite-state toy into tiny neural policies, then into reproducible language and
+agent benchmarks with honest cost accounting.
 
 ## References
 
-- John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov.
-  "Proximal Policy Optimization Algorithms." 2017.
-  <https://arxiv.org/abs/1707.06347>
-- Zhihong Shao et al. "DeepSeekMath: Pushing the Limits of Mathematical
-  Reasoning in Open Language Models." 2024. <https://arxiv.org/abs/2402.03300>
-- DeepSeek-AI. "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via
-  Reinforcement Learning." 2025. <https://arxiv.org/abs/2501.12948>
-- Zichen Liu et al. "Understanding R1-Zero-Like Training: A Critical
-  Perspective." 2025. <https://arxiv.org/abs/2503.20783>
-- Qiying Yu et al. "DAPO: An Open-Source LLM Reinforcement Learning System at
-  Scale." 2025. <https://arxiv.org/abs/2503.14476>
-- Youssef Mroueh. "Reinforcement Learning with Verifiable Rewards: GRPO's
-  Effective Loss, Dynamics, and Success Amplification." 2025.
-  <https://arxiv.org/abs/2503.06639>
-- Siyan Zhao et al. "Self-Distilled Reasoner: On-Policy Self-Distillation for
-  Large Language Models." 2026. <https://arxiv.org/abs/2601.18734>
-- Yaxuan Li et al. "Rethinking On-Policy Distillation of Large Language Models:
-  Phenomenology, Mechanism, and Recipe." 2026.
-  <https://arxiv.org/abs/2604.13016>
-- Feng Luo et al. "Demystifying OPD: Length Inflation and Stabilization
-  Strategies for Large Language Models." 2026.
-  <https://arxiv.org/abs/2604.08527>
-- Hongyi Zhou et al. "Demystifying Group Relative Policy Optimization: Its
-  Policy Gradient is a U-Statistic." 2026.
-  <https://arxiv.org/abs/2603.01162>
-- Mohammad Mahdi Salmani-Zarchi et al. "MDP-GRPO: Stabilized Group Relative
-  Policy Optimization for Multi-Constraint Instruction Following." 2026.
-  <https://arxiv.org/abs/2606.06058>
+[1] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov.
+"Proximal Policy Optimization Algorithms." 2017.
+<https://arxiv.org/abs/1707.06347>
+
+[2] John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, Pieter Abbeel.
+"High-Dimensional Continuous Control Using Generalized Advantage Estimation."
+2015. <https://arxiv.org/abs/1506.02438>
+
+[3] John Schulman, Sergey Levine, Philipp Moritz, Michael I. Jordan, Pieter
+Abbeel. "Trust Region Policy Optimization." 2015.
+<https://arxiv.org/abs/1502.05477>
+
+[4] Long Ouyang et al. "Training language models to follow instructions with
+human feedback." 2022. <https://arxiv.org/abs/2203.02155>
+
+[5] Zhihong Shao et al. "DeepSeekMath: Pushing the Limits of Mathematical
+Reasoning in Open Language Models." 2024. <https://arxiv.org/abs/2402.03300>
+
+[6] DeepSeek-AI. "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via
+Reinforcement Learning." 2025. <https://arxiv.org/abs/2501.12948>
+
+[7] Youssef Mroueh. "Reinforcement Learning with Verifiable Rewards: GRPO's
+Effective Loss, Dynamics, and Success Amplification." 2025.
+<https://arxiv.org/abs/2503.06639>
+
+[8] Zichen Liu et al. "Understanding R1-Zero-Like Training: A Critical
+Perspective." 2025. <https://arxiv.org/abs/2503.20783>
+
+[9] Qiying Yu et al. "DAPO: An Open-Source LLM Reinforcement Learning System at
+Scale." 2025. <https://arxiv.org/abs/2503.14476>
+
+[10] Hongyi Zhou et al. "Demystifying Group Relative Policy Optimization: Its
+Policy Gradient is a U-Statistic." 2026. <https://arxiv.org/abs/2603.01162>
+
+[11] Mohammad Mahdi Salmani-Zarchi et al. "MDP-GRPO: Stabilized Group Relative
+Policy Optimization for Multi-Constraint Instruction Following." 2026.
+<https://arxiv.org/abs/2606.06058>
+
+[12] Rishabh Agarwal et al. "On-Policy Distillation of Language Models:
+Learning from Self-Generated Mistakes." 2023.
+<https://arxiv.org/abs/2306.13649>
+
+[13] Siyan Zhao et al. "Self-Distilled Reasoner: On-Policy Self-Distillation
+for Large Language Models." 2026. <https://arxiv.org/abs/2601.18734>
+
+[14] Yaxuan Li et al. "Rethinking On-Policy Distillation of Large Language
+Models: Phenomenology, Mechanism, and Recipe." 2026.
+<https://arxiv.org/abs/2604.13016>
+
+[15] Feng Luo et al. "Demystifying OPD: Length Inflation and Stabilization
+Strategies for Large Language Models." 2026.
+<https://arxiv.org/abs/2604.08527>
+
+[16] Nisan Stiennon et al. "Learning to summarize from human feedback." 2020.
+<https://arxiv.org/abs/2009.01325>
+
+[17] Tue Le, Nghi D. Q. Bui, Linh Ngo Van, Trung Le. "Token-Regulated Group
+Relative Policy Optimization for Stable Reinforcement Learning in Large
+Language Models." 2025. <https://arxiv.org/abs/2511.00066>
+
+[18] Roger Girgis et al. "Constrained Group Relative Policy Optimization." 2026.
+<https://arxiv.org/abs/2602.05863>
 

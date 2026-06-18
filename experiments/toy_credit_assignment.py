@@ -36,6 +36,61 @@ TOKEN_COST = 0.02
 ACTIONS = ("help", "harm", "wait")
 
 
+@dataclass(frozen=True)
+class Scenario:
+    name: str
+    description: str
+    token_cost: float = TOKEN_COST
+    wait_bias_after_success: float = 0.0
+    help_bias_when_behind: float = 0.0
+    harm_bias: float = 0.0
+    critic_observation: str = "full"
+    threshold_cycle: tuple[int, ...] = (1, 2, 3)
+    min_steps: int = 2
+
+
+DEFAULT_SCENARIO = Scenario(
+    name="baseline",
+    description="Original mixed-horizon toy setting with a full-state critic.",
+)
+
+SCENARIOS: dict[str, Scenario] = {
+    DEFAULT_SCENARIO.name: DEFAULT_SCENARIO,
+    "short_dense": Scenario(
+        name="short_dense",
+        description="Shorter traces with fewer wait tokens; response-level groups are less wasteful.",
+        wait_bias_after_success=-0.18,
+        help_bias_when_behind=0.08,
+        threshold_cycle=(1, 1, 2),
+    ),
+    "long_wait": Scenario(
+        name="long_wait",
+        description="Long successful traces often contain uninformative wait tokens.",
+        wait_bias_after_success=0.24,
+        threshold_cycle=(1, 2, 3),
+    ),
+    "sparse_hard": Scenario(
+        name="sparse_hard",
+        description="Harder thresholds produce sparse successes and weaker group reward dispersion.",
+        wait_bias_after_success=0.10,
+        help_bias_when_behind=-0.06,
+        threshold_cycle=(2, 3, 4),
+    ),
+    "coarse_critic": Scenario(
+        name="coarse_critic",
+        description="The critic only observes score sign, not exact progress.",
+        wait_bias_after_success=0.18,
+        critic_observation="coarse",
+    ),
+    "blind_critic": Scenario(
+        name="blind_critic",
+        description="The critic cannot observe progress score, so terminal group information can dominate.",
+        wait_bias_after_success=0.16,
+        critic_observation="blind",
+    ),
+}
+
+
 @dataclass
 class StepRecord:
     trajectory_id: int
@@ -70,7 +125,8 @@ class Trajectory:
 class TabularCritic:
     """A small value estimator trained from sampled returns-to-go."""
 
-    def __init__(self, trajectories: Iterable[Trajectory]):
+    def __init__(self, trajectories: Iterable[Trajectory], observation: str = "full"):
+        self.observation = observation
         by_state: dict[tuple[int, int, int], list[float]] = defaultdict(list)
         by_threshold_remaining: dict[tuple[int, int], list[float]] = defaultdict(list)
         by_remaining: dict[int, list[float]] = defaultdict(list)
@@ -81,6 +137,7 @@ class TabularCritic:
                 trajectory.threshold,
                 trajectory.final_score,
                 0,
+                self.observation,
             )
             by_state[terminal_key].append(trajectory.terminal_reward)
             by_threshold_remaining[(trajectory.threshold, 0)].append(
@@ -90,7 +147,12 @@ class TabularCritic:
             all_values.append(trajectory.terminal_reward)
 
             for step in trajectory.steps:
-                key = state_key(step.threshold, step.start_score, step.remaining_before)
+                key = state_key(
+                    step.threshold,
+                    step.start_score,
+                    step.remaining_before,
+                    self.observation,
+                )
                 by_state[key].append(step.return_to_go)
                 by_threshold_remaining[
                     (step.threshold, step.remaining_before)
@@ -106,7 +168,10 @@ class TabularCritic:
         self.global_mean = fmean(all_values) if all_values else 0.0
 
     def value(self, threshold: int, score: int, remaining: int) -> float:
-        key = state_key(threshold, score, remaining)
+        if remaining == 0:
+            return terminal_reward(threshold, score)
+
+        key = state_key(threshold, score, remaining, self.observation)
         if key in self.by_state:
             return self.by_state[key]
 
@@ -119,12 +184,40 @@ class TabularCritic:
 
         return self.global_mean
 
+    def has_exact_state(self, threshold: int, score: int, remaining: int) -> bool:
+        if remaining == 0:
+            return True
+        key = state_key(threshold, score, remaining, self.observation)
+        return key in self.by_state
 
-def state_key(threshold: int, score: int, remaining: int) -> tuple[int, int, int]:
-    return threshold, score, remaining
+
+def state_key(
+    threshold: int,
+    score: int,
+    remaining: int,
+    observation: str = "full",
+) -> tuple[int, int, int]:
+    if observation == "blind":
+        observed_score = 0
+    elif observation == "coarse":
+        observed_score = 1 if score > 0 else -1 if score < 0 else 0
+    else:
+        observed_score = score
+    return threshold, observed_score, remaining
 
 
-def action_probabilities(threshold: int, score: int, remaining: int) -> dict[str, float]:
+def normalize_probabilities(probs: dict[str, float]) -> dict[str, float]:
+    clipped = {action: max(0.02, probability) for action, probability in probs.items()}
+    total = sum(clipped.values())
+    return {action: probability / total for action, probability in clipped.items()}
+
+
+def action_probabilities(
+    threshold: int,
+    score: int,
+    remaining: int,
+    scenario: Scenario = DEFAULT_SCENARIO,
+) -> dict[str, float]:
     """Behavior policy used to sample toy trajectories.
 
     Once a trajectory is likely to succeed, the policy often emits ``wait``
@@ -146,13 +239,35 @@ def action_probabilities(threshold: int, score: int, remaining: int) -> dict[str
         probs["help"] += 0.08
         probs["wait"] -= 0.08
 
-    return probs
+    if gap > 0:
+        probs["help"] += scenario.help_bias_when_behind
+        probs["wait"] -= scenario.help_bias_when_behind
+    else:
+        probs["wait"] += scenario.wait_bias_after_success
+        probs["help"] -= scenario.wait_bias_after_success * 0.7
+        probs["harm"] -= scenario.wait_bias_after_success * 0.3
+
+    probs["harm"] += scenario.harm_bias
+    probs["wait"] -= scenario.harm_bias
+
+    return normalize_probabilities(probs)
 
 
-def sample_action(rng: random.Random, threshold: int, score: int, remaining: int) -> str:
+def sample_action(
+    rng: random.Random,
+    threshold: int,
+    score: int,
+    remaining: int,
+    scenario: Scenario,
+) -> str:
     roll = rng.random()
     cumulative = 0.0
-    for action, probability in action_probabilities(threshold, score, remaining).items():
+    for action, probability in action_probabilities(
+        threshold,
+        score,
+        remaining,
+        scenario,
+    ).items():
         cumulative += probability
         if roll <= cumulative:
             return action
@@ -171,7 +286,12 @@ def terminal_reward(threshold: int, score: int) -> float:
     return 1.0 if score >= threshold else 0.0
 
 
-def exact_value(threshold: int, score: int, remaining: int) -> float:
+def exact_value(
+    threshold: int,
+    score: int,
+    remaining: int,
+    scenario: Scenario = DEFAULT_SCENARIO,
+) -> float:
     """Expected future return under the behavior policy from a known state."""
 
     cache: dict[tuple[int, int, int], float] = {}
@@ -184,11 +304,16 @@ def exact_value(threshold: int, score: int, remaining: int) -> float:
             value = terminal_reward(state_threshold, state_score)
         else:
             value = 0.0
-            probs = action_probabilities(state_threshold, state_score, state_remaining)
+            probs = action_probabilities(
+                state_threshold,
+                state_score,
+                state_remaining,
+                scenario,
+            )
             for action, probability in probs.items():
                 score_after = next_score(state_score, action)
                 value += probability * (
-                    -TOKEN_COST
+                    -scenario.token_cost
                     + solve(state_threshold, score_after, state_remaining - 1)
                 )
         cache[key] = value
@@ -203,8 +328,9 @@ def simulate_trajectory(
     prompt_id: int,
     threshold: int,
     max_steps: int,
+    scenario: Scenario = DEFAULT_SCENARIO,
 ) -> Trajectory:
-    length = rng.randint(2, max_steps)
+    length = rng.randint(scenario.min_steps, max_steps)
     score = 0
     raw_steps: list[tuple[str, int, int, int, int, float]] = []
 
@@ -212,12 +338,12 @@ def simulate_trajectory(
         remaining_before = length - token_index
         remaining_after = remaining_before - 1
         start_score = score
-        action = sample_action(rng, threshold, score, remaining_before)
+        action = sample_action(rng, threshold, score, remaining_before, scenario)
         score = next_score(score, action)
         oracle_advantage = (
-            -TOKEN_COST
-            + exact_value(threshold, score, remaining_after)
-            - exact_value(threshold, start_score, remaining_before)
+            -scenario.token_cost
+            + exact_value(threshold, score, remaining_after, scenario)
+            - exact_value(threshold, start_score, remaining_before, scenario)
         )
         raw_steps.append(
             (
@@ -231,11 +357,11 @@ def simulate_trajectory(
         )
 
     final_reward = terminal_reward(threshold, score)
-    total_return = final_reward - TOKEN_COST * length
+    total_return = final_reward - scenario.token_cost * length
     steps: list[StepRecord] = []
     for token_index, raw_step in enumerate(raw_steps):
         action, start_score, after_score, remaining_before, remaining_after, oracle = raw_step
-        return_to_go = final_reward - TOKEN_COST * (length - token_index)
+        return_to_go = final_reward - scenario.token_cost * (length - token_index)
         steps.append(
             StepRecord(
                 trajectory_id=trajectory_id,
@@ -246,7 +372,7 @@ def simulate_trajectory(
                 next_score=after_score,
                 remaining_before=remaining_before,
                 remaining_after=remaining_after,
-                step_reward=-TOKEN_COST,
+                step_reward=-scenario.token_cost,
                 terminal_reward=final_reward,
                 total_return=total_return,
                 return_to_go=return_to_go,
@@ -272,12 +398,13 @@ def generate_groups(
     group_count: int,
     group_size: int,
     max_steps: int,
+    scenario: Scenario = DEFAULT_SCENARIO,
     trajectory_offset: int = 0,
 ) -> list[list[Trajectory]]:
     groups: list[list[Trajectory]] = []
     next_trajectory_id = trajectory_offset
     for prompt_id in range(group_count):
-        threshold = 1 + (prompt_id % 3)
+        threshold = scenario.threshold_cycle[prompt_id % len(scenario.threshold_cycle)]
         group: list[Trajectory] = []
         for _ in range(group_size):
             group.append(
@@ -287,6 +414,7 @@ def generate_groups(
                     prompt_id=prompt_id,
                     threshold=threshold,
                     max_steps=max_steps,
+                    scenario=scenario,
                 )
             )
             next_trajectory_id += 1
@@ -312,6 +440,26 @@ def add_group_relative_advantages(groups: list[list[Trajectory]]) -> None:
                 step.group_advantage = advantage
 
 
+def group_diagnostics(groups: list[list[Trajectory]]) -> dict[str, float]:
+    stddevs: list[float] = []
+    zero_variance_groups = 0
+    for group in groups:
+        returns = [trajectory.total_return for trajectory in group]
+        mean_return = fmean(returns)
+        variance = fmean((value - mean_return) ** 2 for value in returns)
+        stddev = math.sqrt(variance)
+        stddevs.append(stddev)
+        if stddev <= 1e-12:
+            zero_variance_groups += 1
+
+    return {
+        "zero_variance_group_fraction": (
+            zero_variance_groups / len(groups) if groups else 0.0
+        ),
+        "mean_group_return_stddev": fmean(stddevs) if stddevs else 0.0,
+    }
+
+
 def add_critic_advantages(
     trajectories: Iterable[Trajectory],
     critic: TabularCritic,
@@ -332,7 +480,9 @@ def add_critic_advantages(
 
 
 def pearson(xs: list[float], ys: list[float]) -> float:
-    if len(xs) != len(ys) or not xs:
+    if len(xs) != len(ys):
+        raise ValueError("expected equal-length inputs")
+    if not xs:
         return 0.0
     mean_x = fmean(xs)
     mean_y = fmean(ys)
@@ -349,6 +499,8 @@ def pearson(xs: list[float], ys: list[float]) -> float:
 def calibrated_mse(estimates: list[float], targets: list[float]) -> float:
     """MSE after fitting one affine calibration, so scale does not dominate."""
 
+    if len(estimates) != len(targets):
+        raise ValueError("expected equal-length inputs")
     if not estimates:
         return 0.0
     mean_estimate = fmean(estimates)
@@ -368,6 +520,8 @@ def calibrated_mse(estimates: list[float], targets: list[float]) -> float:
 
 
 def sign_accuracy(estimates: list[float], targets: list[float]) -> float:
+    if len(estimates) != len(targets):
+        raise ValueError("expected equal-length inputs")
     if not estimates:
         return 0.0
     matches = 0
@@ -376,6 +530,8 @@ def sign_accuracy(estimates: list[float], targets: list[float]) -> float:
         if abs(target) <= 1e-9:
             continue
         considered += 1
+        if abs(estimate) <= 1e-9:
+            continue
         if math.copysign(1.0, estimate) == math.copysign(1.0, target):
             matches += 1
     return matches / considered if considered else 0.0
@@ -425,9 +581,23 @@ def estimator_metrics(
     }
 
 
+def resolve_scenario(
+    scenario_name: str = DEFAULT_SCENARIO.name,
+    scenario: Scenario | None = None,
+) -> Scenario:
+    if scenario is not None:
+        return scenario
+    if scenario_name not in SCENARIOS:
+        choices = ", ".join(sorted(SCENARIOS))
+        raise ValueError(f"unknown scenario {scenario_name!r}; choices: {choices}")
+    return SCENARIOS[scenario_name]
+
+
 def run_experiment(
     *,
     seed: int = 7,
+    scenario_name: str = DEFAULT_SCENARIO.name,
+    scenario: Scenario | None = None,
     train_groups: int = 240,
     eval_groups: int = 80,
     group_size: int = 6,
@@ -435,6 +605,9 @@ def run_experiment(
 ) -> dict[str, object]:
     if train_groups <= 0 or eval_groups <= 0 or group_size <= 1 or max_steps < 2:
         raise ValueError("expected train/eval groups > 0, group_size > 1, max_steps >= 2")
+    scenario = resolve_scenario(scenario_name, scenario)
+    if scenario.min_steps > max_steps:
+        raise ValueError("scenario min_steps must be <= max_steps")
 
     train_rng = random.Random(seed)
     train_groups_data = generate_groups(
@@ -442,9 +615,10 @@ def run_experiment(
         group_count=train_groups,
         group_size=group_size,
         max_steps=max_steps,
+        scenario=scenario,
     )
     train_trajectories = flatten(train_groups_data)
-    critic = TabularCritic(train_trajectories)
+    critic = TabularCritic(train_trajectories, observation=scenario.critic_observation)
 
     eval_rng = random.Random(seed + 1)
     eval_groups_data = generate_groups(
@@ -452,9 +626,11 @@ def run_experiment(
         group_count=eval_groups,
         group_size=group_size,
         max_steps=max_steps,
+        scenario=scenario,
         trajectory_offset=len(train_trajectories),
     )
     add_group_relative_advantages(eval_groups_data)
+    group_stats = group_diagnostics(eval_groups_data)
     eval_trajectories = flatten(eval_groups_data)
     add_critic_advantages(eval_trajectories, critic)
 
@@ -472,11 +648,14 @@ def run_experiment(
     return {
         "config": {
             "seed": seed,
+            "scenario_name": scenario.name,
+            "scenario_description": scenario.description,
+            "critic_observation": scenario.critic_observation,
             "train_groups": train_groups,
             "eval_groups": eval_groups,
             "group_size": group_size,
             "max_steps": max_steps,
-            "token_cost": TOKEN_COST,
+            "token_cost": scenario.token_cost,
         },
         "sample_counts": {
             "train_trajectories": len(train_trajectories),
@@ -491,6 +670,30 @@ def run_experiment(
                 sum(trajectory.terminal_reward for trajectory in eval_trajectories)
                 / len(eval_trajectories)
                 if eval_trajectories
+                else 0.0
+            ),
+            "zero_variance_group_fraction": group_stats[
+                "zero_variance_group_fraction"
+            ],
+            "mean_group_return_stddev": group_stats["mean_group_return_stddev"],
+            "critic_exact_state_rate": (
+                sum(
+                    1
+                    for step in steps
+                    if critic.has_exact_state(
+                        step.threshold,
+                        step.start_score,
+                        step.remaining_before,
+                    )
+                )
+                / len(steps)
+                if steps
+                else 0.0
+            ),
+            "nonzero_oracle_advantage_fraction": (
+                sum(1 for step in steps if abs(step.oracle_advantage) > 1e-9)
+                / len(steps)
+                if steps
                 else 0.0
             ),
         },
@@ -526,6 +729,11 @@ def run_experiment(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument(
+        "--scenario",
+        choices=sorted(SCENARIOS),
+        default=DEFAULT_SCENARIO.name,
+    )
     parser.add_argument("--train-groups", type=int, default=240)
     parser.add_argument("--eval-groups", type=int, default=80)
     parser.add_argument("--group-size", type=int, default=6)
@@ -538,13 +746,16 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     result = run_experiment(
         seed=args.seed,
+        scenario_name=args.scenario,
         train_groups=args.train_groups,
         eval_groups=args.eval_groups,
         group_size=args.group_size,
         max_steps=args.max_steps,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    args.output.write_text(
+        json.dumps(result, allow_nan=False, indent=2, sort_keys=True) + "\n"
+    )
 
     group = result["metrics"]["group_relative"]
     critic = result["metrics"]["critic_value_model"]
@@ -564,4 +775,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

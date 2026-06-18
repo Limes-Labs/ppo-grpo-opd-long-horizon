@@ -18,11 +18,14 @@ drop-in replacements for policy optimization.
 
 ## What Is Here
 
-- `PAPER.md` - first paper-style outline with definitions, taxonomy,
-  comparison table, cost accounting, failure modes, predictions, and references.
+- `PAPER.md` - full public draft with formal setup, equations, taxonomy,
+  cost accounting, toy results, limitations, and references.
 - `experiments/toy_credit_assignment.py` - CPU-only toy experiment comparing a
   GRPO-style group-relative advantage with a learned critic-style TD estimator
   on variable-length trajectories.
+- `experiments/scenario_sweep.py` - deterministic multi-scenario sweep covering
+  critic-favorable regimes and a group-favorable counterexample.
+- `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
 - `tests/` - unit tests for the toy experiment and CLI artifact.
 - `scripts/run_smoke.sh` - one-command smoke runner.
 - `docs/research-roadmap.md` - integration plan for Limes AutoResearch,
@@ -51,6 +54,7 @@ Run the toy experiment manually:
 
 ```bash
 python3 -m experiments.toy_credit_assignment \
+  --scenario baseline \
   --seed 11 \
   --train-groups 120 \
   --eval-groups 40 \
@@ -59,9 +63,37 @@ python3 -m experiments.toy_credit_assignment \
   --output runs/toy_credit_assignment_smoke.json
 ```
 
+Regenerate the scenario sweep used in the paper:
+
+```bash
+python3 -m experiments.scenario_sweep \
+  --seed 11 \
+  --output-json results/toy_sweep_seed11.json \
+  --output-md results/toy_sweep_seed11.md
+```
+
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
 credit-assignment mechanism, not model quality.
+
+## Current Toy Result
+
+The committed seed-11 sweep runs six regimes. The critic-style estimator wins in
+five regimes with informative state coverage. A group-relative estimator wins in
+one counterexample where the critic is blind and undercovered:
+
+| Regime | Winner | Group r | Critic r |
+| --- | --- | ---: | ---: |
+| short dense | critic | 0.442 | 0.974 |
+| baseline | critic | 0.353 | 0.898 |
+| long wait-heavy | critic | 0.286 | 0.908 |
+| sparse hard | critic | 0.310 | 0.916 |
+| coarse critic | critic | 0.356 | 0.736 |
+| blind undercovered critic | group | 0.525 | 0.503 |
+
+Read this as mechanism evidence, not a leaderboard: value information helps when
+it is observable and covered; group-relative terminal rewards can be more useful
+when the critic is weak or unavailable.
 
 ## Working Thesis
 
@@ -71,12 +103,11 @@ calls, delays, retries, and compaction. In that regime:
 - PPO with a value model can, in principle, support token-level or state-level
   advantage estimation and temporal credit assignment.
 - GRPO can be memory-efficient and effective when groups contain informative
-  reward variation, but response-level group normalization can waste information
-  in long rollouts by broadcasting one scalar over many heterogeneous tokens.
+  reward variation, but terminal response-level group normalization can blur
+  token credit in long heterogeneous rollouts.
 - OPD and OPSD can provide dense distillation signals on student/on-policy
-  trajectories, but they answer a different question: how to transfer or
-  self-transfer behavior, not how to optimize a policy against an external
-  reward with temporal credit assignment.
+  trajectories. They are different objectives from reward optimization, although
+  they can still compete as practical post-training recipes.
 
 The first experiments here are designed to make those claims falsifiable before
 moving to real language-model training.
@@ -107,7 +138,7 @@ Primary and near-primary sources covered in the first outline include:
 ## Non-Claims
 
 This repository does not claim that PPO is always better than GRPO, that OPD is
-inferior to RL, or that the toy experiment predicts frontier-model behavior. It
-is a small public scaffold for asking sharper questions and building reproducible
-evidence.
-
+inferior to RL, or that the toy experiment predicts frontier-model behavior. The
+current claim is narrower: critic-style estimators are promising when temporal
+state information is learnable; group-relative methods are attractive when group
+reward contrast is reliable and value modeling is weak or too expensive.
