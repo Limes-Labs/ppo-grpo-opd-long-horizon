@@ -101,10 +101,22 @@ class LatexPaperTests(unittest.TestCase):
         variance_table = VARIANCE_CREDIT_TABLE.read_text()
         self.assertIn("Critic TD", variance_table)
         self.assertIn("Sampled MC", variance_table)
+        self.assertIn("Anchor ctr.", variance_table)
         self.assertIn(r"\begin{tabular}", variance_table)
         self.assertEqual(
             variance_credit["summary"]["best_non_oracle_by_correlation"],
             "critic_td",
+        )
+        variance_estimators = {
+            entry["name"]: entry["metrics"] for entry in variance_credit["estimators"]
+        }
+        self.assertGreater(
+            variance_estimators["anchor_action_contrast"]["pearson_correlation"],
+            variance_estimators["sibling_group_norm"]["pearson_correlation"],
+        )
+        self.assertLess(
+            variance_estimators["anchor_action_contrast"]["pearson_correlation"],
+            variance_estimators["critic_td"]["pearson_correlation"],
         )
 
         length = json.loads(LENGTH_IMBALANCE.read_text())

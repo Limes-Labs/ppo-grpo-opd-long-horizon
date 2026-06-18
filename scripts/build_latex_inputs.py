@@ -280,6 +280,7 @@ VARIANCE_LABELS = {
     "sibling_group_norm": "Group z",
     "leave_one_out": "LOO",
     "dense_progress_reward": "Dense reward",
+    "anchor_action_contrast": "Anchor ctr.",
     "critic_td": "Critic TD",
     "sampled_mc_td": "Sampled MC",
 }
@@ -288,6 +289,7 @@ VARIANCE_REDUCTION_LABELS = {
     "none": "none",
     "global/running": "global",
     "sibling group": "group",
+    "anchor state group": "anchor",
     "external dense signal": "dense",
     "learned critic V(s)": "critic",
     "sampled value": "sampled",

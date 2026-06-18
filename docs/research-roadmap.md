@@ -10,6 +10,8 @@ Use `limes-autoresearch` as the run ledger and promotion gate:
 - add a research-question spec for "long-horizon credit assignment"
 - run toy ablations over group size, horizon length, reward sparsity, and value
   model data
+- replay structural critic-free baselines such as anchor-action contrast under
+  explicit state-action coverage thresholds
 - store JSON artifacts and result cards
 - require negative-result notes before moving to larger models
 
@@ -57,8 +59,8 @@ Use Parameter Golf for efficiency pressure:
 The next scientific goal is a phase diagram, not a single winner.
 
 1. **Toy estimator phase:** sweep horizon, wait/no-op load, reward sparsity,
-   group size, critic state coverage, and critic data budget. Keep oracle
-   advantages so estimator quality is measurable.
+   group size, critic state coverage, structural-anchor coverage, and critic
+   data budget. Keep oracle advantages so estimator quality is measurable.
 2. **Tiny neural phase:** move the same dynamics into `limes-nanogpt` with
    actual learned policies, PPO-style value heads, and GRPO-style group
    objectives under identical generated-token budgets.

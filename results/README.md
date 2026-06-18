@@ -14,7 +14,8 @@ Current artifacts:
 - `deep_matrix_20seed.md` - human-readable multi-seed summary with 95%
   confidence intervals.
 - `variance_credit_grid_seed17.json` - estimator grid separating variance
-  reduction from credit assignment on the long-wait toy case.
+  reduction from credit assignment on the long-wait toy case, including a
+  critic-free anchor-action contrast baseline over repeated toy states.
 - `variance_credit_grid_seed17.md` - human-readable table and reading notes for
   the same estimator grid.
 - `length_imbalance_audit_seedset.json` - horizon sweep testing within-group

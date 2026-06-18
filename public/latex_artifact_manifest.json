@@ -13,11 +13,11 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-18T11:42:06.379585+00:00",
+  "generated_at_utc": "2026-06-18T11:53:08.798569+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "f6c2f07d7ab67e8821c8ab7c0840aa65adaa9adf",
+  "git_commit": "3411abd923da800518bbe5c6ea75a617377f9374",
   "git_context_note": "The manifest records the worktree at generation time. When the LaTeX source, PDF, and manifest are committed together, the final commit will necessarily differ; rebuild from a clean checkout to refresh it.",
-  "git_status_short": "M README.md\n M paper/README.md\n M paper/main.tex\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M results/README.md\n M scripts/build_latex_inputs.py\n M scripts/build_latex_manifest.py\n M scripts/run_smoke.sh\n M tests/test_latex_paper.py\n?? autoresearch/\n?? experiments/closed_loop_credit_training.py\n?? paper/generated/closed_loop_training_table.tex\n?? results/closed_loop_credit_training_10seed.json\n?? results/closed_loop_credit_training_10seed.md\n?? results/closed_loop_credit_training_low_coverage_10seed.json\n?? results/closed_loop_credit_training_low_coverage_10seed.md\n?? tests/test_autoresearch_config.py\n?? tests/test_closed_loop_credit_training.py",
+  "git_status_short": "M README.md\n M docs/research-roadmap.md\n M experiments/variance_credit_grid.py\n M paper/generated/variance_credit_table.tex\n M paper/main.tex\n M public/latex_artifact_manifest.json\n M public/ppo_grpo_opd_long_horizon_latex.pdf\n M results/README.md\n M results/variance_credit_grid_seed17.json\n M results/variance_credit_grid_seed17.md\n M scripts/build_latex_inputs.py\n M scripts/run_smoke.sh\n M tests/test_latex_paper.py\n M tests/test_variance_credit_grid.py",
   "inputs": {
     "paper/generated/axis_summary_table.tex": {
       "bytes": 571,
@@ -56,12 +56,12 @@
       "sha256": "c6ac710d65f96b2dc317d6942c37031d6131a262eea1cd82e11249cff5ff10d9"
     },
     "paper/generated/variance_credit_table.tex": {
-      "bytes": 626,
-      "sha256": "3b1f004ce50fda94535f0771dce81896ce2881b685c4686c813504bcbba209b4"
+      "bytes": 690,
+      "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 52658,
-      "sha256": "0632a77a1a0eef3ced42f8de0517beafb39e6a72043d505f7c4694aca6918db7"
+      "bytes": 53685,
+      "sha256": "61a1551bf03775c910242f086978af9e88ec90fe29561dc6aa794355fcf199ab"
     },
     "paper/references.bib": {
       "bytes": 10404,
@@ -96,14 +96,14 @@
       "sha256": "7b1803ee0bc281e76f00f470cd4a36f2100570858e5690fc2df81b46b91d1119"
     },
     "results/variance_credit_grid_seed17.json": {
-      "bytes": 7397,
-      "sha256": "68cbaabcc55f63a95b1a99a80b2eb47b040e3de43d9156a7b3fb8fe659cd19df"
+      "bytes": 8382,
+      "sha256": "2809667a98198337c8aefc2f16a312eed6baf699e6359b73e5c5c7e99fc7929f"
     }
   },
   "outputs": {
     "public/ppo_grpo_opd_long_horizon_latex.pdf": {
-      "bytes": 268295,
-      "sha256": "e78574794ec76f69f065209aba1cd724d663caa216422608234ea0a40fdee18f"
+      "bytes": 269097,
+      "sha256": "326fb49a3d9a1181324b15c0f696e01f9e77613d4118b1068ca8fd818c8b31ea"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

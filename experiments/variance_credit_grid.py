@@ -138,6 +138,58 @@ def build_leave_one_out_advantages(
     return advantages
 
 
+def anchor_key(step: StepRecord) -> tuple[int, int, int]:
+    return step.threshold, step.start_score, step.remaining_before
+
+
+def build_anchor_action_contrast(
+    steps: list[StepRecord],
+) -> tuple[dict[tuple[int, int], float], dict[str, float]]:
+    """Critic-free step credit from repeated state-action anchors.
+
+    For a state that appears in multiple rollouts, estimate an action value by
+    leave-one-out return-to-go among sibling visits to the same state and action.
+    The baseline is the leave-one-out state return. Unsupported anchors return
+    zero rather than borrowing a value model.
+    """
+
+    state_sums: dict[tuple[int, int, int], float] = {}
+    state_counts: dict[tuple[int, int, int], int] = {}
+    action_sums: dict[tuple[tuple[int, int, int], str], float] = {}
+    action_counts: dict[tuple[tuple[int, int, int], str], int] = {}
+
+    for step in steps:
+        state = anchor_key(step)
+        action = (state, step.action)
+        state_sums[state] = state_sums.get(state, 0.0) + step.return_to_go
+        state_counts[state] = state_counts.get(state, 0) + 1
+        action_sums[action] = action_sums.get(action, 0.0) + step.return_to_go
+        action_counts[action] = action_counts.get(action, 0) + 1
+
+    estimates: dict[tuple[int, int], float] = {}
+    supported = 0
+    for step in steps:
+        state = anchor_key(step)
+        action = (state, step.action)
+        state_count = state_counts[state]
+        action_count = action_counts[action]
+        if state_count > 1 and action_count > 1:
+            state_value = (state_sums[state] - step.return_to_go) / (state_count - 1)
+            action_value = (
+                action_sums[action] - step.return_to_go
+            ) / (action_count - 1)
+            estimates[step_key(step)] = action_value - state_value
+            supported += 1
+        else:
+            estimates[step_key(step)] = 0.0
+
+    return estimates, {
+        "unique_anchor_states": float(len(state_counts)),
+        "unique_anchor_actions": float(len(action_counts)),
+        "supported_step_fraction": supported / len(steps) if steps else 0.0,
+    }
+
+
 def estimate_variance(values: list[float]) -> float:
     if not values:
         return 0.0
@@ -232,6 +284,7 @@ def run_grid(
         scenario=scenario,
         branches_per_state=branches_per_state,
     )
+    anchor_action, anchor_action_counts = build_anchor_action_contrast(steps)
 
     estimators = [
         summarize_estimator(
@@ -279,6 +332,15 @@ def run_grid(
             trajectories=eval_trajectories,
             getter=lambda step: float(step.next_score - step.start_score),
             cost_note="requires process signal or progress verifier",
+        ),
+        summarize_estimator(
+            name="anchor_action_contrast",
+            label="Anchor action contrast",
+            variance_reduction="anchor state group",
+            credit_assignment="step",
+            trajectories=eval_trajectories,
+            getter=lambda step: anchor_action[step_key(step)],
+            cost_note="requires repeated state-action anchors",
         ),
         summarize_estimator(
             name="critic_td",
@@ -353,6 +415,7 @@ def run_grid(
                 else 0.0
             ),
             "sampled_mc": sampled_mc_counts,
+            "anchor_action": anchor_action_counts,
         },
         "estimators": estimators,
         "summary": {
@@ -431,6 +494,8 @@ def build_markdown_report(result: dict[str, Any]) -> str:
             "  policy-gradient signal without creating step-level credit.",
             "- Sibling groups can be memory-light, but in this long-wait setting their",
             "  scalar advantages still have zero within-trajectory variation.",
+            "- Anchor-action contrast is a critic-free structural batch estimator",
+            "  over repeated exact toy states; unsupported anchors fall back to zero.",
             "- Step-level estimators create intra-trajectory variation and reduce",
             "  wait-token leakage when they have useful state or process signal.",
             "- The oracle row is a ceiling, included only to calibrate estimator fidelity.",

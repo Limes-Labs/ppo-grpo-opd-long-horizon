@@ -209,9 +209,13 @@ current local environment.
 
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment
-without creating within-trajectory credit variation, while learned critic TD
-and sampled Monte Carlo value estimates create step-level variation and improve
-oracle-advantage correlation over sibling group normalization.
+without creating within-trajectory credit variation. A critic-free
+anchor-action contrast over repeated state-action visits improves
+oracle-advantage correlation from sibling group normalization's `r=0.319` to
+`r=0.715`, while learned critic TD reaches `r=0.870` and sampled Monte Carlo
+value estimates reach `r=0.849`. This makes the middle ground explicit:
+critic-free does not have to mean trajectory-only, but value estimation remains
+the strongest signal in this toy setting.
 
 The length-imbalance audit tests a simple length-adjusted group baseline. As
 maximum horizon grows from 4 to 20, mean within-group length range grows from

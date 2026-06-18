@@ -246,14 +246,14 @@ Policy Optimization and Segment Policy Optimization.}
 \scriptsize
 \setlength{\tabcolsep}{2pt}
 \renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{0.99\linewidth}{@{}L{2.0cm}YY@{}}
+\begin{tabularx}{0.98\linewidth}{@{}L{2.0cm}YY@{}}
 \toprule
 Baseline source & Trajectory-level credit & Step-/segment-level credit \\
 \midrule
 None & REINFORCE & -- \\
 Global/running & REINFORCE++; Single-stream PO & add process rewards \\
 \addlinespace[2pt]
-Sibling/LOO & \grpo; RLOO; DAPO; Dr. \grpo & GiGPO; SALT; PRM+\grpo \\
+Sibling/LOO & \grpo; RLOO; DAPO; Dr. \grpo & GiGPO; SALT; anchor contrast; PRM+\grpo \\
 \addlinespace[2pt]
 Learned critic $V(s)$ & usually unnecessary alone & \ppo/GAE; ArCHer \\
 Sampled value & -- & VinePPO; OPPO; Segment PO \\
@@ -333,7 +333,9 @@ they preserve critic-free or group-based structure while constructing
 finer-grained comparisons across repeated states or trajectory graphs
 \citep{feng2025gigpo,li2025salt}. These methods make the main point sharper:
 ``critic-free'' does not have to mean ``trajectory-only,'' and ``critic-based''
-does not automatically mean correct credit.
+does not automatically mean correct credit. Our anchor-action contrast row is a
+minimal local analogue of that structural idea for the toy environment; it is
+not a reproduction of GiGPO or SALT.
 
 \paragraph{On-policy distillation.}
 \opd\ and related generalized knowledge distillation methods train on
@@ -431,13 +433,14 @@ correlation with the oracle advantage, calibrated MSE after affine rescaling,
 raw MSE, sign accuracy, wait-token leakage, within-trajectory variance,
 zero-variance group fraction, and exact critic-state hit rate.
 
-The variance-credit grid adds six non-oracle estimators on the same toy
+The variance-credit grid adds eight non-oracle estimators on the same toy
 dynamics: raw REINFORCE returns, a global return baseline, sibling group
 normalization, leave-one-out group centering, a dense progress-reward proxy, a
-learned critic TD estimator, and a sampled Monte Carlo value estimator. The
-purpose is not to simulate every cited algorithm, but to test the mechanism
-classes in Table \ref{tab:variance-credit-taxonomy}: baseline-only variance
-reduction versus step-level credit.
+critic-free anchor-action contrast over repeated state-action visits, a learned
+critic TD estimator, and a sampled Monte Carlo value estimator. The purpose is
+not to simulate every cited algorithm, but to test the mechanism classes in
+Table \ref{tab:variance-credit-taxonomy}: baseline-only variance reduction,
+structural critic-free step credit, and value-estimation-based step credit.
 
 Two robustness audits test likely objections. The length-imbalance audit adds a
 length-adjusted group scalar, computed by normalizing return per token inside
@@ -488,13 +491,13 @@ negative delta after adding the interval; otherwise the case is labeled a near
 tie. This is why the abstract says both ``17 mean critic wins'' and the more
 cautious ``16 clear, 1 near tie, 1 clear group'' reading.
 
-\paragraph{Why not a closed-loop toy RL run?}
-A closed-loop toy \ppo/\grpo\ implementation is a useful next step, but it
-would mix estimator fidelity with optimizer settings, clipping schedules,
-policy parameterization, exploration, and KL control. The current paper asks a
-more basic question first: when the oracle credit is known, which estimator is
-closer to it? That answer should inform later closed-loop experiments rather
-than be hidden inside them.
+\paragraph{Why not a full closed-loop \ppo/\grpo\ benchmark?}
+The closed-loop audit below is intentionally tabular and unclipped. A full
+\ppo/\grpo\ benchmark would mix estimator fidelity with optimizer settings,
+clipping schedules, policy parameterization, exploration, and KL control. This
+paper therefore asks the oracle-credit question first, then uses a small
+downstream policy-training audit as a sanity check rather than as final
+production evidence.
 
 \section{Results}
 
@@ -549,7 +552,7 @@ better than a poor value table.
 case. Baseline-only methods can lower second moment, but they do not create
 within-trajectory credit variation. Abbreviations: Var. is variance reduction;
 Group z is sibling-group z-scoring; LOO is leave-one-out; Within is
-within-trajectory estimator variance.}
+within-trajectory estimator variance; Anchor ctr. is anchor-action contrast.}
 \label{tab:variance-credit-grid}
 \scriptsize
 \input{generated/variance_credit_table.tex}
@@ -563,11 +566,21 @@ gradient signal relative to raw REINFORCE returns, but it leaves
 within-trajectory variance at zero because every token in a trajectory still
 receives the same scalar. Sibling group normalization is memory-light and
 critic-free, but in this long-wait setting it also remains a trajectory-level
-broadcast. The learned critic TD and sampled Monte Carlo value estimators both
-create step-level variation and substantially improve correlation with the
-oracle advantage. The dense progress-reward proxy sits between them: it gives a
-step signal, but because it lacks horizon and threshold information, it is not a
-full value estimate.
+broadcast. The anchor-action contrast row tests a stronger critic-free
+structural baseline: it uses repeated state-action anchors to create local
+step-level comparisons without fitting a value model. It is a transductive
+batch estimator over exact repeated toy states: it assumes repeated
+state-action coverage, and unsupported anchors receive zero rather than a
+borrowed value estimate. It substantially narrows
+the gap to the critic rows, improving correlation from the sibling-group
+baseline's 0.319 to 0.715, but it remains below learned critic TD at 0.870 and
+sampled Monte Carlo value estimation at 0.849. The dense progress-reward proxy
+also gives a step signal, but because it lacks horizon and threshold
+information, it is not a full value estimate. The strongest claim supported by
+this grid is therefore not that every critic-free method is weak; it is that
+long-horizon tasks need some mechanism for state-sensitive step credit, and in
+this toy the value-estimation mechanisms still carry the highest oracle
+alignment.
 
 \begin{table}[!htbp]
 \centering

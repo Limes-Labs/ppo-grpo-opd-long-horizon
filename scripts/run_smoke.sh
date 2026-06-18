@@ -117,8 +117,14 @@ if estimators["global_baseline"]["metrics"]["estimate_second_moment"] >= estimat
     raise SystemExit("global baseline did not reduce the trajectory-level second moment")
 if estimators["critic_td"]["metrics"]["pearson_correlation"] <= estimators["sibling_group_norm"]["metrics"]["pearson_correlation"]:
     raise SystemExit("critic TD did not beat sibling group correlation in variance/credit grid")
+if estimators["anchor_action_contrast"]["metrics"]["pearson_correlation"] <= estimators["sibling_group_norm"]["metrics"]["pearson_correlation"]:
+    raise SystemExit("anchor action contrast did not beat sibling group correlation in variance/credit grid")
+if estimators["anchor_action_contrast"]["metrics"]["pearson_correlation"] >= estimators["critic_td"]["metrics"]["pearson_correlation"]:
+    raise SystemExit("anchor action contrast unexpectedly beat critic TD in variance/credit grid")
 if abs(estimators["sibling_group_norm"]["metrics"]["within_trajectory_variance"]) > 1e-12:
     raise SystemExit("sibling group broadcast unexpectedly had step-level variation")
+if estimators["anchor_action_contrast"]["metrics"]["within_trajectory_variance"] <= 0.0:
+    raise SystemExit("anchor action contrast did not create step-level variation")
 if estimators["critic_td"]["metrics"]["within_trajectory_variance"] <= 0.0:
     raise SystemExit("critic TD did not create step-level variation")
 

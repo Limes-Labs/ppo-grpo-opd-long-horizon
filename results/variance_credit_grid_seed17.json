@@ -113,6 +113,26 @@
       "variance_reduction": "external dense signal"
     },
     {
+      "cost_note": "requires repeated state-action anchors",
+      "credit_assignment": "step",
+      "label": "Anchor action contrast",
+      "metrics": {
+        "calibrated_mse": 0.011663271418341106,
+        "estimate_mean": 0.0017409409694380228,
+        "estimate_second_moment": 0.044546108507766906,
+        "estimate_variance": 0.04454307763230783,
+        "mean_abs_active_tokens": 0.1746013562320551,
+        "mean_abs_wait_tokens": 0.07656273967649159,
+        "pearson_correlation": 0.7150087771264526,
+        "raw_mse": 0.021787994535106704,
+        "sign_accuracy": 0.5921113689095128,
+        "wait_to_active_abs_ratio": 0.43850025755089417,
+        "within_trajectory_variance": 0.04227125905425286
+      },
+      "name": "anchor_action_contrast",
+      "variance_reduction": "anchor state group"
+    },
+    {
       "cost_note": "requires fitted value model",
       "credit_assignment": "step",
       "label": "Learned critic TD",
@@ -174,6 +194,11 @@
     }
   ],
   "sample_counts": {
+    "anchor_action": {
+      "supported_step_fraction": 0.9517181383210092,
+      "unique_anchor_actions": 446.0,
+      "unique_anchor_states": 202.0
+    },
     "eval_tokens": 2299,
     "eval_trajectories": 288,
     "sampled_mc": {
