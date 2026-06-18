@@ -36,7 +36,8 @@ drop-in replacements for policy optimization.
   `public/ppo_grpo_opd_long_horizon.docx` - abridged rendered public report
   artifacts with charts and result tables. `PAPER.md` remains the full
   manuscript draft.
-- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full LaTeX-built paper.
+- `public/ppo_grpo_opd_long_horizon_latex.pdf` - full 30-page LaTeX-built
+  paper with generated result appendices.
 - `public/latex_artifact_manifest.json` - SHA-256 manifest for the full LaTeX
   paper artifact.
 - `public/artifact_manifest.json` - SHA-256 manifest for the rendered
@@ -114,6 +115,10 @@ Build the full LaTeX paper:
 ```bash
 ./scripts/build_latex_paper.sh
 ```
+
+The LaTeX build regenerates the result macros and appendix tables from
+`results/deep_matrix_20seed.json`, compiles the paper with `tectonic`, and
+checks that the rendered PDF is at least 30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a

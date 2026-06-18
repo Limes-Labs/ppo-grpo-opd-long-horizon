@@ -11,6 +11,10 @@ LATEX_PDF = ROOT / "public/ppo_grpo_opd_long_horizon_latex.pdf"
 LATEX_MANIFEST = ROOT / "public/latex_artifact_manifest.json"
 MACROS = ROOT / "paper/generated/result_macros.tex"
 TABLE = ROOT / "paper/generated/deep_matrix_table.tex"
+AXIS_TABLE = ROOT / "paper/generated/axis_summary_table.tex"
+FULL_CASE_TABLE = ROOT / "paper/generated/full_case_table.tex"
+RAW_SEED_TABLE = ROOT / "paper/generated/raw_seed_table.tex"
+RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 
 
@@ -27,9 +31,15 @@ class LatexPaperTests(unittest.TestCase):
             r"\section{Toy Experiment}",
             r"\section{Results}",
             r"\section{Failure Modes and Testable Predictions}",
+            r"\section{Threats to Validity}",
             r"\section{Reproducibility}",
             r"\section{Limitations}",
+            r"\section{Roadmap for Limes Labs}",
             r"\section{Conclusion}",
+            r"\appendix",
+            r"\section{Full Case Summary}",
+            r"\section{Raw Seed-Level Rows}",
+            r"\section{Raw Error and Dispersion Rows}",
             r"\bibliography{references}",
         ]:
             self.assertIn(required, text)
@@ -61,6 +71,16 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"blind\_undercovered\_counterexample", table)
         self.assertIn("group clear", table)
 
+        self.assertIn("critic\\_budget", AXIS_TABLE.read_text())
+        self.assertIn(r"\begin{longtable}", FULL_CASE_TABLE.read_text())
+        raw_seed = RAW_SEED_TABLE.read_text()
+        self.assertIn(r"\begin{longtable}", raw_seed)
+        self.assertGreaterEqual(raw_seed.count(r"\\"), 360)
+        raw_error = RAW_ERROR_TABLE.read_text()
+        self.assertIn(r"\begin{longtable}", raw_error)
+        self.assertIn("Group MSE", raw_error)
+        self.assertGreaterEqual(raw_error.count(r"\\"), 360)
+
     def test_bibliography_covers_required_sources(self) -> None:
         bib = BIB.read_text()
         for key in [
@@ -84,8 +104,12 @@ class LatexPaperTests(unittest.TestCase):
         self.assertEqual(output["bytes"], LATEX_PDF.stat().st_size)
         self.assertEqual(manifest["checks"]["pdf_header"], "%PDF")
         self.assertTrue(manifest["checks"]["pdf_generated"])
+        self.assertGreaterEqual(manifest["checks"]["page_count"], 30)
+        self.assertTrue(manifest["checks"]["page_count_ok"])
         self.assertIn("paper/main.tex", manifest["inputs"])
         self.assertIn("results/deep_matrix_20seed.json", manifest["inputs"])
+        self.assertIn("paper/generated/raw_seed_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/raw_error_table.tex", manifest["inputs"])
 
 
 if __name__ == "__main__":

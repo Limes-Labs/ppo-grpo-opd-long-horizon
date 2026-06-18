@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,16 +36,38 @@ def file_payload(path: Path) -> dict[str, Any]:
     }
 
 
-def build_manifest(repo: Path, output_pdf: Path) -> dict[str, Any]:
+def pdf_page_count(path: Path) -> int:
+    pdfinfo = shutil.which("pdfinfo")
+    if pdfinfo:
+        output = subprocess.check_output([pdfinfo, str(path)], text=True)
+        for line in output.splitlines():
+            if line.startswith("Pages:"):
+                return int(line.split(":", 1)[1].strip())
+
+    try:
+        from pypdf import PdfReader  # type: ignore
+
+        return len(PdfReader(str(path)).pages)
+    except Exception:
+        data = path.read_bytes()
+        return len(re.findall(rb"/Type\s*/Page\b", data))
+
+
+def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, Any]:
     inputs = [
         Path("paper/main.tex"),
         Path("paper/references.bib"),
         Path("paper/generated/result_macros.tex"),
         Path("paper/generated/deep_matrix_table.tex"),
+        Path("paper/generated/axis_summary_table.tex"),
+        Path("paper/generated/full_case_table.tex"),
+        Path("paper/generated/raw_seed_table.tex"),
+        Path("paper/generated/raw_error_table.tex"),
         Path("results/deep_matrix_20seed.json"),
         Path("public/figures/deep_matrix_delta.png"),
         Path("public/figures/deep_matrix_coverage.png"),
     ]
+    page_count = pdf_page_count(repo / output_pdf)
     return {
         "artifact_scope": "full LaTeX paper artifact",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -69,6 +93,9 @@ def build_manifest(repo: Path, output_pdf: Path) -> dict[str, Any]:
             "pdf_header": (repo / output_pdf).read_bytes()[:4].decode("ascii", "replace"),
             "pdf_generated": (repo / output_pdf).exists()
             and (repo / output_pdf).stat().st_size > 100_000,
+            "page_count": page_count,
+            "min_pages": min_pages,
+            "page_count_ok": page_count >= min_pages,
             "result_source": "results/deep_matrix_20seed.json",
         },
     }
@@ -86,16 +113,22 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("public/latex_artifact_manifest.json"),
     )
+    parser.add_argument("--min-pages", type=int, default=30)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     repo = Path.cwd()
-    manifest = build_manifest(repo, args.output_pdf)
+    manifest = build_manifest(repo, args.output_pdf, args.min_pages)
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.write_text(json.dumps(manifest, allow_nan=False, indent=2, sort_keys=True) + "\n")
     print(f"wrote {args.manifest}")
+    if not manifest["checks"]["page_count_ok"]:
+        raise SystemExit(
+            "LaTeX PDF has "
+            f"{manifest['checks']['page_count']} pages; expected at least {args.min_pages}"
+        )
     return 0
 
 
