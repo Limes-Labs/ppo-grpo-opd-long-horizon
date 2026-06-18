@@ -1,0 +1,15 @@
+[project]
+name = "ppo-grpo-opd-long-horizon"
+version = "0.1.0"
+description = "Toy experiments and research notes on PPO, GRPO, and on-policy distillation for long-horizon post-training."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Limes Labs" }
+]
+dependencies = []
+
+[tool.setuptools]
+packages = ["experiments"]
+
