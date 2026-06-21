@@ -99,6 +99,15 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/credit_phase_smoke.json" \
   --output-md "$SMOKE_DIR/credit_phase_smoke.md"
 
+"$PYTHON_BIN" -m experiments.policy_gradient_fidelity \
+  --seed 13 \
+  --batches 8 \
+  --groups-per-batch 5 \
+  --group-size 4 \
+  --horizon 4 \
+  --output-json "$SMOKE_DIR/policy_gradient_smoke.json" \
+  --output-md "$SMOKE_DIR/policy_gradient_smoke.md"
+
 "$PYTHON_BIN" - "$SMOKE_DIR" <<'PY'
 import json
 import math
@@ -229,6 +238,31 @@ for row in phase["aggregate_rows"]:
         raise SystemExit(f"phase smoke invalid broadcast ceiling in {row['cell_name']}")
     if abs(row["group_correlation"]) > row["broadcast_ceiling_correlation"] + 1e-9:
         raise SystemExit(f"group estimator exceeded broadcast ceiling in {row['cell_name']}")
+
+pg = json.loads((smoke_dir / "policy_gradient_smoke.json").read_text())
+pg_estimators = {row["method"]: row["metrics"] for row in pg["estimators"]}
+for required in [
+    "reinforce_return",
+    "sibling_loo_return",
+    "prefix_value_baseline",
+    "brpo_combined_baseline",
+    "critic_td",
+    "vimpo_equal_ref",
+    "vimpo_stale_ref",
+]:
+    if required not in pg_estimators:
+        raise SystemExit(f"policy-gradient smoke missing {required}")
+if pg_estimators["critic_td"]["variance_trace"] >= pg_estimators["reinforce_return"]["variance_trace"]:
+    raise SystemExit("policy-gradient smoke critic TD did not reduce gradient variance")
+if abs(pg_estimators["vimpo_equal_ref"]["mean_gradient_norm"]) > 1e-12:
+    raise SystemExit("VIMPO equal-reference smoke was not zero at initialization")
+if pg_estimators["vimpo_stale_ref"]["gradient_cosine"] <= 0.0:
+    raise SystemExit("VIMPO stale-reference smoke did not produce a positive gradient cosine")
+pg_baselines = pg["position_diagnostics"]["overall"]
+if pg_baselines["critic_value"]["residual_variance_ratio"] >= pg_baselines["group_mean"]["residual_variance_ratio"]:
+    raise SystemExit("policy-gradient smoke critic baseline did not reduce residual variance")
+if pg["sample_counts"]["null_token_fraction"] <= 0.0:
+    raise SystemExit("policy-gradient smoke did not sample the null action")
 
 print(f"smoke artifacts: {smoke_dir}")
 PY

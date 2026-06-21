@@ -8,17 +8,18 @@
     "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
     "min_pages": 30,
     "neural_generalization_source": "results/neural_credit_generalization_seedset.json",
-    "page_count": 38,
+    "page_count": 40,
     "page_count_ok": true,
     "pdf_generated": true,
     "pdf_header": "%PDF",
+    "policy_gradient_source": "results/policy_gradient_fidelity_seed13.json",
     "result_source": "results/deep_matrix_20seed.json",
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-21T20:32:52.051646+00:00",
+  "generated_at_utc": "2026-06-21T21:30:44.464607+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "d981cddcbeda331e734dec346238abce25323a4d",
+  "git_commit": "a1659fc8ed22eca93a9932d8fa2e8476fc3afa2d",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
@@ -50,8 +51,16 @@
       "sha256": "d84f75ed41cc78646b9ead064f628a5a1990d875d3ef2f78cf2dee73572fc44f"
     },
     "paper/generated/neural_generalization_table.tex": {
-      "bytes": 413,
-      "sha256": "5bc260d2fda780fc6f38bc642bc254b74f6ef7173866e8e5de374993f72f51d4"
+      "bytes": 417,
+      "sha256": "3bcb7de335365265558f6a5b9508fcd19ce511e4fe90d301a200136d68132ac0"
+    },
+    "paper/generated/policy_baseline_table.tex": {
+      "bytes": 411,
+      "sha256": "a5c29927d788bff8b3421ac2a7a3f6e4fb54b89d8cea692f802fe9c88c52ce1b"
+    },
+    "paper/generated/policy_gradient_table.tex": {
+      "bytes": 1139,
+      "sha256": "1b20b5e770b141565abc5509106667e4794393f5c9e0a26bd42724670bcd454b"
     },
     "paper/generated/raw_error_table.tex": {
       "bytes": 27672,
@@ -74,12 +83,12 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 66294,
-      "sha256": "7c37b4575880c6594efe17ae58a167099e0c56e4f920c73bb2959f843d7510ca"
+      "bytes": 71721,
+      "sha256": "950f937c9dbe2897f6c515f33388c530b60c5370f5d8a1f3e00ecf28d868d99b"
     },
     "paper/references.bib": {
-      "bytes": 11701,
-      "sha256": "72ed526a9a9be25a33db908e51b3964513e444c19789d622eca11332fab16c3a"
+      "bytes": 13564,
+      "sha256": "e6330e152331da155bddc195d7dbbe4a563244d63694121cc9d42b7d97d15b37"
     },
     "public/figures/deep_matrix_coverage.png": {
       "bytes": 26739,
@@ -117,6 +126,10 @@
       "bytes": 5227,
       "sha256": "36643c97d1ebb4abf597eb39e78c89f79e30c817ab36f8f1eb1fcbf959ac5e64"
     },
+    "results/policy_gradient_fidelity_seed13.json": {
+      "bytes": 17528,
+      "sha256": "c64131c85bfac0cecec74162f4712defba1c8de6ccd40ce7965b9166b1a3ad7a"
+    },
     "results/token_cost_sensitivity_20seed.json": {
       "bytes": 111284,
       "sha256": "7b1803ee0bc281e76f00f470cd4a36f2100570858e5690fc2df81b46b91d1119"
@@ -128,8 +141,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 295564,
-      "sha256": "23e89d6c1ffda6e009546493cf492213495596830f9148f9232390396cf87581"
+      "bytes": 308410,
+      "sha256": "3591e57c4d06eded03d53eef493c7dbd7a23e5d64b70e4e746ef09a46579965a"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

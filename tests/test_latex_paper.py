@@ -22,6 +22,8 @@ TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
 CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
 NEURAL_TABLE = ROOT / "paper/generated/neural_generalization_table.tex"
 PHASE_TABLE = ROOT / "paper/generated/credit_phase_table.tex"
+POLICY_GRADIENT_TABLE = ROOT / "paper/generated/policy_gradient_table.tex"
+POLICY_BASELINE_TABLE = ROOT / "paper/generated/policy_baseline_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
 ANCHOR_COVERAGE = ROOT / "results/anchor_coverage_audit_seedset.json"
@@ -31,6 +33,7 @@ CLOSED_LOOP = ROOT / "results/closed_loop_credit_training_10seed.json"
 CLOSED_LOOP_LOW = ROOT / "results/closed_loop_credit_training_low_coverage_10seed.json"
 NEURAL = ROOT / "results/neural_credit_generalization_seedset.json"
 PHASE = ROOT / "results/credit_phase_diagram_seedset.json"
+POLICY_GRADIENT = ROOT / "results/policy_gradient_fidelity_seed13.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -42,11 +45,13 @@ class LatexPaperTests(unittest.TestCase):
             r"\begin{abstract}",
             r"\section{Introduction}",
             r"\section{Definitions and Method Taxonomy}",
+            r"\subsection{Policy-implied values}",
             r"\subsection{Variance reduction versus credit assignment}",
-            r"\section{Cost Accounting}",
-            r"\section{Formal Limitation: The Broadcast Ceiling}",
+            r"\section{Compute and Information Costs}",
+            r"\section{Formal Limitation: Information, Reliability, and Broadcast}",
             r"\section{Toy Experiment}",
             r"\section{Results}",
+            r"\section{Estimator Regimes and Selection Criteria}",
             r"\section{Failure Modes and Testable Predictions}",
             r"\section{Threats to Validity}",
             r"\section{Reproducibility}",
@@ -61,9 +66,14 @@ class LatexPaperTests(unittest.TestCase):
         ]:
             self.assertIn(required, text)
 
+        self.assertIn("The Broadcast Ceiling", text)
+        self.assertIn(r"\vimpo", text)
+        self.assertIn(r"\brpo", text)
         self.assertIn(r"\includegraphics[width=\linewidth]{deep_matrix_delta.png}", text)
         self.assertIn(r"\DeepClearCriticCases", text)
-        self.assertIn("clear critic-favorable", text)
+        self.assertIn("critic-favorable", text)
+        self.assertIn(r"\input{generated/policy_gradient_table.tex}", text)
+        self.assertIn(r"\input{generated/policy_baseline_table.tex}", text)
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
         self.assertIn(r"\input{generated/anchor_coverage_table.tex}", text)
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
@@ -71,10 +81,12 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
         self.assertIn(r"\input{generated/neural_generalization_table.tex}", text)
         self.assertIn(r"\input{generated/credit_phase_table.tex}", text)
-        self.assertIn("coverage-gated credit", text)
+        self.assertIn("reliability-gated baseline", text)
         self.assertIn("behavior-policy advantage", text)
         self.assertIn(r"A^{\pi_b}(x,a)", text)
         self.assertIn("REINFORCE remains an unbiased", text)
+        self.assertIn("information ceiling", text)
+        self.assertIn("reliability or consistency error", text)
         self.assertIn(r"H_{\mathrm{credit}}", text)
         self.assertIn("trajectory-broadcast ceiling", text)
         self.assertIn("near tie", text)
@@ -82,8 +94,8 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("not a production", text)
         self.assertIn("controlled estimator-fidelity toy", text)
         self.assertIn("anchor-action contrast", text)
-        self.assertIn("coverage-gated credit", text)
-        self.assertIn("tabular closed-loop training", text)
+        self.assertIn("exact-gradient audit", text)
+        self.assertIn("closed-loop training", text)
         self.assertIn("value-critic generalization", text)
         self.assertIn(r"\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)", text)
         self.assertIn(r"\paragraph{Full clipped \ppo/\grpo\ training.}", text)
@@ -92,6 +104,11 @@ class LatexPaperTests(unittest.TestCase):
         self.assertNotIn(r"\mathcal{r}_t + \gamma V_\phi", text)
         self.assertNotIn(r"A^\star(s_t,a_t)", text)
         self.assertNotIn("token-level causal structure", text)
+        self.assertNotIn("Public draft", text)
+        self.assertNotIn("Limes Labs Research Workstream", text)
+        self.assertNotIn("Which Method Is Better?", text)
+        self.assertNotIn("Cost Accounting", text)
+        self.assertNotIn("public headline", text)
 
     def test_generated_latex_inputs_match_matrix_json(self) -> None:
         matrix = json.loads(MATRIX.read_text())
@@ -194,7 +211,7 @@ class LatexPaperTests(unittest.TestCase):
         neural = json.loads(NEURAL.read_text())
         neural_table = NEURAL_TABLE.read_text()
         self.assertIn("Neural TD", neural_table)
-        self.assertIn("Held-out exact-state fraction", neural_table)
+        self.assertIn("Eval keys unseen in tabular train", neural_table)
         self.assertGreaterEqual(
             neural["aggregate"]["sample_counts"]["heldout_exact_state_fraction"],
             0.99,
@@ -216,6 +233,32 @@ class LatexPaperTests(unittest.TestCase):
                 abs(row["group_correlation"]),
                 row["broadcast_ceiling_correlation"] + 1e-9,
             )
+
+        policy_gradient = json.loads(POLICY_GRADIENT.read_text())
+        gradient_table = POLICY_GRADIENT_TABLE.read_text()
+        baseline_table = POLICY_BASELINE_TABLE.read_text()
+        self.assertIn("VIMPO", gradient_table)
+        self.assertIn("BRPO-style", gradient_table)
+        self.assertIn(r"$\pi=\pi_{\rm ref}$", gradient_table)
+        pg_metrics = {
+            entry["method"]: entry["metrics"]
+            for entry in policy_gradient["estimators"]
+        }
+        self.assertLess(
+            pg_metrics["critic_td"]["variance_trace"],
+            pg_metrics["reinforce_return"]["variance_trace"],
+        )
+        self.assertEqual(pg_metrics["vimpo_equal_ref"]["mean_gradient_norm"], 0.0)
+        self.assertGreater(pg_metrics["vimpo_stale_ref"]["gradient_cosine"], 0.0)
+        self.assertIn("Score-wtd. resid.", baseline_table)
+        self.assertLess(
+            policy_gradient["position_diagnostics"]["overall"]["critic_value"][
+                "residual_variance_ratio"
+            ],
+            policy_gradient["position_diagnostics"]["overall"]["group_mean"][
+                "residual_variance_ratio"
+            ],
+        )
 
     def test_bibliography_covers_required_sources(self) -> None:
         bib = BIB.read_text()
@@ -244,6 +287,11 @@ class LatexPaperTests(unittest.TestCase):
             "yang2026groupbiased",
             "li2026ecpo",
             "zhang2026creditassignment",
+            "kang2026vimpo",
+            "qi2025anytimereasoner",
+            "luo2026dopsd",
+            "fu2025areal",
+            "khan2026straggler",
         ]:
             self.assertRegex(bib, rf"@\w+\{{{re.escape(key)},")
 
@@ -272,12 +320,15 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/closed_loop_training_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/neural_generalization_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/credit_phase_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/policy_gradient_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/policy_baseline_table.tex", manifest["inputs"])
         self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
         self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_10seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_low_coverage_10seed.json", manifest["inputs"])
         self.assertIn("results/neural_credit_generalization_seedset.json", manifest["inputs"])
         self.assertIn("results/credit_phase_diagram_seedset.json", manifest["inputs"])
+        self.assertIn("results/policy_gradient_fidelity_seed13.json", manifest["inputs"])
 
 
 if __name__ == "__main__":
