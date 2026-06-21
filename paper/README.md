@@ -10,9 +10,11 @@ This directory contains the full LaTeX manuscript source for the public paper:
   `generated/variance_credit_table.tex`, `generated/anchor_coverage_table.tex`,
   `generated/length_imbalance_table.tex`, `generated/token_cost_table.tex`,
   `generated/closed_loop_training_table.tex`, and
-  `generated/neural_generalization_table.tex` - reproducible LaTeX inputs generated
+  `generated/neural_generalization_table.tex`, and
+  `generated/credit_phase_table.tex` - reproducible LaTeX inputs generated
   from `results/deep_matrix_20seed.json`,
   `results/variance_credit_grid_seed17.json`,
+  `results/credit_phase_diagram_seedset.json`,
   `results/anchor_coverage_audit_seedset.json`,
   `results/length_imbalance_audit_seedset.json`, and
   `results/token_cost_sensitivity_20seed.json`, the closed-loop training JSON

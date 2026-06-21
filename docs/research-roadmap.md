@@ -62,7 +62,7 @@ The next scientific goal is a phase diagram, not a single winner.
 
 1. **Toy estimator phase:** sweep horizon, wait/no-op load, reward sparsity,
    group size, critic state coverage, structural-anchor coverage, and critic
-   data budget. Keep oracle advantages so estimator quality is measurable.
+   data budget. Keep exact behavior-policy advantages so estimator quality is measurable.
 2. **Tiny neural phase:** extend the current held-out-threshold value-critic
    audit into `limes-nanogpt` with actual learned sequence policies,
    PPO-style value heads, and GRPO-style group objectives under identical

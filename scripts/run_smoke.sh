@@ -87,6 +87,18 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/neural_credit_smoke.json" \
   --output-md "$SMOKE_DIR/neural_credit_smoke.md"
 
+"$PYTHON_BIN" -m experiments.credit_phase_diagram \
+  --seeds 11,29 \
+  --heterogeneity-levels low,high \
+  --observability-levels full,blind \
+  --coverage-levels low,high \
+  --reward-levels contrast \
+  --drift-levels matched \
+  --eval-groups 12 \
+  --group-size 4 \
+  --output-json "$SMOKE_DIR/credit_phase_smoke.json" \
+  --output-md "$SMOKE_DIR/credit_phase_smoke.md"
+
 "$PYTHON_BIN" - "$SMOKE_DIR" <<'PY'
 import json
 import math
@@ -204,6 +216,19 @@ if neural_td["pearson_correlation"] <= neural_group["pearson_correlation"] + 0.2
     raise SystemExit("neural critic did not beat group broadcast in held-out smoke")
 if neural_td["within_trajectory_variance"] <= 1e-4:
     raise SystemExit("neural critic did not create step-level variation")
+
+phase = json.loads((smoke_dir / "credit_phase_smoke.json").read_text())
+if phase["summary"]["critic_clear_cells"] < 1:
+    raise SystemExit("phase smoke did not include a critic-clear cell")
+if phase["summary"]["group_clear_cells"] < 1:
+    raise SystemExit("phase smoke did not include a group-clear cell")
+for row in phase["aggregate_rows"]:
+    if not (0.0 <= row["credit_heterogeneity"] <= 1.0):
+        raise SystemExit(f"phase smoke invalid heterogeneity in {row['cell_name']}")
+    if not (0.0 <= row["broadcast_ceiling_correlation"] <= 1.0):
+        raise SystemExit(f"phase smoke invalid broadcast ceiling in {row['cell_name']}")
+    if abs(row["group_correlation"]) > row["broadcast_ceiling_correlation"] + 1e-9:
+        raise SystemExit(f"group estimator exceeded broadcast ceiling in {row['cell_name']}")
 
 print(f"smoke artifacts: {smoke_dir}")
 PY
