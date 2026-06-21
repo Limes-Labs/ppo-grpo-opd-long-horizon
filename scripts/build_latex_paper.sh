@@ -12,6 +12,10 @@ fi
 
 mkdir -p public
 mkdir -p paper/build
+mkdir -p .cache .tectonic-cache
+
+export XDG_CACHE_HOME="$ROOT_DIR/.cache"
+export TECTONIC_CACHE_DIR="$ROOT_DIR/.tectonic-cache"
 
 python3 scripts/build_latex_inputs.py
 

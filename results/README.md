@@ -18,6 +18,11 @@ Current artifacts:
   critic-free anchor-action contrast baseline over repeated toy states.
 - `variance_credit_grid_seed17.md` - human-readable table and reading notes for
   the same estimator grid.
+- `credit_phase_diagram_seedset.json` - broadcast-ceiling phase diagnostic over
+  credit heterogeneity, critic observability, coverage, reward contrast, and
+  policy drift.
+- `credit_phase_diagram_seedset.md` - human-readable table and reading notes
+  for the same phase diagnostic.
 - `anchor_coverage_audit_seedset.json` - coverage sweep for the critic-free
   anchor-action contrast estimator over repeated exact toy states.
 - `anchor_coverage_audit_seedset.md` - human-readable table for the same
@@ -71,6 +76,14 @@ Regenerate the variance/credit grid with:
 python3 -m experiments.variance_credit_grid \
   --output-json results/variance_credit_grid_seed17.json \
   --output-md results/variance_credit_grid_seed17.md
+```
+
+Regenerate the broadcast-ceiling phase diagnostic with:
+
+```bash
+python3 -m experiments.credit_phase_diagram \
+  --output-json results/credit_phase_diagram_seedset.json \
+  --output-md results/credit_phase_diagram_seedset.md
 ```
 
 Regenerate the robustness audits with:

@@ -4,10 +4,11 @@
     "anchor_coverage_source": "results/anchor_coverage_audit_seedset.json",
     "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
     "closed_loop_source": "results/closed_loop_credit_training_10seed.json",
+    "credit_phase_source": "results/credit_phase_diagram_seedset.json",
     "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
     "min_pages": 30,
     "neural_generalization_source": "results/neural_credit_generalization_seedset.json",
-    "page_count": 36,
+    "page_count": 38,
     "page_count_ok": true,
     "pdf_generated": true,
     "pdf_header": "%PDF",
@@ -15,9 +16,9 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-18T13:40:26.155833+00:00",
+  "generated_at_utc": "2026-06-21T20:32:52.051646+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "b0171cd1c49459c9392820728429c4a53927cdcf",
+  "git_commit": "d981cddcbeda331e734dec346238abce25323a4d",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
@@ -31,6 +32,10 @@
     "paper/generated/closed_loop_training_table.tex": {
       "bytes": 742,
       "sha256": "c6ce3225d8014d6111cb6b39a2a7a1d9f8e7d485c9f65bf01ba58713f7edcec3"
+    },
+    "paper/generated/credit_phase_table.tex": {
+      "bytes": 1047,
+      "sha256": "22e165e83b227bd8ce556c5e6d45c76755adfefab811efce570de4a45f9916e0"
     },
     "paper/generated/deep_matrix_table.tex": {
       "bytes": 756,
@@ -69,12 +74,12 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 57993,
-      "sha256": "a2150d163161120d0bee8a8c4bdb4d57b333050fea6972176ce4d7d37041e7bf"
+      "bytes": 66294,
+      "sha256": "7c37b4575880c6594efe17ae58a167099e0c56e4f920c73bb2959f843d7510ca"
     },
     "paper/references.bib": {
-      "bytes": 10404,
-      "sha256": "ae08969c53c10c224d12c2112fb7b968ede26e7ef1915d9344d4db8e8cbd3f65"
+      "bytes": 11701,
+      "sha256": "72ed526a9a9be25a33db908e51b3964513e444c19789d622eca11332fab16c3a"
     },
     "public/figures/deep_matrix_coverage.png": {
       "bytes": 26739,
@@ -95,6 +100,10 @@
     "results/closed_loop_credit_training_low_coverage_10seed.json": {
       "bytes": 155781,
       "sha256": "e556e6631f3df9e8ff69065f53c5f087ab9909276988dbc85e758c666bb636ff"
+    },
+    "results/credit_phase_diagram_seedset.json": {
+      "bytes": 169526,
+      "sha256": "52c53f8c79f0af71da9857ac7078ca0208d5c650844002c3b03c0401ea80e6ed"
     },
     "results/deep_matrix_20seed.json": {
       "bytes": 231192,
@@ -119,8 +128,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 278962,
-      "sha256": "23d2951c08b96b63bd76427e9814eec295053980ddac1f523f12755447f58ca3"
+      "bytes": 295564,
+      "sha256": "23e89d6c1ffda6e009546493cf492213495596830f9148f9232390396cf87581"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

@@ -16,11 +16,12 @@ trajectory storage is expensive. OPD and OPSD belong in the comparison as
 complementary on-policy distillation/self-distillation tools, not as direct
 drop-in replacements for policy optimization.
 
-The repository now includes estimator-fidelity audits, structural critic-free
-baselines, an exploratory coverage-gated credit estimator, tabular closed-loop
-training, and a tiny neural value-critic generalization audit. The main
-remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
-sequence-policy benchmark.
+The repository now includes estimator-fidelity audits, a broadcast-ceiling
+diagnostic for trajectory-constant estimators, structural critic-free baselines,
+an exploratory coverage-gated credit estimator, tabular closed-loop training,
+and a tiny neural value-critic generalization audit. The main remaining upgrade
+toward a stronger ML paper is a nanoGPT-scale or transformer sequence-policy
+benchmark.
 
 ## Canonical Paper
 
@@ -48,6 +49,8 @@ have to guess which paper is current.
   group size, critic budget, observability, and sparse rewards.
 - `experiments/variance_credit_grid.py` - estimator grid separating variance
   reduction mechanisms from step-level credit assignment.
+- `experiments/credit_phase_diagram.py` - factorial diagnostic over credit
+  heterogeneity, critic observability, coverage, reward contrast, and drift.
 - `experiments/anchor_coverage_audit.py` - coverage sweep for the critic-free
   anchor-action contrast baseline.
 - `experiments/length_imbalance_audit.py` - audit of group-relative estimators
@@ -66,6 +69,8 @@ have to guess which paper is current.
   the paper.
 - `results/variance_credit_grid_seed17.md` - canonical result table for the
   variance-reduction versus credit-assignment grid.
+- `results/credit_phase_diagram_seedset.md` - canonical broadcast-ceiling
+  phase diagnostic.
 - `results/anchor_coverage_audit_seedset.md` - canonical coverage sweep for
   anchor-action contrast.
 - `results/length_imbalance_audit_seedset.md` - canonical length-imbalance
@@ -143,6 +148,10 @@ Regenerate the variance-reduction versus credit-assignment grid:
 python3 -m experiments.variance_credit_grid \
   --output-json results/variance_credit_grid_seed17.json \
   --output-md results/variance_credit_grid_seed17.md
+
+python3 -m experiments.credit_phase_diagram \
+  --output-json results/credit_phase_diagram_seedset.json \
+  --output-md results/credit_phase_diagram_seedset.md
 ```
 
 Regenerate the anchor-coverage, length-imbalance, and token-cost audits:
@@ -185,8 +194,9 @@ Build the full LaTeX paper:
 
 The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
-`results/variance_credit_grid_seed17.json`, plus the length-imbalance,
-token-cost, closed-loop, and neural generalization audit JSON files. It
+`results/variance_credit_grid_seed17.json`, plus the credit-phase,
+length-imbalance, token-cost, closed-loop, and neural generalization audit JSON
+files. It
 compiles the paper with `tectonic` and checks that the rendered PDF is at least
 30 pages.
 
@@ -197,7 +207,7 @@ credit-assignment mechanism, not model quality.
 ## Current Experiment Result
 
 The canonical 20-seed matrix runs 18 fixed regimes. The critic-style estimator
-wins by mean oracle-advantage correlation in 17 regimes, but one of those is a
+wins by mean exact behavior-policy advantage correlation in 17 regimes, but one of those is a
 near tie whose 95% confidence interval crosses zero. The more careful reading is
 16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable
 counterexample where the critic is blind and undercovered:
@@ -222,11 +232,19 @@ The canonical PDF is rendered from LaTeX at
 `public/trajectory_rewards_are_not_token_credit.pdf` and tracked with
 `public/paper_manifest.json`.
 
+The broadcast-ceiling phase diagnostic is the main boundary result. Across 32
+cells over credit heterogeneity, critic observability, coverage, reward
+contrast, and policy drift, it finds 15 clear critic-favorable cells, 2 clear
+group-favorable cells, and 15 near ties. The useful rule is conditional:
+trajectory-constant estimators hit a ceiling as within-trajectory credit
+heterogeneity rises, but critics only exploit that opening when held-out critic
+reliability is high enough.
+
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment
 without creating within-trajectory credit variation. A critic-free
 anchor-action contrast over repeated state-action visits improves
-oracle-advantage correlation from sibling group normalization's `r=0.319` to
+behavior-policy advantage correlation from sibling group normalization's `r=0.319` to
 `r=0.715`, while learned critic TD reaches `r=0.870` and sampled Monte Carlo
 value estimates reach `r=0.849`. This makes the middle ground explicit:
 critic-free does not have to mean trajectory-only, but value estimation remains
@@ -257,9 +275,10 @@ pattern, not a solved algorithm.
 The tiny neural generalization audit trains a one-hidden-layer value critic on
 thresholds `1` and `3`, then evaluates on held-out threshold `2`. Exact tabular
 state lookup cannot match the held-out threshold. In the canonical 3-seed run,
-group-relative broadcast reaches oracle-credit Pearson `r=0.364`, while neural
-critic TD reaches `r=0.842` with lower calibrated MSE and lower wait-token
-leakage. This is still a toy, but it is no longer pure table lookup.
+group-relative broadcast reaches behavior-policy-credit Pearson `r=0.364`,
+while neural critic TD reaches `r=0.842` with lower calibrated MSE and lower
+delay-action magnitude. This is still a toy, but it is no longer pure table
+lookup.
 
 ## Working Thesis
 
@@ -300,6 +319,14 @@ Primary and near-primary sources covered in the first outline include:
   <https://arxiv.org/abs/2603.01162>
 - Stabilized GRPO variants: Salmani-Zarchi et al., 2026,
   <https://arxiv.org/abs/2606.06058>
+- VAPO value-based long-CoT RL: Yue et al., 2025,
+  <https://arxiv.org/abs/2504.05118>
+- Group-relative advantage bias: Yang et al., 2026,
+  <https://arxiv.org/abs/2601.08521>
+- Evidence-Calibrated Policy Optimization: Li et al., 2026,
+  <https://arxiv.org/abs/2606.05885>
+- 2026 credit-assignment survey: Zhang, 2026,
+  <https://arxiv.org/abs/2604.09459>
 - GLM-5.2 as a vendor case study for critic-based PPO returning in compacted
   long-horizon agentic RL: Z.ai, 2026, <https://z.ai/blog/glm-5.2>
 - Variance-reduction and step-credit references added in the LaTeX paper:
