@@ -525,7 +525,13 @@ def estimate_gradient_for_batch(
             group_loo[trajectory_index] = trajectory.total_return - baseline
             trajectory_index += 1
 
-    diagnostics = {"terminal_consistency_residual": 0.0, "critic_state_hit_rate": 0.0}
+    diagnostics = {
+        "terminal_consistency_residual": 0.0,
+        "critic_state_hit_rate": 0.0,
+        "null_credit_sum": 0.0,
+        "null_abs_credit_sum": 0.0,
+        "null_credit_count": 0.0,
+    }
     residuals: list[float] = []
     critic_hits = 0
     critic_queries = 0
@@ -574,6 +580,10 @@ def estimate_gradient_for_batch(
                     residuals.append(abs(estimate - target))
                 else:
                     raise ValueError(f"unknown method {method!r}")
+                if step.action == "null":
+                    diagnostics["null_credit_sum"] += estimate
+                    diagnostics["null_abs_credit_sum"] += abs(estimate)
+                    diagnostics["null_credit_count"] += 1.0
                 add_score_function_gradient(
                     gradient_values,
                     policy,
@@ -699,6 +709,23 @@ def ci95(values: list[float]) -> float:
     return 1.96 * stdev(values) / math.sqrt(len(values))
 
 
+def quantile(values: list[float], q: float) -> float:
+    if not values:
+        return 0.0
+    if q <= 0:
+        return min(values)
+    if q >= 1:
+        return max(values)
+    ordered = sorted(values)
+    position = q * (len(ordered) - 1)
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return ordered[lower]
+    weight = position - lower
+    return ordered[lower] * (1.0 - weight) + ordered[upper] * weight
+
+
 def pearson(pairs: list[tuple[float, float]]) -> float:
     if not pairs:
         return 0.0
@@ -810,6 +837,9 @@ def summarize_gradient_metrics(
         "variance_trace": variance_trace(gradients, mean),
         "gradient_cosine": cosine,
         "matched_kl_improvement": matched_kl_improvement(policy, mean),
+        "batch_matched_kl_improvement_mean": 0.0,
+        "batch_matched_kl_improvement_p05": 0.0,
+        "batch_negative_update_probability": 0.0,
         "advantage_correlation": pearson(pairs),
         "calibrated_advantage_mse": calibrated_mse(pairs),
         "terminal_consistency_residual": (
@@ -820,6 +850,18 @@ def summarize_gradient_metrics(
         "critic_state_hit_rate": (
             fmean(row["critic_state_hit_rate"] for row in diagnostics)
             if diagnostics
+            else 0.0
+        ),
+        "null_credit_mean": (
+            sum(row["null_credit_sum"] for row in diagnostics)
+            / sum(row["null_credit_count"] for row in diagnostics)
+            if diagnostics and sum(row["null_credit_count"] for row in diagnostics) > 0
+            else 0.0
+        ),
+        "null_abs_credit_mean": (
+            sum(row["null_abs_credit_sum"] for row in diagnostics)
+            / sum(row["null_credit_count"] for row in diagnostics)
+            if diagnostics and sum(row["null_credit_count"] for row in diagnostics) > 0
             else 0.0
         ),
     }
@@ -834,6 +876,7 @@ def gradient_metrics(
     policy: TabularSoftmaxPolicy,
     diagnostics: list[dict[str, float]],
     replication_summaries: list[dict[str, float]],
+    compute_batch_stats: bool = True,
 ) -> dict[str, float]:
     metrics = summarize_gradient_metrics(
         method=method,
@@ -845,7 +888,6 @@ def gradient_metrics(
     )
     for key in [
         "relative_mean_error_norm",
-        "variance_trace",
         "gradient_cosine",
         "matched_kl_improvement",
         "advantage_correlation",
@@ -853,16 +895,32 @@ def gradient_metrics(
     ]:
         values = [row[key] for row in replication_summaries if key in row]
         metrics[f"{key}_ci95"] = ci95(values)
+    mean = mean_gradient(gradients)
+    variance_terms = [gradient.minus(mean).norm ** 2 for gradient in gradients]
+    metrics["variance_trace_ci95"] = ci95(variance_terms)
+    if compute_batch_stats:
+        batch_improvements = [
+            matched_kl_improvement(policy, gradient) for gradient in gradients
+        ]
+        metrics["batch_matched_kl_improvement_mean"] = (
+            fmean(batch_improvements) if batch_improvements else 0.0
+        )
+        metrics["batch_matched_kl_improvement_p05"] = quantile(batch_improvements, 0.05)
+        metrics["batch_negative_update_probability"] = (
+            sum(1 for value in batch_improvements if value < 0.0) / len(batch_improvements)
+            if batch_improvements
+            else 0.0
+        )
     return metrics
 
 
 def run_policy_gradient_audit(
     *,
     seed: int = 13,
-    batches: int = 180,
+    batches: int = 200,
     groups_per_batch: int = 16,
     group_size: int = 5,
-    replications: int = 12,
+    replications: int = 200,
     config: MDPConfig | None = None,
 ) -> dict[str, Any]:
     if batches <= 0 or groups_per_batch <= 0 or group_size <= 1 or replications <= 0:
@@ -961,7 +1019,11 @@ def run_policy_gradient_audit(
                 )
             )
 
-    def build_rows(selected_methods: list[tuple[str, TabularSoftmaxPolicy | None]]) -> list[dict[str, Any]]:
+    def build_rows(
+        selected_methods: list[tuple[str, TabularSoftmaxPolicy | None]],
+        *,
+        compute_batch_stats: bool,
+    ) -> list[dict[str, Any]]:
         rows = []
         for method, reference in selected_methods:
             row: dict[str, Any] = {
@@ -974,6 +1036,7 @@ def run_policy_gradient_audit(
                     policy=policy,
                     diagnostics=per_method[method]["diagnostics"],
                     replication_summaries=per_method[method]["replications"],
+                    compute_batch_stats=compute_batch_stats,
                 ),
             }
             if reference is not None:
@@ -981,8 +1044,8 @@ def run_policy_gradient_audit(
             rows.append(row)
         return rows
 
-    estimators = build_rows(estimator_methods)
-    policy_implied_signals = build_rows(references)
+    estimators = build_rows(estimator_methods, compute_batch_stats=True)
+    policy_implied_signals = build_rows(references, compute_batch_stats=False)
 
     finite_diff_error = finite_diff.minus(exact).norm
     exact_norm = exact.norm
@@ -1037,8 +1100,8 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
         "",
         "Finite MDP with exact value and occupancy-measure policy gradient.",
         "",
-        "| Method | Mean err/|g*| | 95% CI | Var trace | Cosine | KL-step dJ | Adv. r | Cal. MSE |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Method | Rel. mean err. | 95% CI | Var trace | Cosine | Mean batch dJ | P5 batch dJ | Neg. batch | Null abs A | Adv. r | Cal. MSE |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in result["estimators"]:
         metrics = row["metrics"]
@@ -1050,7 +1113,10 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
                     fmt(metrics["relative_mean_error_norm_ci95"]),
                     fmt(metrics["variance_trace"]),
                     fmt(metrics["gradient_cosine"]),
-                    fmt(metrics["matched_kl_improvement"]),
+                    fmt(metrics["batch_matched_kl_improvement_mean"]),
+                    fmt(metrics["batch_matched_kl_improvement_p05"]),
+                    fmt(metrics["batch_negative_update_probability"]),
+                    fmt(metrics["null_abs_credit_mean"]),
                     fmt(metrics["advantage_correlation"]),
                     fmt(metrics["calibrated_advantage_mse"]) + " |",
                 ]
@@ -1083,8 +1149,8 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=13)
-    parser.add_argument("--batches", type=int, default=180)
-    parser.add_argument("--replications", type=int, default=12)
+    parser.add_argument("--batches", type=int, default=200)
+    parser.add_argument("--replications", type=int, default=200)
     parser.add_argument("--groups-per-batch", type=int, default=16)
     parser.add_argument("--group-size", type=int, default=5)
     parser.add_argument("--threshold", type=int, default=2)

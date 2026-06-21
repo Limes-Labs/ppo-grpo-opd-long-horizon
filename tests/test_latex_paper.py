@@ -21,6 +21,7 @@ PHASE_TABLE = ROOT / "paper/generated/credit_phase_table.tex"
 POLICY_GRADIENT_TABLE = ROOT / "paper/generated/policy_gradient_table.tex"
 POLICY_IMPLIED_TABLE = ROOT / "paper/generated/policy_implied_table.tex"
 POLICY_BASELINE_TABLE = ROOT / "paper/generated/policy_baseline_table.tex"
+SELECTION_REGRET_TABLE = ROOT / "paper/generated/selection_regret_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
 ANCHOR_COVERAGE = ROOT / "results/anchor_coverage_audit_seedset.json"
@@ -31,6 +32,7 @@ CLOSED_LOOP_LOW = ROOT / "results/closed_loop_credit_training_low_coverage_10see
 NEURAL = ROOT / "results/neural_credit_generalization_seedset.json"
 PHASE = ROOT / "results/credit_phase_diagram_seedset.json"
 POLICY_GRADIENT = ROOT / "results/policy_gradient_fidelity_seed13.json"
+SELECTION_REGRET = ROOT / "results/selection_regret_seedset.json"
 
 
 class LatexPaperTests(unittest.TestCase):
@@ -78,6 +80,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
         self.assertIn(r"\input{generated/neural_generalization_table.tex}", text)
         self.assertIn(r"\input{generated/credit_phase_table.tex}", text)
+        self.assertIn(r"\input{generated/selection_regret_table.tex}", text)
         self.assertIn("reliability-gated baseline", text)
         self.assertIn("behavior-policy advantage", text)
         self.assertIn(r"A^{\pi_b}(x,a)", text)
@@ -164,6 +167,7 @@ class LatexPaperTests(unittest.TestCase):
                     "policy_gradient_table.tex",
                     "policy_implied_table.tex",
                     "result_macros.tex",
+                    "selection_regret_table.tex",
                     "token_cost_table.tex",
                     "variance_credit_table.tex",
                 ]
@@ -253,6 +257,7 @@ class LatexPaperTests(unittest.TestCase):
         phase_table = PHASE_TABLE.read_text()
         self.assertIn(r"$H_{\mathrm{credit}}$", phase_table)
         self.assertIn("Crossover", phase_table)
+        self.assertIn("realized", phase_table)
         self.assertGreaterEqual(phase["summary"]["cell_count"], 48)
         self.assertGreaterEqual(phase["summary"]["critic_clear_cells"], 1)
         self.assertGreaterEqual(phase["summary"]["group_clear_cells"], 1)
@@ -264,12 +269,31 @@ class LatexPaperTests(unittest.TestCase):
                 row["broadcast_ceiling_correlation"] + 1e-9,
             )
 
+        selection_regret = json.loads(SELECTION_REGRET.read_text())
+        selection_table = SELECTION_REGRET_TABLE.read_text()
+        self.assertIn("Audit MSE+cost", selection_table)
+        self.assertIn("Always group", selection_table)
+        self.assertIn("Always critic", selection_table)
+        self.assertEqual(
+            selection_regret["config"]["source_cell_count"],
+            phase["summary"]["cell_count"],
+        )
+        self.assertLessEqual(
+            selection_regret["heldout_metrics"]["audit_mse_cost"]["mean_regret"],
+            max(
+                selection_regret["heldout_metrics"]["always_group"]["mean_regret"],
+                selection_regret["heldout_metrics"]["always_critic"]["mean_regret"],
+            ),
+        )
+
         policy_gradient = json.loads(POLICY_GRADIENT.read_text())
         gradient_table = POLICY_GRADIENT_TABLE.read_text()
         policy_implied_table = POLICY_IMPLIED_TABLE.read_text()
         baseline_table = POLICY_BASELINE_TABLE.read_text()
         self.assertIn("Learned value TD", gradient_table)
         self.assertIn("Oracle-value TD", gradient_table)
+        self.assertIn(r"P5 $\Delta J_b$", gradient_table)
+        self.assertIn(r"Null $|\hat A|$", gradient_table)
         self.assertIn("VIMPO", policy_implied_table)
         self.assertIn("VIMPO-style", policy_implied_table)
         self.assertIn("diagnostic", policy_implied_table)
@@ -289,7 +313,12 @@ class LatexPaperTests(unittest.TestCase):
             policy_gradient["exact_gradient"]["finite_difference_relative_error"],
             1e-8,
         )
-        self.assertEqual(policy_gradient["config"]["replications"], 12)
+        self.assertEqual(policy_gradient["config"]["replications"], 200)
+        for metrics in pg_metrics.values():
+            self.assertIn("batch_matched_kl_improvement_mean", metrics)
+            self.assertIn("batch_matched_kl_improvement_p05", metrics)
+            self.assertIn("batch_negative_update_probability", metrics)
+            self.assertIn("null_abs_credit_mean", metrics)
         vimpo_metrics = {
             entry["method"]: entry
             for entry in policy_gradient["policy_implied_signals"]
@@ -373,6 +402,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/policy_gradient_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_implied_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_baseline_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/selection_regret_table.tex", manifest["inputs"])
         self.assertNotIn("paper/generated/axis_summary_table.tex", manifest["inputs"])
         self.assertNotIn("paper/generated/full_case_table.tex", manifest["inputs"])
         self.assertNotIn("paper/generated/credit_phase_full_table.tex", manifest["inputs"])
@@ -385,6 +415,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("results/neural_credit_generalization_seedset.json", manifest["inputs"])
         self.assertIn("results/credit_phase_diagram_seedset.json", manifest["inputs"])
         self.assertIn("results/policy_gradient_fidelity_seed13.json", manifest["inputs"])
+        self.assertIn("results/selection_regret_seedset.json", manifest["inputs"])
 
 
 if __name__ == "__main__":

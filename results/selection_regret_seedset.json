@@ -1,0 +1,323 @@
+{
+  "config": {
+    "cell_split": "reward-paired split within heterogeneity/observability/coverage/drift strata; stable hash fallback for unpaired cells",
+    "fitted_lambda_cost": 0.0005,
+    "heldout_cell_count": 24,
+    "max_train_trajectories": 600.0,
+    "seed_split": "alternating audit/heldout seeds within each cell",
+    "source_cell_count": 48,
+    "train_cell_count": 24
+  },
+  "heldout_choices": [
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h005_blind_high_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h005_blind_low_contrast_matched",
+      "critic_mse_audit": 1.7440365607506635e-33,
+      "critic_mse_heldout": 3.4923529658221876e-33,
+      "group_mse_audit": 0.025388493275761568,
+      "group_mse_heldout": 0.02791992736655866,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h005_non_privileged_high_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h005_non_privileged_low_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h015_blind_high_contrast_matched",
+      "critic_mse_audit": 0.052621192753981895,
+      "critic_mse_heldout": 0.06716666377460864,
+      "group_mse_audit": 0.07923765638716551,
+      "group_mse_heldout": 0.07500298027324198,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.2462533672664295
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h015_blind_low_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h015_non_privileged_high_contrast_matched",
+      "critic_mse_audit": 0.00016395320061944032,
+      "critic_mse_heldout": 0.00021924180911643185,
+      "group_mse_audit": 0.07923765638716551,
+      "group_mse_heldout": 0.07500298027324198,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.2462533672664295
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h015_non_privileged_low_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h030_blind_high_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.007445159988966596,
+      "cell_name": "h030_blind_low_contrast_matched",
+      "critic_mse_audit": 0.0643012881956695,
+      "critic_mse_heldout": 0.07685195585912555,
+      "group_mse_audit": 0.07296183630074328,
+      "group_mse_heldout": 0.06940679587015895,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.25132328178697066
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h030_non_privileged_high_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h030_non_privileged_low_sparse_matched",
+      "critic_mse_audit": 0.0,
+      "critic_mse_heldout": 0.0,
+      "group_mse_audit": 0.0,
+      "group_mse_heldout": 0.0,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h050_blind_high_contrast_matched",
+      "critic_mse_audit": 0.07588303949323696,
+      "critic_mse_heldout": 0.07061583280417645,
+      "group_mse_audit": 0.07073770890938447,
+      "group_mse_heldout": 0.067857256516295,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.4971171306690182
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h050_blind_low_contrast_matched",
+      "critic_mse_audit": 0.08165482447357518,
+      "critic_mse_heldout": 0.08451403771821306,
+      "group_mse_audit": 0.07073770890938447,
+      "group_mse_heldout": 0.067857256516295,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.4971171306690182
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h050_non_privileged_high_sparse_matched",
+      "critic_mse_audit": 3.009265538105056e-36,
+      "critic_mse_heldout": 3.009265538105056e-36,
+      "group_mse_audit": 3.009265538105056e-36,
+      "group_mse_heldout": 3.009265538105056e-36,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.0
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h050_non_privileged_low_contrast_matched",
+      "critic_mse_audit": 0.07589051509861912,
+      "critic_mse_heldout": 0.08451403771821306,
+      "group_mse_audit": 0.07073770890938447,
+      "group_mse_heldout": 0.067857256516295,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.4971171306690182
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h070_blind_high_sparse_matched",
+      "critic_mse_audit": 0.012211834774974723,
+      "critic_mse_heldout": 0.011515553719044211,
+      "group_mse_audit": 0.012982783330699979,
+      "group_mse_heldout": 0.01353764452282159,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.8299720071696862
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h070_blind_low_contrast_matched",
+      "critic_mse_audit": 0.03991172578583321,
+      "critic_mse_heldout": 0.04123403067011465,
+      "group_mse_audit": 0.03665605758268569,
+      "group_mse_heldout": 0.03661939438889419,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.7043562145893969
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h070_non_privileged_high_sparse_matched",
+      "critic_mse_audit": 0.003099520386395096,
+      "critic_mse_heldout": 0.004301937145153735,
+      "group_mse_audit": 0.012982783330699979,
+      "group_mse_heldout": 0.01353764452282159,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.8299720071696862
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h070_non_privileged_low_contrast_matched",
+      "critic_mse_audit": 0.03867035860270751,
+      "critic_mse_heldout": 0.04133973485603578,
+      "group_mse_audit": 0.03665605758268569,
+      "group_mse_heldout": 0.03661939438889419,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.7043562145893969
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h090_blind_high_contrast_matched",
+      "critic_mse_audit": 0.023804388502026957,
+      "critic_mse_heldout": 0.02127399188821785,
+      "group_mse_audit": 0.02347028656804047,
+      "group_mse_heldout": 0.02014798885302297,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.8427325742972114
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h090_blind_low_contrast_matched",
+      "critic_mse_audit": 0.0244666259549247,
+      "critic_mse_heldout": 0.021824664007782907,
+      "group_mse_audit": 0.02347028656804047,
+      "group_mse_heldout": 0.02014798885302297,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.8427325742972114
+    },
+    {
+      "audit_mse_cost_choice": "critic",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h090_non_privileged_high_contrast_matched",
+      "critic_mse_audit": 0.00654522088404251,
+      "critic_mse_heldout": 0.0061199603181258605,
+      "group_mse_audit": 0.02347028656804047,
+      "group_mse_heldout": 0.02014798885302297,
+      "oracle_best": "critic",
+      "realized_credit_heterogeneity": 0.8427325742972114
+    },
+    {
+      "audit_mse_cost_choice": "group",
+      "audit_mse_cost_regret": 0.0,
+      "cell_name": "h090_non_privileged_low_sparse_matched",
+      "critic_mse_audit": 0.018547409440832854,
+      "critic_mse_heldout": 0.01959467965943552,
+      "group_mse_audit": 0.018488917079544448,
+      "group_mse_heldout": 0.019199158107280085,
+      "oracle_best": "group",
+      "realized_credit_heterogeneity": 0.8802569725971516
+    }
+  ],
+  "heldout_metrics": {
+    "always_critic": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 1.0,
+      "max_regret": 0.01665678120191806,
+      "mean_regret": 0.0023354364654648535,
+      "selection_accuracy": 0.25
+    },
+    "always_group": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 0.0,
+      "max_regret": 0.07478373846412555,
+      "mean_regret": 0.005659408710235829,
+      "selection_accuracy": 0.75
+    },
+    "audit_mse_cost": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 0.2916666666666667,
+      "max_regret": 0.007445159988966596,
+      "mean_regret": 0.00031021499954027483,
+      "selection_accuracy": 0.9583333333333334
+    }
+  },
+  "train_metrics": {
+    "always_critic": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 1.0,
+      "max_regret": 0.0035767725127840155,
+      "mean_regret": 0.0002295841364894547,
+      "selection_accuracy": 0.5416666666666666
+    },
+    "always_group": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 0.0,
+      "max_regret": 0.06905366854871145,
+      "mean_regret": 0.012515831913840226,
+      "selection_accuracy": 0.4583333333333333
+    },
+    "audit_mse_cost": {
+      "cell_count": 24.0,
+      "critic_choice_rate": 0.5833333333333334,
+      "max_regret": 0.0035767725127840155,
+      "mean_regret": 0.00014903218803266732,
+      "selection_accuracy": 0.9583333333333334
+    }
+  }
+}
