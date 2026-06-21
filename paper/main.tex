@@ -28,7 +28,7 @@
 \graphicspath{{../public/figures/}{../results/figures/}}
 
 \title{\vspace{-1.0cm}The Broadcast Ceiling: Information and Reliability Limits of Advantage Estimators in Long-Horizon RL}
-\author{Limes Labs}
+\author{Anonymous Authors\\Anonymous Affiliation}
 \date{June 2026}
 
 \newcommand{\grpo}{\textsc{GRPO}}
@@ -54,37 +54,25 @@
 
 \begin{abstract}
 Long-horizon language-model RL often receives terminal trajectory rewards while
-updating token- or step-level actions. This paper studies the information gap
-between those two objects. We decompose advantage-estimator error into an
-information ceiling and a reliability term: trajectory-constant estimators hit a
-broadcast ceiling when policy-relative advantages vary within a rollout, while
-state-, step-, token-, structural-, sampled-, or policy-implied estimators can
-escape that ceiling only when their information source is reliable. We evaluate
-this claim in CPU-only finite-MDP audits with exact behavior-policy advantages
-and exact policy-gradient measurements. The experiments include group-relative
-broadcasts, global and prefix baselines, anchor-action contrast, sampled
-Monte Carlo values, critic TD, an exploratory reliability-gated baseline,
-\brpo-style prefix diagnostics, and a \vimpo-style policy-implied signal. The
-new exact-gradient audit shows why token-credit correlation is not enough:
-REINFORCE and sibling baselines can have excellent gradient cosine while giving
-weak token-local explanations; critic TD has much lower gradient variance in
-covered states; \vimpo's actor signal is exactly zero when
-$\pi_\theta=\pi_{\rm ref}$ and becomes reference-sensitive away from that
-initialization. Across the \DeepSeedCount-seed, \DeepCaseCount-case estimator
-matrix, critic-style temporal-difference advantages have higher mean
-behavior-policy advantage correlation in \DeepMeanCriticWins\ cases, but the
-phase grid also contains group-favorable and near-tie regimes. The conclusion
-is not that \ppo\ universally beats \grpo. It is that estimator choice should
-be made on trajectory credit heterogeneity, observability, support, drift, and
-compute cost, not on whether a method is branded critic-based or critic-free.
+updating token- or step-level actions. This paper studies when a scalar
+trajectory coefficient is enough and when reliable state-varying credit is
+needed. We decompose estimator error into an information term and a reliability
+term, proving a broadcast ceiling for any method whose coefficient is
+token-invariant under the available group context. CPU-only finite-MDP audits
+then compare group-relative broadcasts, prefix and structural baselines,
+sampled values, learned and oracle value TD, and policy-implied actor
+coefficients. The central empirical finding is conditional: trajectory-level
+coefficients can give high policy-gradient cosine, but they can be poor local
+credit explanations in heterogeneous traces; value-style TD reduces variance
+when coverage and observability are adequate, while group or structural methods
+win when value estimates are blind or unsupported. The conclusion is not that
+\ppo\ universally beats \grpo. Estimator choice should be made from credit
+heterogeneity, observability, support, drift, and compute cost.
 \end{abstract}
 
 \paragraph{Keywords.}
 post-training; reinforcement learning from verifiable rewards; PPO; GRPO;
 advantage estimation; credit assignment; long-horizon agents.
-
-\tableofcontents
-\clearpage
 
 \section{Introduction}
 
@@ -100,27 +88,19 @@ The method question is:
 \emph{for variable-length, multi-step, tool-heavy trajectories, which
 information source can produce reliable token- or state-varying credit under a
 given compute budget?} We deliberately avoid centering the work on one base
-model. Z.ai's GLM-5.2 report is mentioned only as an industry example of the
-same design pressure: compacted, variable-length long-horizon rollouts and a
-move toward critic-based \ppo\ with token-level advantages
-\citep{zai2026glm52}. That report is not independent causal evidence that
-\ppo\ beats \grpo.
+model or one training run. The target is a reusable mechanism study.
 
 \paragraph{Contributions.}
-We make six contributions. First, we define the target as a behavior-policy
-advantage $A^{\pi_b}(x,a)$ over latent finite-MDP state and separate the
-information available to trajectory-constant, state-value, sampled-value,
-structural, prefix-verifier, and policy-implied estimators. Second, we prove an
-information--reliability decomposition whose trajectory-only corollary is a
-broadcast ceiling. Third, we introduce CPU-only finite-MDP audits with exact
-behavior-policy advantages and exact policy-gradient measurements. Fourth, we
-test stronger non-critic baselines, including anchor-action contrast,
-prefix-budget baselines, a \brpo-style combined baseline, and a
-\vimpo-style policy-implied signal. Fifth, we add phase and robustness audits
-over heterogeneity, observability, support, reward contrast, length imbalance,
-token cost, and drift. Sixth, we report downstream sanity checks: tabular
-closed-loop training and a tiny neural value-critic audit where the critic must
-interpolate to a held-out threshold.
+We make three contributions. First, we formalize an
+information--reliability view of advantage estimation for long trajectories,
+including a generalized broadcast ceiling for token-invariant group context and
+a score-weighted counterpart tied to policy-gradient variance. Second, we
+provide a CPU-only finite-MDP audit suite with exact behavior-policy advantages,
+analytic occupancy-measure policy gradients, stronger critic-free baselines,
+observability controls, and calibrated heterogeneity regimes. Third, we report
+mechanism findings across estimator fidelity, phase diagrams, length and token
+cost sensitivity, tabular closed-loop training, and a tiny neural value-critic
+generalization audit.
 
 \paragraph{Scope discipline.}
 The paper makes a narrow claim about credit-assignment mechanisms. It does not
@@ -133,10 +113,10 @@ This is not the same as causal explanation. It is also not a claim that
 terminal-return REINFORCE is biased; REINFORCE remains an unbiased episodic
 policy-gradient estimator under the usual assumptions, but a
 trajectory-constant sample can localize action credit poorly and have high
-variance. This distinction matters for public research. A method can improve a
-benchmark for reasons unrelated to the mechanism under discussion, and a method
-can be mechanistically promising while still losing under a particular compute
-budget, implementation, reward model, or data mixture.
+variance. A method can improve a benchmark for reasons unrelated to the
+mechanism under discussion, and a method can be mechanistically promising while
+still losing under a particular compute budget, implementation, reward model,
+or data mixture.
 
 \paragraph{Paper organization.}
 Section 2 defines the estimand and method families. Section 3 reviews related
@@ -144,9 +124,9 @@ work. Section 4 gives compute and information costs. Section 5 proves the
 information--reliability decomposition and the broadcast ceiling.
 Sections 6--8 define the toy environment, experimental protocol, and results.
 Sections 9--11 interpret the mechanism evidence, compare method regimes, and
-state failure modes. The appendices provide implementation details, generated
-summary tables, and raw per-seed rows generated directly from the canonical JSON
-result artifact.
+state failure modes. The appendices provide implementation details and compact
+generated summaries; raw per-seed rows remain repository artifacts rather than
+submission-PDF content.
 
 \section{Definitions and Method Taxonomy}
 
@@ -245,14 +225,18 @@ estimators. It also raises a reliability question: the identity is exact at a
 KL-regularized optimality condition, while practical training substitutes the
 current policy and a reference policy. Therefore a useful testbed should ask
 when the policy-implied signal is aligned with the current behavior-policy
-advantage and when reference staleness or initialization makes it unreliable.
+advantage and how that alignment changes with the fixed reference's KL
+distance from the current policy. The audit below evaluates this actor
+coefficient only; it does not implement the full \vimpo\ value-consistency
+loss or compare against the exact gradient of a matched KL-regularized
+objective.
 
 \begin{table}[!htbp]
 \centering
-\caption{Method taxonomy for long-horizon advantage signals. The important
-axis is whether the signal can vary within a trajectory and whether the
+\caption{Training-signal taxonomy for long-horizon post-training. The important
+axis is whether a signal can vary within a trajectory and whether the
 information source is reliable. Distillation objectives are adjacent dense
-supervision, not direct policy-gradient estimators.}
+supervision, not direct policy-gradient advantage estimators.}
 \label{tab:taxonomy}
 \scriptsize
 \setlength{\tabcolsep}{4pt}
@@ -454,7 +438,8 @@ artifacts, environment side effects, and compaction. The GLM-5.2 report is usefu
 compacted sub-traces, variable numbers of trainable traces per prompt, and a
 move from group-wise optimization to critic-based \ppo\ with token-level
 advantages \citep{zai2026glm52}. We treat this as a case study of a design
-pressure, not as proof of a causal performance mechanism.
+pressure, not independent causal evidence that one optimizer family is
+universally superior.
 The 2026 credit-assignment survey \citep{zhang2026creditassignment} is useful
 context for why this paper is scoped as a diagnostic rather than a universal
 method claim: long-horizon reasoning and agentic RL span token, segment, step,
@@ -581,54 +566,90 @@ methods depend on repeated comparable states. Prefix methods depend on
 intermediate verifier quality.
 
 \paragraph{Trajectory-broadcast ceiling.}
-Sample a token pair $(\tau,t)$ according to the token weighting used for
-training, and define
+Sample a token pair $(i,t)$ according to the weighting used for training.
+Unless otherwise stated, the experiments use token-uniform micro-averaging:
+each emitted token in the evaluation batch has equal weight. A
+trajectory-uniform or prompt-uniform convention changes the expectation but not
+the projection argument. Define
 \begin{equation}
-Y = A^{\pi_b}(x_t,a_t).
+Y = A^{\pi_b}(x_{i,t},a_{i,t}).
 \end{equation}
-Consider all estimators that are constant within a trajectory,
+Let $C_i$ denote all token-invariant information available to a broadcast
+method for rollout $i$: prompt identity, the sampled rollout, sibling rewards,
+group statistics, running baselines, and any other context that does not vary
+with token index $t$. This includes response-level \grpo, RLOO, global
+baselines, and prompt-group statistics. Consider all estimators of the form
 \begin{equation}
-\widehat A_t = g(\tau).
+\widehat A_{i,t} = g(C_i),
+\qquad t\notin C_i .
 \end{equation}
 The $L_2$-optimal member of this class is
 \begin{equation}
-g^\star(\tau)=\E[Y\mid\tau],
+g^\star(C_i)=\E[Y\mid C_i],
 \end{equation}
 and its irreducible error is
 \begin{equation}
-\min_g \E[(Y-g(\tau))^2]
+\min_g \E[(Y-g(C_i))^2]
 =
-\E[\operatorname{Var}(Y\mid\tau)].
+\E[\operatorname{Var}(Y\mid C_i)].
 \end{equation}
 By the law of total variance,
 \begin{equation}
-\max_g \operatorname{Corr}(Y,g(\tau))^2
+\max_g \operatorname{Corr}(Y,g(C_i))^2
 =
-\frac{\operatorname{Var}(\E[Y\mid\tau])}{\operatorname{Var}(Y)}
+\frac{\operatorname{Var}(\E[Y\mid C_i])}{\operatorname{Var}(Y)}
 =
 1 -
-\frac{\E[\operatorname{Var}(Y\mid\tau)]}{\operatorname{Var}(Y)}.
+\frac{\E[\operatorname{Var}(Y\mid C_i)]}{\operatorname{Var}(Y)}.
 \end{equation}
 Define the credit heterogeneity index
 \begin{equation}
 H_{\mathrm{credit}}
 =
-\frac{\E[\operatorname{Var}(A^{\pi_b}_t\mid\tau)]}
+\frac{\E[\operatorname{Var}(A^{\pi_b}_{i,t}\mid C_i)]}
 {\operatorname{Var}(A^{\pi_b}_t)}.
 \end{equation}
-Then any trajectory-constant estimator has absolute token-level correlation at
+Then any token-invariant broadcast estimator has absolute token-level correlation at
 most
 \begin{equation}
-|\operatorname{Corr}(A^{\pi_b}_t,g(\tau))|
+|\operatorname{Corr}(A^{\pi_b}_{i,t},g(C_i))|
 \le
 \sqrt{1-H_{\mathrm{credit}}}.
 \end{equation}
-This trajectory-broadcast ceiling does not say that group or global methods
+This broadcast ceiling does not say that group or global methods
 cannot produce useful policy-gradient updates. It says that, when
 $H_{\mathrm{credit}}$ is large, any method that emits one scalar per trajectory
 has an information-theoretic token-fidelity ceiling. Learned critics, sampled
 values, process rewards, or structural repeated-state methods can beat that
 ceiling only if their own held-out reliability is high enough.
+
+\paragraph{Score-weighted broadcast ceiling.}
+Token correlation is not the whole optimization story because a token's
+contribution is also scaled by the policy score
+$\psi_{i,t}=\nabla_\theta\log\pi_\theta(a_{i,t}\mid o_{i,t})$. The
+score-weighted projection problem is
+\begin{equation}
+\min_g
+\E\!\left[
+  \|\psi_{i,t}\|^2
+  \left(A^{\pi_b}_{i,t}-g(C_i)\right)^2
+\right].
+\end{equation}
+The optimal broadcast coefficient is
+\begin{equation}
+g^\star_{\psi}(C_i)
+=
+\frac{
+  \E[\|\psi_{i,t}\|^2 A^{\pi_b}_{i,t}\mid C_i]
+}{
+  \E[\|\psi_{i,t}\|^2\mid C_i]
+}.
+\end{equation}
+This is the formal reason that a trajectory-level method can have weak
+token-credit correlation yet good policy-gradient cosine: it may explain the
+score-weighted projection well even while failing as a local credit
+explanation. The experiments therefore report both token-level alignment and
+score-weighted residual diagnostics.
 
 \paragraph{Operational diagnostic.}
 The finite-MDP experiments report descriptive quantities side by side:
@@ -677,6 +698,26 @@ future opportunity. Its Bellman contribution is solved as a zero-reward
 self-loop, so its exact one-step advantage is zero. This lets the audit measure
 whether an estimator leaks credit onto irrelevant tokens separately from
 whether it penalizes opportunity-consuming delays.
+
+\begin{table}[!htbp]
+\centering
+\caption{Observation access in the finite-MDP audits. The non-privileged critic
+uses $z_t=o_t$, matching the toy actor observation. Coarse and blind critics
+remove progress information to test reliability limits rather than privileged
+state access.}
+\label{tab:observability}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Variable & Actor & Non-priv. critic & Coarse critic & Blind critic \\
+\midrule
+Prompt threshold & yes & yes & yes & yes \\
+Progress score & exact & exact & sign only & no \\
+Remaining horizon & yes & yes & yes & yes \\
+Previous actions & no & no & no & no \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Estimators and metrics}
 
@@ -735,13 +776,17 @@ stress test, not a production \ppo-vs-\grpo\ benchmark.
 
 \paragraph{Exact policy-gradient audit.}
 Because the MDP is finite, the exact-gradient variant computes the expected
-return $J(\theta)$ and a numerical exact policy gradient $g^\star=\nabla J$.
+return $J(\theta)$ and the exact policy gradient $g^\star=\nabla J$ from
+occupancy measures and dynamic programming. Finite differences are reported
+only as an implementation check.
 For each estimator, we sample batches, form
 $\widehat g=\sum_t \widehat A_t\nabla_\theta\log\pi(a_t\mid s_t)$, and report
-relative gradient bias, trace variance, cosine with $g^\star$, and one-step
-improvement under a matched policy-KL step. This audit also includes
-\vimpo-style policy-implied advantages, sibling leave-one-out baselines,
-prefix-budget baselines, a \brpo-style combined baseline, and critic TD.
+relative mean-gradient error over independent replications, trace variance,
+cosine with $g^\star$, and one-step improvement under a matched policy-KL step.
+The estimator table includes sibling leave-one-out baselines, prefix-budget
+baselines, a \brpo-style combined baseline, cross-fitted learned value TD, and
+oracle-value TD. A separate policy-implied table reports \vimpo-style actor
+coefficients under equal and fixed-distance references.
 
 \section{Experimental Protocol}
 
@@ -835,14 +880,26 @@ better than a poor value table.
 
 \begin{table}[!htbp]
 \centering
-\caption{Exact finite-MDP policy-gradient fidelity. Bias is
-$\|\E[\widehat g]-g^\star\|/\|g^\star\|$, Var. is the across-batch trace
+\caption{Exact finite-MDP policy-gradient fidelity over replicated batches.
+The target gradient $g^\star$ is computed by occupancy-measure dynamic
+programming; finite differences are used only as a check. Err. is
+$\|\overline{\widehat g}-g^\star\|/\|g^\star\|$, Var. is across-batch trace
 variance, Cos. is gradient cosine with $g^\star$, and $\Delta J$ is exact
-return improvement after a matched policy-KL step. $r_A$ is token-level
-advantage correlation, included as a secondary diagnostic.}
+return improvement after a matched policy-KL step.}
 \label{tab:policy-gradient}
 \scriptsize
 \input{generated/policy_gradient_table.tex}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Policy-implied actor-coefficient alignment. These rows evaluate the
+\vimpo-style actor coefficient against the unregularized behavior-policy
+gradient target used in this toy. They are not full \vimpo\ updates and should
+not be read as algorithm-level performance.}
+\label{tab:policy-implied}
+\scriptsize
+\input{generated/policy_implied_table.tex}
 \end{table}
 
 \begin{table}[!htbp]
@@ -857,28 +914,30 @@ related to single-token score-function variance.}
 \end{table}
 
 \paragraph{Exact-gradient audit.}
-Tables \ref{tab:policy-gradient} and \ref{tab:policy-baselines} are the main
-upgrade over correlation-only evidence. REINFORCE and sibling leave-one-out
-have excellent gradient cosine with the exact policy gradient even though their
-token-level advantage correlations are modest. That is expected: terminal
-returns can be valid Monte Carlo policy-gradient coefficients while still being
-weak local credit explanations. Critic TD has the lowest trace variance in this
-covered tabular setting. The \vimpo-style equal-reference row is the revealing
-sanity check: when $\pi_\theta=\pi_{\rm ref}$, its actor signal is exactly zero
-even though the exact behavior-policy gradient is nonzero. With a stale
-reference, the signal becomes token-varying and partially aligned
-($\cos=0.661$), but remains biased relative to the current behavior-policy
-advantage. The baseline table gives the analogous \brpo-style message: prefix
-and combined baselines can reduce score-weighted residual moments relative to a
-group mean, but the critic value baseline remains strongest in this supported
-toy.
+Tables \ref{tab:policy-gradient}--\ref{tab:policy-baselines} are the main
+upgrade over correlation-only evidence. REINFORCE, sibling leave-one-out, and
+prefix baselines have excellent gradient cosine with the exact policy gradient
+even though their token-level advantage correlations are modest. That is
+expected: terminal returns can be valid Monte Carlo policy-gradient
+coefficients while still being weak local credit explanations. Oracle-value TD
+is the dynamic-programming upper bound and has the lowest trace variance in
+this covered tabular setting; the cross-fitted learned-value row retains most
+of the token-credit correlation while exposing finite-sample coverage risk.
+Table \ref{tab:policy-implied} is deliberately separate. It evaluates only the
+\vimpo-style actor coefficient. At equal reference the coefficient is zero for
+the actor term; at fixed nonzero KL distances it becomes token-varying and
+partially aligned with the current unregularized target, but this is an
+objective-mismatched diagnostic rather than a full \vimpo\ result. The baseline
+table gives the analogous \brpo-style message: prefix and combined baselines
+can reduce score-weighted residual moments relative to a group mean, but the
+critic value baseline remains strongest in this supported toy.
 
 \begin{table}[!htbp]
 \centering
 \caption{Broadcast-ceiling phase diagnostic over credit heterogeneity,
 observability, critic coverage, reward contrast, and policy drift. The ceiling
 is $\sqrt{1-H_{\mathrm{credit}}}$, the best possible absolute correlation for a
-trajectory-constant estimator.}
+token-invariant broadcast estimator under the reported token weighting.}
 \label{tab:credit-phase}
 \scriptsize
 \input{generated/credit_phase_table.tex}
@@ -886,14 +945,14 @@ trajectory-constant estimator.}
 
 \paragraph{Broadcast-ceiling phase diagram.}
 Table \ref{tab:credit-phase} is the main response to the boundary critique. In
-the 32-cell phase grid, high-support full-state critics produce clear
-critic-favorable crossovers, while blind low-support sparse cells produce clear
-group-favorable crossovers. The diagnostic also shows many near ties, which is
-useful: high $H_{\mathrm{credit}}$ lowers the ceiling for trajectory-constant
-estimators, but a weak critic does not automatically exploit that opening. The
-stronger working claim is therefore conditional: critic benefit is predicted
-jointly by within-trajectory credit heterogeneity and held-out critic
-reliability.
+the 48-cell calibrated phase grid, realized $H_{\mathrm{credit}}$ spans from
+near-zero homogeneous traces to roughly 0.88 heterogeneous traces. Critic
+coverage is controlled by a fixed training-trajectory budget, so eval sibling
+group size does not secretly increase critic data. High-support
+non-privileged critics produce clear critic-favorable crossovers, while blind
+or low-support cells produce group-favorable and near-tie regimes. The stronger
+working claim is therefore conditional: critic benefit is predicted jointly by
+within-trajectory credit heterogeneity and held-out critic reliability.
 
 \begin{table}[!htbp]
 \centering
@@ -1107,14 +1166,20 @@ on long sparse trajectories, or assign confident but wrong temporal credit.
 \paragraph{GRPO failures.}
 \grpo\ can suffer zero-variance groups, low-dispersion amplification, response
 length bias, scalar reward broadcast over harmful tokens, and group composition
-confounding prompt difficulty with policy quality
-\citep{mroueh2025grpo,liu2025r1zero,yu2025dapo,zhou2026grpo,yang2026groupbiased,salmani2026mdpgrpo}.
+confounding prompt difficulty with policy quality. These issues appear in
+analyses of effective loss, R1-Zero-like training, DAPO-style sampling, and
+group-relative bias
+\citep{mroueh2025grpo,liu2025r1zero,yu2025dapo}. Related theoretical and
+stability analyses study group-relative bias and MDP-level corrections
+\citep{zhou2026grpo,yang2026groupbiased,salmani2026mdpgrpo}.
 
 \paragraph{Dense distillation failures.}
-Teacher/student thinking patterns may be incompatible; the teacher may offer no
-new information; on-policy rollouts may inflate in length and truncate; and
+Teacher and student reasoning patterns may be incompatible. The teacher may add
+little new information, on-policy rollouts may inflate in length, and
 privileged self-teacher traces may leak solution structure
-\citep{li2026opd,luo2026opd,zhao2026opsd,luo2026dopsd}.
+\citep{li2026opd,luo2026opd}. Dense self-distillation variants can also fail
+when architecture-specific teacher signals mismatch the reward target
+\citep{zhao2026opsd,luo2026dopsd}.
 
 \paragraph{Predictions.}
 We predict that increasing horizon length and delay padding will reduce the
@@ -1160,72 +1225,24 @@ reliability.
 
 \section{Reproducibility}
 
-The core experiment code has no external Python dependencies. The canonical
-checks are:
-\begin{verbatim}
-python3 -m unittest discover -s tests
-./scripts/run_smoke.sh
-python3 -m experiments.deep_matrix \
-  --output-json results/deep_matrix_20seed.json \
-  --output-csv results/deep_matrix_20seed.csv \
-  --output-md results/deep_matrix_20seed.md \
-  --figures-dir results/figures
-python3 -m experiments.variance_credit_grid \
-  --output-json results/variance_credit_grid_seed17.json \
-  --output-md results/variance_credit_grid_seed17.md
-python3 -m experiments.length_imbalance_audit \
-  --output-json results/length_imbalance_audit_seedset.json \
-  --output-md results/length_imbalance_audit_seedset.md
-python3 -m experiments.token_cost_sensitivity \
-  --output-json results/token_cost_sensitivity_20seed.json \
-  --output-md results/token_cost_sensitivity_20seed.md
-python3 -m experiments.closed_loop_credit_training \
-  --output-json results/closed_loop_credit_training_10seed.json \
-  --output-md results/closed_loop_credit_training_10seed.md
-python3 -m experiments.neural_credit_generalization \
-  --output-json results/neural_credit_generalization_seedset.json \
-  --output-md results/neural_credit_generalization_seedset.md
-python3 -m experiments.credit_phase_diagram \
-  --output-json results/credit_phase_diagram_seedset.json \
-  --output-md results/credit_phase_diagram_seedset.md
-python3 -m experiments.policy_gradient_fidelity \
-  --output-json results/policy_gradient_fidelity_seed13.json \
-  --output-md results/policy_gradient_fidelity_seed13.md
-./scripts/build_latex_paper.sh
-\end{verbatim}
-The LaTeX paper is built with Tectonic when available and emitted as the full
-paper PDF artifact under \texttt{public/}.
+The experiment code is CPU-only and uses no external Python dependencies. The
+repository contains canonical JSON, CSV, Markdown, and generated-table
+artifacts for every result reported here, plus unit tests, a smoke runner, and
+a LaTeX build script. The public PDF is generated from those artifacts rather
+than hand-copied tables. Raw seed-level rows are intentionally kept as
+repository artifacts so that the submission PDF reports aggregate evidence
+without becoming a run ledger.
 
 \section{Limitations}
 
 The toy environment has a finite known state and a tabular critic. Real
 post-training adds neural approximation, KL controllers, reward-model errors,
 tool failures, distributed rollout systems, stale policies, optimizer details,
-and data contamination risks. The \grpo\ baseline is intentionally simple; the
-next benchmark should include leave-one-out baselines, length-normalized
-variants, DAPO/Dr. GRPO-style corrections, process rewards, and dynamic
-sampling before making stronger claims.
-
-\section{Next Research Steps}
-
-\paragraph{nanoGPT scale.}
-The next controlled step is a tiny sequence-model policy where the true
-environment is still known but both policy and value model must generalize over
-token histories. The held-out-threshold neural audit is a first approximation;
-a nanoGPT-scale benchmark is the next test of whether the mechanism survives
-transformer sequence modeling.
-
-\paragraph{Agentic trace audits.}
-For agentic research workflows, the key artifact is a trace schema that records
-tool state, compaction boundaries, blocked actions, reward calls, and process
-labels. Without that schema, value modeling and group-relative normalization
-cannot be audited fairly.
-
-\paragraph{Cost-normalized benchmarks.}
-Benchmark integrations should report cost-normalized improvement, not only
-final score. A critic may improve credit assignment but violate a deployment
-budget; a group method may be cheaper but lose sample efficiency or wall-clock
-time through synchronization stalls.
+and data contamination risks. The \grpo\ baseline is intentionally simple, and
+the \vimpo\ audit reports actor-coefficient alignment rather than a full
+algorithm. A stronger external-validity claim requires a controlled
+sequence-policy benchmark with clipped objectives, KL control, corrected
+\grpo-family variants, process rewards, and matched rollout budgets.
 
 \clearpage
 \section{Conclusion}
@@ -1265,6 +1282,135 @@ models, or learned subgoal predictors. The central requirement is that the
 state representation contains enough information to make future return
 predictable.
 
+\section{Exact Gradient Derivation}
+
+The exact-gradient audit uses a finite MDP with a true null self-loop. Let
+$s=(q,h)$ denote progress score $q$ and remaining effective horizon $h$. For
+$h>0$, the non-null actions transition to smaller horizon, while the null
+action returns to the same state with zero reward. The value equation is
+\begin{equation}
+V^\pi(s)=
+\sum_{a\neq \mathrm{null}}
+\frac{\pi(a\mid s)}{1-\pi(\mathrm{null}\mid s)}
+\left[r(s,a)+V^\pi(s')\right],
+\end{equation}
+which is the closed-form solution of the null self-loop. This keeps the null
+action's one-step advantage exactly zero:
+\begin{equation}
+A^\pi(s,\mathrm{null})
+=0+V^\pi(s)-V^\pi(s)=0.
+\end{equation}
+
+Let $\eta^\pi(s)$ be the expected number of visits to state $s$ before
+effective horizon reaches zero. Because null actions can repeat without
+advancing horizon, the implementation propagates incoming non-null mass and
+divides by $1-\pi(\mathrm{null}\mid s)$ to obtain total expected visits. The
+policy gradient for the unregularized expected return is then
+\begin{equation}
+\nabla_\theta J(\theta)=
+\sum_s \eta^{\pi_\theta}(s)
+\sum_a \pi_\theta(a\mid s)
+A^{\pi_\theta}(s,a)
+\nabla_\theta\log\pi_\theta(a\mid s).
+\end{equation}
+This is the quantity reported as $g^\star$ in Table
+\ref{tab:policy-gradient}. The central-difference gradient is not used as the
+target; it is only a check that the dynamic-programming implementation and the
+softmax parameter indexing agree. In the canonical run, the relative
+finite-difference check error is approximately $2.0\times 10^{-10}$.
+
+The reported ``error'' column in Table \ref{tab:policy-gradient} is therefore
+not a theorem-level estimator bias unless the expectation is enumerated
+exactly. It is the norm of the empirical mean gradient error across the
+replicated batch experiment:
+\begin{equation}
+\frac{\|\overline{\widehat g}-g^\star\|}{\|g^\star\|}.
+\end{equation}
+REINFORCE-style coefficients can be unbiased in expectation and still show a
+nonzero finite-replication mean error. This is why the table reports
+replication intervals and trace variance beside token-credit correlation.
+
+\section{Objective-Mismatch Note for Policy-Implied Values}
+
+The \vimpo-style rows in this paper are intentionally separated from the main
+estimator table because they answer a narrower question. The toy target in
+Table \ref{tab:policy-gradient} is the unregularized behavior-policy gradient
+of terminal reward plus token cost. \vimpo, by contrast, is derived from a
+KL-regularized value identity. Its actor coefficient is meaningful inside that
+regularized objective and alongside the value-consistency loss used by the full
+algorithm. Comparing only the actor coefficient against the unregularized
+toy gradient is therefore a diagnostic of alignment with the toy target, not a
+test of full \vimpo.
+
+This distinction matters in two directions. First, when
+$\pi_\theta=\pi_{\rm ref}$, the actor coefficient in Equation 8 is zero even
+though the ordinary reward gradient need not be zero. That fact should not be
+read as ``\vimpo\ cannot learn at initialization,'' because the complete method
+can also include value-consistency terms and is not optimizing the same target
+as the toy. Second, when the reference is fixed at nonzero KL distance, the
+actor coefficient becomes token-varying and can be partially aligned with the
+ordinary gradient. That alignment is reference-sensitive: it depends on how the
+reference differs from the current policy, not only on the environment's
+reward structure.
+
+A fair full-algorithm comparison would require a different audit. The target
+would be a KL-regularized objective such as
+\begin{equation}
+J_{\beta}(\theta)
+=
+\E_{\pi_\theta}[R(\tau)]
+-
+\beta\,
+\E_{s}\!\left[
+\KL(\pi_\theta(\cdot\mid s)\,\|\,\pi_{\rm ref}(\cdot\mid s))
+\right],
+\end{equation}
+with the same state weighting convention used by the implemented loss. The
+measured gradient would then be the gradient of the full objective, and the
+algorithmic update would include both the actor coefficient and the
+value-consistency term. This paper does not claim to have run that comparison.
+Instead, it uses the policy-implied rows to make a taxonomy point: critic-free
+does not imply trajectory-constant, but policy-implied token variation has its
+own reliability condition.
+
+\section{Why Gradient Cosine and Token Credit Diverge}
+
+The exact-gradient audit gives a useful warning for interpreting credit
+assignment studies. A terminal-return coefficient can be a good Monte Carlo
+policy-gradient coefficient even if it is a poor local explanation of which
+token helped. The reason is that a policy-gradient update aggregates
+score-weighted coefficients:
+\begin{equation}
+\widehat g
+=
+\sum_t \widehat A_t \psi_t,
+\qquad
+\psi_t=\nabla_\theta\log\pi_\theta(a_t\mid o_t).
+\end{equation}
+If two errors lie mostly in directions where $\psi_t$ is small or cancel across
+actions, the gradient direction can remain good while token-level Pearson
+correlation is modest. Conversely, an estimator can correlate with local
+advantages but still produce a poor update if its errors are concentrated on
+high-score-norm actions.
+
+For this reason, the paper reports several diagnostics rather than a single
+score. Token-level correlation asks whether the estimator explains local
+behavior-policy action credit. Calibrated MSE asks whether an affine rescaling
+can recover the target. Trace variance asks how noisy the sampled gradient is.
+Matched-KL improvement asks whether the mean update direction improves the
+exact finite-MDP return under a comparable local policy move. The
+score-weighted residual moment in Table \ref{tab:policy-baselines} is closest
+to the variance term that a baseline directly controls.
+
+This also clarifies why the broadcast ceiling is not a proof that
+trajectory-level methods cannot optimize. The ceiling is an information bound
+on token-local explanation under the chosen token weighting. A trajectory
+broadcast may still produce a useful update when the score-weighted projection
+of local advantages is well represented by trajectory context. The scientific
+question is therefore not whether group baselines are ``valid'' in the
+abstract. It is whether their information loss is acceptable for the horizon,
+heterogeneity, and action-score geometry of the task at hand.
+
 \paragraph{Distillation losses.}
 The dense distillation losses in the main text are written as KL objectives because the
 teacher signal is a distribution over next tokens. Other implementations may
@@ -1303,6 +1449,41 @@ which estimator produced higher downstream score under one optimizer. With it,
 we can ask whether an estimator points in the same direction as the true
 policy-relative action credit.
 
+\section{Observability and Privilege Controls}
+
+The main toy policy is not an LLM policy, but the observability distinction is
+still important. The behavior policy samples actions from threshold, progress
+score, and remaining horizon. The non-privileged critic uses the same
+information. Thus, in the non-privileged rows, a critic advantage is not
+winning because it sees hidden simulator state that the actor lacks; it is
+winning because it uses a state-conditioned temporal-difference construction
+rather than a token-invariant trajectory broadcast.
+
+The coarse and blind critics are deliberately weaker controls. The coarse
+critic keeps the threshold and remaining horizon but compresses progress to
+its sign. The blind critic keeps threshold and remaining horizon but removes
+progress entirely. These modes mimic practical failures where a value model's
+input omits the causal feature needed for future return. In real language
+agents, this can happen through lossy compaction, missing tool state, hidden
+environment variables, or a value model that sees a sanitized transcript rather
+than the full executable state.
+
+This is why the phase grid reports both observability and coverage. A
+full-information but undercovered critic can be unreliable because it has too
+few examples. A well-covered but blind critic can be unreliable because the
+state abstraction is wrong. A non-privileged and well-covered critic is the
+cleanest test of the value-estimation mechanism. The group-favorable rows are
+therefore not accidents to hide; they identify regimes where terminal
+trajectory information is more useful than a weak value estimate.
+
+The same distinction should carry into future sequence-policy experiments. A
+fair LLM critic comparison should specify whether the critic sees exactly the
+actor's token history, a richer tool or environment state, process labels, hidden
+verifier state, or future-context teacher information. Centralized training
+with privileged state can be scientifically useful, but it should be labeled as
+such and compared separately from actor--critic training with the same
+observation.
+
 \section{Case Design}
 
 The 18 fixed cases are grouped by axis. Horizon cases increase trace length and
@@ -1319,6 +1500,20 @@ counterexample combines blindness and low coverage.
 \input{generated/axis_summary_table.tex}
 \end{table}
 
+\section{Full Aggregate Phase Grid}
+
+Table \ref{tab:credit-phase-full} reports the complete 48-cell aggregate phase
+grid used in Section 8. These are seed-aggregated cells, not raw per-seed
+records. The table is included because it is part of the method-selection
+claim: the paper should show not only favorable critic cases, but also the
+near-tie and group-favorable regimes that define the boundary.
+
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\input{generated/credit_phase_full_table.tex}
+\endgroup
+
 \section{Full Case Summary}
 
 Table \ref{tab:full-case-summary} gives the full 18-case summary. It is
@@ -1330,76 +1525,7 @@ generated from the canonical matrix JSON rather than hand copied.
 \input{generated/full_case_table.tex}
 \endgroup
 
-\section{Raw Seed-Level Rows}
-
-Table \ref{tab:raw-seed-rows} records every case-by-seed row used to compute
-the paper's aggregate claims. Publishing these rows makes the mean-win and
-confidence-interval interpretation auditable. The table is long by design:
-there are \DeepCaseCount\ cases and \DeepSeedCount\ seeds, for 360 rows.
-
-\scriptsize
-\input{generated/raw_seed_table.tex}
-\normalsize
-
-\section{Raw Error and Dispersion Rows}
-
-Table \ref{tab:raw-error-rows} records the calibrated-MSE side of the same
-matrix. These rows help distinguish two different claims: a method can have
-higher correlation with behavior-policy credit while also changing calibrated error,
-zero-variance group frequency, or success-rate mix.
-
-\scriptsize
-\input{generated/raw_error_table.tex}
-\normalsize
-
-\section{Reproducibility Checklist}
-
-\begin{enumerate}[leftmargin=*]
-  \item Run the unit tests with \texttt{python3 -m unittest discover -s tests}.
-  \item Run the smoke gate with \texttt{./scripts/run\_smoke.sh}.
-  \item Regenerate the deep matrix with \texttt{python3 -m experiments.deep\_matrix}.
-  \item Regenerate LaTeX inputs with \texttt{python3 scripts/build\_latex\_inputs.py}.
-  \item Build the full paper with \texttt{./scripts/build\_latex\_paper.sh}.
-  \item Verify that the LaTeX artifact manifest records the PDF hash and page
-  count.
-  \item Treat \texttt{public/trajectory\_rewards\_are\_not\_token\_credit.pdf}
-  as the single canonical paper PDF.
-\end{enumerate}
-
-\section{Next Experiments}
-
-\paragraph{Full clipped \ppo/\grpo\ training.}
-The current closed-loop audit is tabular and unclipped. The next controlled RL
-experiment should implement full clipped \ppo, response-level \grpo, and
-corrected \grpo\ variants such as length-normalized, leave-one-out, DAPO-style,
-and Dr. \grpo-style updates under equal generated-token and optimizer budgets.
-This will test whether the estimator-fidelity and tabular-policy findings
-survive the optimizer details used in modern post-training stacks.
-
-\paragraph{Tiny sequence-policy benchmark.}
-The strongest next upgrade is a small transformer or nanoGPT-style benchmark
-where the environment remains controlled but the policy, critic, and reward
-model consume token histories rather than compact toy features. The v0.9 neural
-audit checks value interpolation on a held-out toy threshold; it does not yet
-test sequence modeling, KL control, or clipped policy optimization.
-
-\paragraph{Process rewards.}
-Adding process labels or subgoal rewards should narrow the gap between
-critic-based and group-relative estimators. This prediction is important
-because many practical systems do not rely on terminal reward alone.
-
-\paragraph{Compaction.}
-A compaction experiment should split long traces into variable numbers of
-sub-traces. The hypothesis is that critic-based individual-rollout objectives
-handle this naturally, while group-wise objectives need additional rules for
-matching sub-traces across completions.
-
-\paragraph{Distillation hybrids.}
-A dense-distillation follow-up should use successful RL traces as teacher or privileged
-self-teacher material and measure whether dense distillation preserves the
-credit assignment gains at lower inference cost.
-
-\section{Replication Protocol for New Benchmarks}
+\section{Benchmark Reporting Protocol}
 
 \paragraph{Trace schema.}
 A real long-horizon benchmark should record more than a final reward. Each
@@ -1439,8 +1565,8 @@ undercovered case. A larger benchmark should preserve the same discipline.
 
 \paragraph{Audit package.}
 The public release should include raw per-seed rows, aggregate tables, plotting
-scripts, exact command lines, environment notes, and a short statement of
-non-claims. The non-claims matter. For this workstream, the honest claim is that
+scripts, exact commands in repository documentation, environment notes, and a
+short statement of non-claims. The non-claims matter. For this workstream, the honest claim is that
 critic-style temporal information can dominate in observable long traces, while
 group-relative normalization remains strong when reward contrast is reliable
 and value modeling is weak. That is a research program, not a slogan.

@@ -20,7 +20,9 @@ The repository now includes estimator-fidelity audits, a broadcast-ceiling
 diagnostic for trajectory-constant estimators, structural critic-free baselines,
 an exact finite-MDP policy-gradient audit with a VIMPO-style signal and true
 null action, an exploratory reliability-gated baseline, tabular closed-loop
-training, and a tiny neural value-critic generalization audit. The main
+training, and a tiny neural value-critic generalization audit. The exact-gradient
+audit separates estimator-gradient fidelity from policy-implied actor-coefficient
+alignment. The main
 remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
 sequence-policy benchmark.
 
@@ -53,8 +55,9 @@ have to guess which paper is current.
 - `experiments/credit_phase_diagram.py` - factorial diagnostic over credit
   heterogeneity, critic observability, coverage, reward contrast, and drift.
 - `experiments/policy_gradient_fidelity.py` - exact finite-MDP policy-gradient
-  audit covering REINFORCE, sibling LOO, prefix/BRPO-style baselines, critic TD,
-  a VIMPO-style policy-implied signal, and true null-action leakage.
+  audit covering REINFORCE, sibling LOO, prefix/BRPO-style baselines,
+  learned-value TD, oracle-value TD, VIMPO-style actor coefficients, and true
+  null-action leakage.
 - `experiments/anchor_coverage_audit.py` - coverage sweep for the critic-free
   anchor-action contrast baseline.
 - `experiments/length_imbalance_audit.py` - audit of group-relative estimators
@@ -90,7 +93,7 @@ have to guess which paper is current.
 - `results/neural_credit_generalization_seedset.md` - tiny neural
   held-out-threshold audit showing value-critic generalization.
 - `public/trajectory_rewards_are_not_token_credit.pdf` - canonical LaTeX-built
-  paper with generated result appendices.
+  paper with generated result tables.
 - `public/paper_manifest.json` - SHA-256 manifest for the canonical PDF.
 - `tests/` - unit tests for the toy experiment and CLI artifact.
 - `scripts/run_smoke.sh` - one-command smoke runner.
@@ -206,7 +209,8 @@ The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
 `results/variance_credit_grid_seed17.json`, plus the credit-phase,
 length-imbalance, token-cost, closed-loop, and neural generalization audit JSON
-files. It
+files. It also tracks the replicated policy-gradient and policy-implied
+actor-coefficient audit. It
 compiles the paper with `tectonic` and checks that the rendered PDF is at least
 30 pages.
 
@@ -242,22 +246,27 @@ The canonical PDF is rendered from LaTeX at
 `public/trajectory_rewards_are_not_token_credit.pdf` and tracked with
 `public/paper_manifest.json`.
 
-The broadcast-ceiling phase diagnostic is the main boundary result. Across 32
-cells over credit heterogeneity, critic observability, coverage, reward
-contrast, and policy drift, it finds 15 clear critic-favorable cells, 2 clear
-group-favorable cells, and 15 near ties. The useful rule is conditional:
-trajectory-constant estimators hit a ceiling as within-trajectory credit
-heterogeneity rises, but critics only exploit that opening when held-out critic
-reliability is high enough.
+The broadcast-ceiling phase diagnostic is the main boundary result. Across 48
+cells over calibrated credit heterogeneity, critic observability, coverage, and
+reward contrast, realized `H_credit` spans `0.000` to `0.880`. The grid finds
+11 clear critic-favorable cells, 3 clear group-favorable cells, and 34 near
+ties. The useful rule is conditional: token-invariant broadcast estimators hit
+a ceiling as within-trajectory credit heterogeneity rises, but critics only
+exploit that opening when held-out critic reliability is high enough. Critic
+coverage is now fixed by training trajectory budget, so eval sibling group size
+does not secretly increase critic data.
 
-The exact policy-gradient audit is the main new v1 result. In the finite MDP,
-REINFORCE and sibling LOO have excellent exact-gradient cosine (`0.994` and
-`0.998`) despite modest token-credit correlation, showing why estimator
-correlation is not the whole optimizer story. Critic TD has much lower gradient
-variance (`0.003` versus REINFORCE's `0.022`). A VIMPO-style signal is exactly
-zero when `pi_theta == pi_ref`, then becomes partially aligned but biased under
-a stale reference (`cos=0.661`). The audit also separates `delay` from a true
-`null` action whose exact advantage is zero.
+The exact policy-gradient audit now uses an analytic occupancy-measure gradient
+with finite differences only as a check (`2.0e-10` relative error in the
+canonical run). Across 12 replications, REINFORCE and sibling LOO have
+excellent exact-gradient cosine (`0.998` and `0.999`) despite modest
+token-credit correlation, showing why estimator correlation is not the whole
+optimizer story. Learned-value TD has lower gradient variance (`0.006` versus
+REINFORCE's `0.018`) and much stronger token-credit correlation (`r=0.895`);
+oracle-value TD is the dynamic-programming upper bound. VIMPO-style rows are
+reported separately as policy-implied actor-coefficient alignment: the equal
+reference coefficient is zero, and fixed-reference rows are KL-distance
+diagnostics, not full VIMPO algorithm performance.
 
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment

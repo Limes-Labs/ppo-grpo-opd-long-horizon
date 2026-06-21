@@ -9,45 +9,62 @@ ceiling implied by the heterogeneity index.
 ## Summary
 
 - Seeds: 5
-- Cells: 32
-- Clear critic cells: 15
-- Clear group cells: 2
-- Near ties: 15
+- Cells: 48
+- H_credit range: 0.000 to 0.880
+- Clear critic cells: 11
+- Clear group cells: 3
+- Near ties: 34
 
-| Cell | H_credit | Ceiling | Group r | Critic r | Delta r | CI | Read | Mechanism |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| low_full_low_contrast_matched | 0.671 | 0.573 | 0.457 | 0.466 | 0.009 | +/- 0.081 | near_tie | process_structural_or_hybrid |
-| low_full_low_contrast_stale | 0.671 | 0.573 | 0.457 | 0.485 | 0.028 | +/- 0.058 | near_tie | process_structural_or_hybrid |
-| low_full_low_sparse_matched | 0.743 | 0.506 | 0.364 | 0.359 | -0.005 | +/- 0.052 | near_tie | process_structural_or_hybrid |
-| low_full_low_sparse_stale | 0.743 | 0.506 | 0.364 | 0.346 | -0.018 | +/- 0.058 | near_tie | process_structural_or_hybrid |
-| low_full_high_contrast_matched | 0.671 | 0.573 | 0.457 | 0.968 | 0.511 | +/- 0.034 | critic_clear | critic_or_sampled_value |
-| low_full_high_contrast_stale | 0.671 | 0.573 | 0.457 | 0.957 | 0.500 | +/- 0.024 | critic_clear | critic_or_sampled_value |
-| low_full_high_sparse_matched | 0.743 | 0.506 | 0.364 | 0.962 | 0.598 | +/- 0.011 | critic_clear | critic_or_sampled_value |
-| low_full_high_sparse_stale | 0.743 | 0.506 | 0.364 | 0.943 | 0.579 | +/- 0.025 | critic_clear | critic_or_sampled_value |
-| low_blind_low_contrast_matched | 0.671 | 0.573 | 0.457 | 0.477 | 0.019 | +/- 0.023 | near_tie | process_structural_or_hybrid |
-| low_blind_low_contrast_stale | 0.671 | 0.573 | 0.457 | 0.516 | 0.059 | +/- 0.060 | near_tie | process_structural_or_hybrid |
-| low_blind_low_sparse_matched | 0.743 | 0.506 | 0.364 | 0.309 | -0.055 | +/- 0.023 | group_clear | process_structural_or_hybrid |
-| low_blind_low_sparse_stale | 0.743 | 0.506 | 0.364 | 0.288 | -0.076 | +/- 0.029 | group_clear | process_structural_or_hybrid |
-| low_blind_high_contrast_matched | 0.671 | 0.573 | 0.457 | 0.577 | 0.120 | +/- 0.036 | critic_clear | process_structural_or_hybrid |
-| low_blind_high_contrast_stale | 0.671 | 0.573 | 0.457 | 0.561 | 0.104 | +/- 0.041 | critic_clear | process_structural_or_hybrid |
-| low_blind_high_sparse_matched | 0.743 | 0.506 | 0.364 | 0.406 | 0.043 | +/- 0.036 | near_tie | process_structural_or_hybrid |
-| low_blind_high_sparse_stale | 0.743 | 0.506 | 0.364 | 0.396 | 0.032 | +/- 0.041 | near_tie | process_structural_or_hybrid |
-| high_full_low_contrast_matched | 0.845 | 0.393 | 0.277 | 0.336 | 0.059 | +/- 0.024 | critic_clear | process_structural_or_hybrid |
-| high_full_low_contrast_stale | 0.845 | 0.393 | 0.277 | 0.295 | 0.019 | +/- 0.074 | near_tie | process_structural_or_hybrid |
-| high_full_low_sparse_matched | 0.879 | 0.347 | 0.283 | 0.288 | 0.006 | +/- 0.045 | near_tie | process_structural_or_hybrid |
-| high_full_low_sparse_stale | 0.879 | 0.347 | 0.283 | 0.245 | -0.037 | +/- 0.026 | near_tie | process_structural_or_hybrid |
-| high_full_high_contrast_matched | 0.845 | 0.393 | 0.277 | 0.826 | 0.549 | +/- 0.030 | critic_clear | critic_or_sampled_value |
-| high_full_high_contrast_stale | 0.845 | 0.393 | 0.277 | 0.726 | 0.450 | +/- 0.079 | critic_clear | critic_or_sampled_value |
-| high_full_high_sparse_matched | 0.879 | 0.347 | 0.283 | 0.802 | 0.519 | +/- 0.041 | critic_clear | critic_or_sampled_value |
-| high_full_high_sparse_stale | 0.879 | 0.347 | 0.283 | 0.740 | 0.457 | +/- 0.047 | critic_clear | critic_or_sampled_value |
-| high_blind_low_contrast_matched | 0.845 | 0.393 | 0.277 | 0.339 | 0.062 | +/- 0.023 | critic_clear | process_structural_or_hybrid |
-| high_blind_low_contrast_stale | 0.845 | 0.393 | 0.277 | 0.338 | 0.061 | +/- 0.020 | critic_clear | process_structural_or_hybrid |
-| high_blind_low_sparse_matched | 0.879 | 0.347 | 0.283 | 0.277 | -0.006 | +/- 0.057 | near_tie | process_structural_or_hybrid |
-| high_blind_low_sparse_stale | 0.879 | 0.347 | 0.283 | 0.235 | -0.048 | +/- 0.028 | near_tie | process_structural_or_hybrid |
-| high_blind_high_contrast_matched | 0.845 | 0.393 | 0.277 | 0.408 | 0.132 | +/- 0.031 | critic_clear | process_structural_or_hybrid |
-| high_blind_high_contrast_stale | 0.845 | 0.393 | 0.277 | 0.399 | 0.122 | +/- 0.030 | critic_clear | process_structural_or_hybrid |
-| high_blind_high_sparse_matched | 0.879 | 0.347 | 0.283 | 0.321 | 0.038 | +/- 0.037 | near_tie | process_structural_or_hybrid |
-| high_blind_high_sparse_stale | 0.879 | 0.347 | 0.283 | 0.303 | 0.021 | +/- 0.044 | near_tie | process_structural_or_hybrid |
+| Cell | Target H | H_credit | Ceiling | Group r | Critic r | Delta r | CI | Read | Mechanism |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| h005_non_privileged_low_contrast_matched | 0.050 | 0.000 | 1.000 | 0.901 | 1.000 | 0.099 | +/- 0.015 | critic_clear | either_by_cost |
+| h005_non_privileged_low_sparse_matched | 0.050 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h005_non_privileged_high_contrast_matched | 0.050 | 0.000 | 1.000 | 0.901 | 1.000 | 0.099 | +/- 0.015 | critic_clear | either_by_cost |
+| h005_non_privileged_high_sparse_matched | 0.050 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h005_blind_low_contrast_matched | 0.050 | 0.000 | 1.000 | 0.901 | 1.000 | 0.099 | +/- 0.015 | critic_clear | either_by_cost |
+| h005_blind_low_sparse_matched | 0.050 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h005_blind_high_contrast_matched | 0.050 | 0.000 | 1.000 | 0.901 | 1.000 | 0.099 | +/- 0.015 | critic_clear | either_by_cost |
+| h005_blind_high_sparse_matched | 0.050 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h015_non_privileged_low_contrast_matched | 0.150 | 0.246 | 0.868 | 0.665 | 0.765 | 0.100 | +/- 0.148 | near_tie | either_by_cost |
+| h015_non_privileged_low_sparse_matched | 0.150 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h015_non_privileged_high_contrast_matched | 0.150 | 0.246 | 0.868 | 0.665 | 0.999 | 0.334 | +/- 0.043 | critic_clear | either_by_cost |
+| h015_non_privileged_high_sparse_matched | 0.150 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h015_blind_low_contrast_matched | 0.150 | 0.246 | 0.868 | 0.665 | 0.689 | 0.024 | +/- 0.084 | near_tie | either_by_cost |
+| h015_blind_low_sparse_matched | 0.150 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h015_blind_high_contrast_matched | 0.150 | 0.246 | 0.868 | 0.665 | 0.758 | 0.093 | +/- 0.085 | near_tie | either_by_cost |
+| h015_blind_high_sparse_matched | 0.150 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h030_non_privileged_low_contrast_matched | 0.300 | 0.251 | 0.865 | 0.730 | 0.788 | 0.058 | +/- 0.078 | near_tie | either_by_cost |
+| h030_non_privileged_low_sparse_matched | 0.300 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h030_non_privileged_high_contrast_matched | 0.300 | 0.251 | 0.865 | 0.730 | 0.999 | 0.269 | +/- 0.037 | critic_clear | either_by_cost |
+| h030_non_privileged_high_sparse_matched | 0.300 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h030_blind_low_contrast_matched | 0.300 | 0.251 | 0.865 | 0.730 | 0.738 | 0.008 | +/- 0.078 | near_tie | either_by_cost |
+| h030_blind_low_sparse_matched | 0.300 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h030_blind_high_contrast_matched | 0.300 | 0.251 | 0.865 | 0.730 | 0.766 | 0.035 | +/- 0.051 | near_tie | either_by_cost |
+| h030_blind_high_sparse_matched | 0.300 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h050_non_privileged_low_contrast_matched | 0.500 | 0.497 | 0.709 | 0.624 | 0.548 | -0.077 | +/- 0.095 | near_tie | process_structural_or_hybrid |
+| h050_non_privileged_low_sparse_matched | 0.500 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h050_non_privileged_high_contrast_matched | 0.500 | 0.497 | 0.709 | 0.624 | 0.997 | 0.373 | +/- 0.014 | critic_clear | critic_or_sampled_value |
+| h050_non_privileged_high_sparse_matched | 0.500 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h050_blind_low_contrast_matched | 0.500 | 0.497 | 0.709 | 0.624 | 0.521 | -0.103 | +/- 0.061 | group_clear | process_structural_or_hybrid |
+| h050_blind_low_sparse_matched | 0.500 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h050_blind_high_contrast_matched | 0.500 | 0.497 | 0.709 | 0.624 | 0.595 | -0.029 | +/- 0.030 | near_tie | process_structural_or_hybrid |
+| h050_blind_high_sparse_matched | 0.500 | 0.000 | 1.000 | 0.000 | 0.000 | 0.000 | +/- 0.000 | near_tie | group_or_global |
+| h070_non_privileged_low_contrast_matched | 0.700 | 0.704 | 0.543 | 0.410 | 0.303 | -0.107 | +/- 0.101 | near_tie | process_structural_or_hybrid |
+| h070_non_privileged_low_sparse_matched | 0.700 | 0.830 | 0.410 | 0.273 | 0.362 | 0.089 | +/- 0.095 | near_tie | process_structural_or_hybrid |
+| h070_non_privileged_high_contrast_matched | 0.700 | 0.704 | 0.543 | 0.410 | 0.924 | 0.515 | +/- 0.054 | critic_clear | critic_or_sampled_value |
+| h070_non_privileged_high_sparse_matched | 0.700 | 0.830 | 0.410 | 0.273 | 0.864 | 0.590 | +/- 0.051 | critic_clear | critic_or_sampled_value |
+| h070_blind_low_contrast_matched | 0.700 | 0.704 | 0.543 | 0.410 | 0.285 | -0.125 | +/- 0.064 | group_clear | process_structural_or_hybrid |
+| h070_blind_low_sparse_matched | 0.700 | 0.830 | 0.410 | 0.273 | 0.362 | 0.089 | +/- 0.095 | near_tie | process_structural_or_hybrid |
+| h070_blind_high_contrast_matched | 0.700 | 0.704 | 0.543 | 0.410 | 0.411 | 0.002 | +/- 0.053 | near_tie | process_structural_or_hybrid |
+| h070_blind_high_sparse_matched | 0.700 | 0.830 | 0.410 | 0.273 | 0.384 | 0.111 | +/- 0.083 | near_tie | process_structural_or_hybrid |
+| h090_non_privileged_low_contrast_matched | 0.900 | 0.843 | 0.396 | 0.301 | 0.249 | -0.052 | +/- 0.070 | near_tie | process_structural_or_hybrid |
+| h090_non_privileged_low_sparse_matched | 0.900 | 0.880 | 0.346 | 0.273 | 0.241 | -0.032 | +/- 0.076 | near_tie | process_structural_or_hybrid |
+| h090_non_privileged_high_contrast_matched | 0.900 | 0.843 | 0.396 | 0.301 | 0.859 | 0.558 | +/- 0.033 | critic_clear | critic_or_sampled_value |
+| h090_non_privileged_high_sparse_matched | 0.900 | 0.880 | 0.346 | 0.273 | 0.848 | 0.576 | +/- 0.047 | critic_clear | critic_or_sampled_value |
+| h090_blind_low_contrast_matched | 0.900 | 0.843 | 0.396 | 0.301 | 0.189 | -0.112 | +/- 0.049 | group_clear | process_structural_or_hybrid |
+| h090_blind_low_sparse_matched | 0.900 | 0.880 | 0.346 | 0.273 | 0.215 | -0.057 | +/- 0.113 | near_tie | process_structural_or_hybrid |
+| h090_blind_high_contrast_matched | 0.900 | 0.843 | 0.396 | 0.301 | 0.249 | -0.052 | +/- 0.036 | near_tie | process_structural_or_hybrid |
+| h090_blind_high_sparse_matched | 0.900 | 0.880 | 0.346 | 0.273 | 0.312 | 0.039 | +/- 0.091 | near_tie | process_structural_or_hybrid |
 
 ## Reading
 

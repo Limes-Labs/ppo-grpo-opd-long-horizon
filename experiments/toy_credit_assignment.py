@@ -37,6 +37,45 @@ TOKEN_COST = 0.02
 ACTIONS = ("help", "harm", "wait")
 
 
+OBSERVATION_SCHEMAS: dict[str, dict[str, bool | str]] = {
+    "actor": {
+        "prompt_threshold": True,
+        "progress": True,
+        "remaining_horizon": True,
+        "previous_actions": False,
+        "description": "The toy behavior policy observes threshold, progress, and remaining horizon.",
+    },
+    "non_privileged": {
+        "prompt_threshold": True,
+        "progress": True,
+        "remaining_horizon": True,
+        "previous_actions": False,
+        "description": "Critic observation equal to the actor observation z_t=o_t.",
+    },
+    "full": {
+        "prompt_threshold": True,
+        "progress": True,
+        "remaining_horizon": True,
+        "previous_actions": False,
+        "description": "Full toy state used by the behavior policy; not privileged in this toy.",
+    },
+    "coarse": {
+        "prompt_threshold": True,
+        "progress": "sign",
+        "remaining_horizon": True,
+        "previous_actions": False,
+        "description": "Threshold and remaining horizon plus only the sign of progress.",
+    },
+    "blind": {
+        "prompt_threshold": True,
+        "progress": False,
+        "remaining_horizon": True,
+        "previous_actions": False,
+        "description": "Threshold and remaining horizon, with progress hidden.",
+    },
+}
+
+
 @dataclass(frozen=True)
 class Scenario:
     name: str
@@ -202,9 +241,27 @@ def state_key(
         observed_score = 0
     elif observation == "coarse":
         observed_score = 1 if score > 0 else -1 if score < 0 else 0
-    else:
+    elif observation in {"full", "actor", "non_privileged"}:
         observed_score = score
+    else:
+        raise ValueError(f"unknown observation mode {observation!r}")
     return threshold, observed_score, remaining
+
+
+def observation_schema(observation: str) -> dict[str, bool | str]:
+    if observation not in OBSERVATION_SCHEMAS:
+        raise ValueError(f"unknown observation mode {observation!r}")
+    return dict(OBSERVATION_SCHEMAS[observation])
+
+
+def critic_is_privileged(observation: str) -> bool:
+    actor = OBSERVATION_SCHEMAS["actor"]
+    critic = OBSERVATION_SCHEMAS[observation]
+    progress_order = {False: 0, "sign": 1, True: 2}
+    for key in ["prompt_threshold", "remaining_horizon", "previous_actions"]:
+        if bool(critic[key]) and not bool(actor[key]):
+            return True
+    return progress_order[critic["progress"]] > progress_order[actor["progress"]]
 
 
 def normalize_probabilities(probs: dict[str, float]) -> dict[str, float]:
@@ -639,6 +696,9 @@ def run_experiment(
             "scenario_name": scenario.name,
             "scenario_description": scenario.description,
             "critic_observation": scenario.critic_observation,
+            "actor_observation_schema": observation_schema("actor"),
+            "critic_observation_schema": observation_schema(scenario.critic_observation),
+            "critic_is_privileged": critic_is_privileged(scenario.critic_observation),
             "train_groups": train_groups,
             "eval_groups": eval_groups,
             "group_size": group_size,
