@@ -3,7 +3,7 @@
 <text x="50" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0B2545">Critic coverage vs estimator advantage</text>
 <text x="50" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Each point is a multi-seed case. Lower coverage is where group-relative can win.</text>
 <rect x="90" y="130" width="920" height="560" fill="white" stroke="#AAB4C0" stroke-width="2"/>
-<line x1="90" y1="624" x2="1010" y2="624" stroke="#777777" stroke-width="2"/>
+<line x1="90" y1="631" x2="1010" y2="631" stroke="#777777" stroke-width="2"/>
 <text x="450" y="710" font-family="Arial, sans-serif" font-size="18" fill="#333333">critic exact-state hit rate</text>
 <text x="20" y="410" font-family="Arial, sans-serif" font-size="18" fill="#333333">delta r</text>
 <line x1="90" y1="690" x2="90" y2="698" stroke="#777777"/>
@@ -16,40 +16,40 @@
 <text x="766" y="720" font-family="Arial, sans-serif" font-size="14" fill="#444444">0.75</text>
 <line x1="1010" y1="690" x2="1010" y2="698" stroke="#777777"/>
 <text x="996" y="720" font-family="Arial, sans-serif" font-size="14" fill="#444444">1.00</text>
-<circle cx="1009" cy="227" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1021" y="217" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 04 baseline</text>
-<circle cx="1006" cy="183" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1018" y="173" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 08 baseline</text>
-<circle cx="1004" cy="187" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1016" y="177" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 12 baseline</text>
-<circle cx="1006" cy="153" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1018" y="143" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 16 long wait</text>
-<circle cx="999" cy="165" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1011" y="155" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 02 long wait</text>
-<circle cx="1004" cy="171" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1016" y="161" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 04 long wait</text>
-<circle cx="1006" cy="159" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1018" y="149" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 08 long wait</text>
-<circle cx="1008" cy="144" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1020" y="134" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 12 long wait</text>
-<circle cx="527" cy="611" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="539" y="601" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 002 full</text>
-<circle cx="903" cy="535" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="915" y="525" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 008 full</text>
-<circle cx="990" cy="308" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1002" y="298" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 032 full</text>
-<circle cx="1005" cy="167" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1017" y="157" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 128 full</text>
-<circle cx="1002" cy="202" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1014" y="192" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability full</text>
-<circle cx="1009" cy="309" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1021" y="299" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability coarse</text>
-<circle cx="1010" cy="517" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1022" y="507" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability blind</text>
-<circle cx="727" cy="669" r="8" fill="#9B1C1C" stroke="#111111"/>
-<text x="739" y="659" font-family="Arial, sans-serif" font-size="14" fill="#222222">blind undercovered counterexample</text>
-<circle cx="1004" cy="160" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1016" y="150" font-family="Arial, sans-serif" font-size="14" fill="#222222">sparse hard group04</text>
-<circle cx="1007" cy="130" r="8" fill="#1F6F4A" stroke="#111111"/>
-<text x="1019" y="120" font-family="Arial, sans-serif" font-size="14" fill="#222222">sparse hard group08</text>
+<circle cx="1009" cy="281" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1021" y="271" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 04 baseline</text>
+<circle cx="1006" cy="242" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1018" y="232" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 08 baseline</text>
+<circle cx="1004" cy="245" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1016" y="235" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 12 baseline</text>
+<circle cx="1006" cy="215" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1018" y="205" font-family="Arial, sans-serif" font-size="14" fill="#222222">horizon 16 long wait</text>
+<circle cx="1005" cy="130" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1017" y="120" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 02 long wait</text>
+<circle cx="1006" cy="203" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1018" y="193" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 04 long wait</text>
+<circle cx="1005" cy="232" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1017" y="222" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 08 long wait</text>
+<circle cx="1006" cy="242" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1018" y="232" font-family="Arial, sans-serif" font-size="14" fill="#222222">group size 12 long wait</text>
+<circle cx="527" cy="620" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="539" y="610" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 002 full</text>
+<circle cx="903" cy="553" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="915" y="543" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 008 full</text>
+<circle cx="990" cy="352" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1002" y="342" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 032 full</text>
+<circle cx="1005" cy="228" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1017" y="218" font-family="Arial, sans-serif" font-size="14" fill="#222222">critic budget 128 full</text>
+<circle cx="1002" cy="258" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1014" y="248" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability full</text>
+<circle cx="1009" cy="353" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1021" y="343" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability coarse</text>
+<circle cx="1010" cy="537" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1022" y="527" font-family="Arial, sans-serif" font-size="14" fill="#222222">observability blind</text>
+<circle cx="727" cy="671" r="8" fill="#9B1C1C" stroke="#111111"/>
+<text x="739" y="661" font-family="Arial, sans-serif" font-size="14" fill="#222222">blind undercovered counterexample</text>
+<circle cx="1004" cy="221" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1016" y="211" font-family="Arial, sans-serif" font-size="14" fill="#222222">sparse hard group04</text>
+<circle cx="1007" cy="194" r="8" fill="#1F6F4A" stroke="#111111"/>
+<text x="1019" y="184" font-family="Arial, sans-serif" font-size="14" fill="#222222">sparse hard group08</text>
 </svg>

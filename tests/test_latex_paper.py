@@ -11,10 +11,6 @@ LATEX_PDF = ROOT / "public/trajectory_rewards_are_not_token_credit.pdf"
 LATEX_MANIFEST = ROOT / "public/paper_manifest.json"
 MACROS = ROOT / "paper/generated/result_macros.tex"
 TABLE = ROOT / "paper/generated/deep_matrix_table.tex"
-AXIS_TABLE = ROOT / "paper/generated/axis_summary_table.tex"
-FULL_CASE_TABLE = ROOT / "paper/generated/full_case_table.tex"
-RAW_SEED_TABLE = ROOT / "paper/generated/raw_seed_table.tex"
-RAW_ERROR_TABLE = ROOT / "paper/generated/raw_error_table.tex"
 VARIANCE_CREDIT_TABLE = ROOT / "paper/generated/variance_credit_table.tex"
 ANCHOR_COVERAGE_TABLE = ROOT / "paper/generated/anchor_coverage_table.tex"
 LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
@@ -59,7 +55,7 @@ class LatexPaperTests(unittest.TestCase):
             r"\section{Limitations}",
             r"\section{Conclusion}",
             r"\appendix",
-            r"\section{Full Case Summary}",
+            r"\section{Case Design and Artifact Mapping}",
             r"\section{Benchmark Reporting Protocol}",
             r"\bibliography{references}",
         ]:
@@ -112,6 +108,17 @@ class LatexPaperTests(unittest.TestCase):
         self.assertNotIn(r"\section{Raw Seed-Level Rows}", text)
         self.assertNotIn(r"\section{Raw Error and Dispersion Rows}", text)
         self.assertNotIn(r"\begin{verbatim}", text)
+        self.assertNotIn("near-term reporting scorecard", text)
+        self.assertNotIn("policy drift. The ceiling", text)
+        self.assertFalse((ROOT / "paper/generated/raw_seed_table.tex").exists())
+        self.assertFalse((ROOT / "paper/generated/raw_error_table.tex").exists())
+        self.assertFalse((ROOT / "paper/generated/axis_summary_table.tex").exists())
+        self.assertFalse((ROOT / "paper/generated/full_case_table.tex").exists())
+        self.assertFalse((ROOT / "paper/generated/credit_phase_full_table.tex").exists())
+        self.assertNotIn(r"\usepackage{longtable}", text)
+        self.assertNotIn(r"\input{generated/axis_summary_table.tex}", text)
+        self.assertNotIn(r"\input{generated/full_case_table.tex}", text)
+        self.assertNotIn(r"\input{generated/credit_phase_full_table.tex}", text)
         self.assertNotIn(r"\mathcal{r}_t + \gamma V_\phi", text)
         self.assertNotIn(r"A^\star(s_t,a_t)", text)
         self.assertNotIn("token-level causal structure", text)
@@ -142,8 +149,26 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"blind\_undercovered\_counterexample", table)
         self.assertIn("group clear", table)
 
-        self.assertIn("critic\\_budget", AXIS_TABLE.read_text())
-        self.assertIn(r"\begin{longtable}", FULL_CASE_TABLE.read_text())
+        generated = sorted(path.name for path in (ROOT / "paper/generated").glob("*.tex"))
+        self.assertEqual(
+            generated,
+            sorted(
+                [
+                    "anchor_coverage_table.tex",
+                    "closed_loop_training_table.tex",
+                    "credit_phase_table.tex",
+                    "deep_matrix_table.tex",
+                    "length_imbalance_table.tex",
+                    "neural_generalization_table.tex",
+                    "policy_baseline_table.tex",
+                    "policy_gradient_table.tex",
+                    "policy_implied_table.tex",
+                    "result_macros.tex",
+                    "token_cost_table.tex",
+                    "variance_credit_table.tex",
+                ]
+            ),
+        )
         variance_credit = json.loads(VARIANCE_CREDIT.read_text())
         variance_table = VARIANCE_CREDIT_TABLE.read_text()
         self.assertIn("Critic TD", variance_table)
@@ -246,7 +271,10 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("Learned value TD", gradient_table)
         self.assertIn("Oracle-value TD", gradient_table)
         self.assertIn("VIMPO", policy_implied_table)
+        self.assertIn("VIMPO-style", policy_implied_table)
+        self.assertIn("diagnostic", policy_implied_table)
         self.assertIn("not complete", policy_implied_table)
+        self.assertIn("algorithm performance", policy_implied_table)
         self.assertIn("BRPO-style", gradient_table)
         self.assertIn(r"$\pi=\pi_{\rm ref}$", policy_implied_table)
         pg_metrics = {
@@ -345,6 +373,11 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/policy_gradient_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_implied_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_baseline_table.tex", manifest["inputs"])
+        self.assertNotIn("paper/generated/axis_summary_table.tex", manifest["inputs"])
+        self.assertNotIn("paper/generated/full_case_table.tex", manifest["inputs"])
+        self.assertNotIn("paper/generated/credit_phase_full_table.tex", manifest["inputs"])
+        self.assertNotIn("paper/generated/raw_seed_table.tex", manifest["inputs"])
+        self.assertNotIn("paper/generated/raw_error_table.tex", manifest["inputs"])
         self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
         self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_10seed.json", manifest["inputs"])

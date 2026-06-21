@@ -46,6 +46,20 @@ class DeepMatrixTests(unittest.TestCase):
                 self.assertTrue(chart.exists())
                 self.assertGreater(chart.stat().st_size, 1000)
 
+    def test_group_size_axis_keeps_critic_training_budget_fixed(self) -> None:
+        group_cases = [
+            case for case in DEFAULT_DEEP_CASES if case["axis"] == "group_size"
+        ]
+        result = run_deep_matrix(seeds=[3], cases=group_cases)
+
+        train_budgets = {
+            case["case_name"]: case["mean_train_trajectories"]
+            for case in result["cases"]
+        }
+        self.assertEqual(set(train_budgets.values()), {840})
+        for case in result["cases"]:
+            self.assertEqual(case["train_group_size"], 6)
+
 
 if __name__ == "__main__":
     unittest.main()

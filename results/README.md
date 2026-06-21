@@ -12,15 +12,16 @@ Current artifacts:
   paper and rendered artifacts.
 - `deep_matrix_20seed.csv` - raw case-by-seed rows for independent checking.
 - `deep_matrix_20seed.md` - human-readable multi-seed summary with 95%
-  confidence intervals.
+  confidence intervals. The group-size rows fix critic replay at 840 training
+  trajectories so only evaluation sibling group size changes.
 - `variance_credit_grid_seed17.json` - estimator grid separating variance
   reduction from credit assignment on the long-wait toy case, including a
   critic-free anchor-action contrast baseline over repeated toy states.
 - `variance_credit_grid_seed17.md` - human-readable table and reading notes for
   the same estimator grid.
 - `credit_phase_diagram_seedset.json` - broadcast-ceiling phase diagnostic over
-  credit heterogeneity, critic observability, coverage, reward contrast, and
-  policy drift.
+  credit heterogeneity, critic observability, coverage, and reward contrast
+  under matched train/evaluation dynamics.
 - `credit_phase_diagram_seedset.md` - human-readable table and reading notes
   for the same phase diagnostic.
 - `anchor_coverage_audit_seedset.json` - coverage sweep for the critic-free
@@ -84,6 +85,14 @@ Regenerate the broadcast-ceiling phase diagnostic with:
 python3 -m experiments.credit_phase_diagram \
   --output-json results/credit_phase_diagram_seedset.json \
   --output-md results/credit_phase_diagram_seedset.md
+```
+
+Regenerate the exact-gradient and policy-implied actor-coefficient audit with:
+
+```bash
+python3 -m experiments.policy_gradient_fidelity \
+  --output-json results/policy_gradient_fidelity_seed13.json \
+  --output-md results/policy_gradient_fidelity_seed13.md
 ```
 
 Regenerate the robustness audits with:

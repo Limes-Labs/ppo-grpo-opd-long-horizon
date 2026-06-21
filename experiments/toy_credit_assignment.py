@@ -646,9 +646,17 @@ def run_experiment(
     train_groups: int = 240,
     eval_groups: int = 80,
     group_size: int = 6,
+    train_group_size: int | None = None,
     max_steps: int = 12,
 ) -> dict[str, object]:
-    if train_groups <= 0 or eval_groups <= 0 or group_size <= 1 or max_steps < 2:
+    train_group_size = group_size if train_group_size is None else train_group_size
+    if (
+        train_groups <= 0
+        or eval_groups <= 0
+        or group_size <= 1
+        or train_group_size <= 0
+        or max_steps < 2
+    ):
         raise ValueError("expected train/eval groups > 0, group_size > 1, max_steps >= 2")
     scenario = resolve_scenario(scenario_name, scenario)
     if scenario.min_steps > max_steps:
@@ -658,7 +666,7 @@ def run_experiment(
     train_groups_data = generate_groups(
         train_rng,
         group_count=train_groups,
-        group_size=group_size,
+        group_size=train_group_size,
         max_steps=max_steps,
         scenario=scenario,
     )
@@ -702,6 +710,7 @@ def run_experiment(
             "train_groups": train_groups,
             "eval_groups": eval_groups,
             "group_size": group_size,
+            "train_group_size": train_group_size,
             "max_steps": max_steps,
             "token_cost": scenario.token_cost,
         },

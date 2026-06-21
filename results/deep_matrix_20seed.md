@@ -4,6 +4,8 @@ This report aggregates the toy credit-assignment comparison across
 20 seeds and 18 fixed cases.
 Positive delta means the critic-style TD estimator has higher oracle
 advantage correlation than the group-relative estimator.
+For group-size rows, critic replay is fixed at 840 training trajectories
+while only evaluation sibling group size changes.
 
 ## Summary
 
@@ -12,7 +14,7 @@ advantage correlation than the group-relative estimator.
 - Clear critic-favorable cases by 95% CI: 16
 - Near-tie cases by 95% CI: 1
 - Clear group-favorable cases by 95% CI: 1
-- Mean critic-minus-group correlation: 0.420
+- Mean critic-minus-group correlation: 0.426
 
 | Case | Axis | Mean winner | CI read | Group r | Critic r | Delta r | 95% CI | Critic hit | Wait frac | Success |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -20,10 +22,10 @@ advantage correlation than the group-relative estimator.
 | horizon_08_baseline | horizon | critic | critic_clear | 0.390 | 0.925 | 0.535 | +/- 0.015 | 1.00 | 0.37 | 0.55 |
 | horizon_12_baseline | horizon | critic | critic_clear | 0.335 | 0.866 | 0.531 | +/- 0.012 | 0.99 | 0.41 | 0.63 |
 | horizon_16_long_wait | horizon | critic | critic_clear | 0.293 | 0.865 | 0.571 | +/- 0.013 | 1.00 | 0.54 | 0.68 |
-| group_size_02_long_wait | group_size | critic | critic_clear | 0.213 | 0.771 | 0.557 | +/- 0.022 | 0.99 | 0.51 | 0.66 |
-| group_size_04_long_wait | group_size | critic | critic_clear | 0.301 | 0.851 | 0.550 | +/- 0.014 | 0.99 | 0.50 | 0.65 |
-| group_size_08_long_wait | group_size | critic | critic_clear | 0.346 | 0.910 | 0.564 | +/- 0.011 | 1.00 | 0.50 | 0.64 |
-| group_size_12_long_wait | group_size | critic | critic_clear | 0.358 | 0.940 | 0.582 | +/- 0.007 | 1.00 | 0.50 | 0.65 |
+| group_size_02_long_wait | group_size | critic | critic_clear | 0.213 | 0.902 | 0.689 | +/- 0.014 | 0.99 | 0.51 | 0.66 |
+| group_size_04_long_wait | group_size | critic | critic_clear | 0.301 | 0.889 | 0.588 | +/- 0.016 | 1.00 | 0.50 | 0.65 |
+| group_size_08_long_wait | group_size | critic | critic_clear | 0.346 | 0.894 | 0.549 | +/- 0.011 | 1.00 | 0.50 | 0.64 |
+| group_size_12_long_wait | group_size | critic | critic_clear | 0.358 | 0.892 | 0.534 | +/- 0.009 | 1.00 | 0.50 | 0.65 |
 | critic_budget_002_full | critic_budget | critic | near_tie | 0.352 | 0.367 | 0.015 | +/- 0.027 | 0.48 | 0.39 | 0.60 |
 | critic_budget_008_full | critic_budget | critic | critic_clear | 0.352 | 0.459 | 0.107 | +/- 0.027 | 0.88 | 0.39 | 0.60 |
 | critic_budget_032_full | critic_budget | critic | critic_clear | 0.352 | 0.735 | 0.383 | +/- 0.021 | 0.98 | 0.39 | 0.60 |
