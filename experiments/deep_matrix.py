@@ -466,7 +466,7 @@ def render_delta_chart(result: dict[str, Any], output: Path) -> None:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="white"/>',
         '<text x="40" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0B2545">Critic minus group correlation by case</text>',
-        '<text x="40" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Positive values favor critic-style TD advantage; negative values favor group-relative advantage.</text>',
+        '<text x="40" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Bars show means; whiskers are 95% across-seed intervals for critic minus group correlation.</text>',
         f'<line x1="{zero_x}" y1="{top - 24}" x2="{zero_x}" y2="{height - 55}" stroke="#666666" stroke-width="2"/>',
         f'<text x="{zero_x - 8}" y="{height - 30}" font-family="Arial, sans-serif" font-size="15" fill="#555555">0</text>',
     ]
@@ -474,6 +474,7 @@ def render_delta_chart(result: dict[str, Any], output: Path) -> None:
     for idx, case in enumerate(result["cases"]):
         y = top + idx * row_h
         delta = case["mean_critic_minus_group_correlation"]
+        ci95_delta = case["ci95_critic_minus_group_correlation"]
         bar_len = int(abs(delta) / max_abs * (chart_w / 2 - 20))
         color = "#1F6F4A" if delta >= 0 else "#9B1C1C"
         if delta >= 0:
@@ -481,9 +482,16 @@ def render_delta_chart(result: dict[str, Any], output: Path) -> None:
         else:
             x = zero_x - bar_len
         value_x = zero_x + bar_len + 10 if delta >= 0 else zero_x - bar_len - 74
+        half_w = chart_w / 2 - 20
+        ci_low = int(zero_x + (delta - ci95_delta) / max_abs * half_w)
+        ci_high = int(zero_x + (delta + ci95_delta) / max_abs * half_w)
+        ci_y = y + 20
         parts.extend(
             [
                 f'<text x="40" y="{y + 27}" font-family="Arial, sans-serif" font-size="15" fill="#111111">{case["case_name"]}</text>',
+                f'<line x1="{ci_low}" y1="{ci_y}" x2="{ci_high}" y2="{ci_y}" stroke="#333333" stroke-width="2"/>',
+                f'<line x1="{ci_low}" y1="{ci_y - 7}" x2="{ci_low}" y2="{ci_y + 7}" stroke="#333333" stroke-width="2"/>',
+                f'<line x1="{ci_high}" y1="{ci_y - 7}" x2="{ci_high}" y2="{ci_y + 7}" stroke="#333333" stroke-width="2"/>',
                 f'<rect x="{x}" y="{y + 8}" width="{bar_len}" height="24" rx="6" fill="{color}"/>',
                 f'<text x="{value_x}" y="{y + 27}" font-family="Arial, sans-serif" font-size="15" fill="{color}">{delta:+.3f}</text>',
             ]
@@ -512,15 +520,54 @@ def render_coverage_scatter(result: dict[str, Any], output: Path) -> None:
         return int(plot_top + (max_delta - delta) / (max_delta - min_delta) * plot_h)
 
     zero_y = y_of(0.0)
+    label_offsets = {
+        "critic_budget_002_full": (16, -12),
+        "critic_budget_128_full": (-170, 24),
+        "observability_blind": (-150, 28),
+        "blind_undercovered_counterexample": (16, -18),
+        "horizon_16_long_wait": (-170, -32),
+        "sparse_hard_group08": (-170, 42),
+        "group_size_02_long_wait": (-150, -18),
+    }
+
+    def style_for(case: dict[str, Any]) -> tuple[str, str]:
+        name = case["case_name"]
+        if "blind" in name:
+            return "#9B1C1C", "triangle"
+        if "coarse" in name:
+            return "#B7791F", "diamond"
+        if "observability_full" in name or case.get("critic_is_privileged"):
+            return "#2457A7", "square"
+        return "#1F6F4A", "circle"
+
+    def marker_svg(x: int, y: int, radius: int, color: str, shape: str) -> str:
+        if shape == "triangle":
+            points = f"{x},{y - radius} {x - radius},{y + radius} {x + radius},{y + radius}"
+            return f'<polygon points="{points}" fill="{color}" stroke="#111111" stroke-width="1.5"/>'
+        if shape == "diamond":
+            points = f"{x},{y - radius} {x - radius},{y} {x},{y + radius} {x + radius},{y}"
+            return f'<polygon points="{points}" fill="{color}" stroke="#111111" stroke-width="1.5"/>'
+        if shape == "square":
+            side = radius * 2
+            return f'<rect x="{x - radius}" y="{y - radius}" width="{side}" height="{side}" fill="{color}" stroke="#111111" stroke-width="1.5"/>'
+        return f'<circle cx="{x}" cy="{y}" r="{radius}" fill="{color}" stroke="#111111" stroke-width="1.5"/>'
+
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="white"/>',
         '<text x="50" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0B2545">Critic coverage vs estimator advantage</text>',
-        '<text x="50" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Each point is a multi-seed case. Lower coverage is where group-relative can win.</text>',
+        '<text x="50" y="80" font-family="Arial, sans-serif" font-size="18" fill="#333333">Color/shape encode critic observability; marker size scales with wait-token fraction.</text>',
         f'<rect x="{plot_left}" y="{plot_top}" width="{plot_w}" height="{plot_h}" fill="white" stroke="#AAB4C0" stroke-width="2"/>',
         f'<line x1="{plot_left}" y1="{zero_y}" x2="{plot_left + plot_w}" y2="{zero_y}" stroke="#777777" stroke-width="2"/>',
-        f'<text x="{plot_left + plot_w // 2 - 100}" y="{height - 70}" font-family="Arial, sans-serif" font-size="18" fill="#333333">critic exact-state hit rate</text>',
+        f'<text x="{plot_left + plot_w // 2 - 100}" y="{height - 38}" font-family="Arial, sans-serif" font-size="18" fill="#333333">critic exact-state hit rate</text>',
         f'<text x="20" y="{plot_top + plot_h // 2}" font-family="Arial, sans-serif" font-size="18" fill="#333333">delta r</text>',
+        '<rect x="120" y="150" width="330" height="104" rx="8" fill="#FFFFFF" stroke="#D0D7DE"/>',
+        '<circle cx="142" cy="178" r="8" fill="#1F6F4A" stroke="#111111" stroke-width="1.5"/>',
+        '<text x="160" y="184" font-family="Arial, sans-serif" font-size="14" fill="#222222">non-blind critic</text>',
+        '<rect x="134" y="198" width="16" height="16" fill="#2457A7" stroke="#111111" stroke-width="1.5"/>',
+        '<text x="160" y="212" font-family="Arial, sans-serif" font-size="14" fill="#222222">privileged/full-observation row</text>',
+        '<polygon points="142,229 134,245 150,245" fill="#9B1C1C" stroke="#111111" stroke-width="1.5"/>',
+        '<text x="160" y="244" font-family="Arial, sans-serif" font-size="14" fill="#222222">blind critic</text>',
     ]
     for tick in [0.0, 0.25, 0.5, 0.75, 1.0]:
         x = x_of(tick)
@@ -534,12 +581,21 @@ def render_coverage_scatter(result: dict[str, Any], output: Path) -> None:
     for case in result["cases"]:
         x = x_of(case["mean_critic_exact_state_rate"])
         y = y_of(case["mean_critic_minus_group_correlation"])
-        color = "#1F6F4A" if case["mean_critic_minus_group_correlation"] >= 0 else "#9B1C1C"
-        label = case["case_name"].replace("_", " ")
-        parts.append(f'<circle cx="{x}" cy="{y}" r="8" fill="{color}" stroke="#111111"/>')
-        parts.append(
-            f'<text x="{x + 12}" y="{y - 10}" font-family="Arial, sans-serif" font-size="14" fill="#222222">{label}</text>'
-        )
+        color, shape = style_for(case)
+        radius = 6 + int(10 * case["mean_wait_token_fraction"])
+        parts.append(marker_svg(x, y, radius, color, shape))
+        if case["case_name"] in label_offsets:
+            dx, dy = label_offsets[case["case_name"]]
+            label = case["case_name"].replace("_", " ")
+            text_x = x + dx
+            text_y = y + dy
+            text_w = max(116, min(240, 7 * len(label) + 12))
+            parts.append(
+                f'<rect x="{text_x - 4}" y="{text_y - 15}" width="{text_w}" height="20" rx="4" fill="white" opacity="0.82"/>'
+            )
+            parts.append(
+                f'<text x="{text_x}" y="{text_y}" font-family="Arial, sans-serif" font-size="13" fill="#222222">{label}</text>'
+            )
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(parts + ["</svg>\n"]))

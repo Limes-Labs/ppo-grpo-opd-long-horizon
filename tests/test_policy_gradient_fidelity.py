@@ -87,9 +87,21 @@ class PolicyGradientFidelityTests(unittest.TestCase):
                 "variance_trace_ci95",
                 "gradient_cosine",
                 "matched_kl_improvement",
+                "batch_matched_kl_improvement_mean",
+                "batch_matched_kl_improvement_p05",
+                "batch_negative_update_probability",
+                "null_abs_credit_mean",
                 "advantage_correlation",
             ]:
                 self.assertTrue(math.isfinite(metrics[required][key]), (required, key))
+            self.assertGreaterEqual(
+                metrics[required]["batch_negative_update_probability"],
+                0.0,
+            )
+            self.assertLessEqual(
+                metrics[required]["batch_negative_update_probability"],
+                1.0,
+            )
 
         self.assertLess(
             metrics["prefix_value_baseline"]["variance_trace"],

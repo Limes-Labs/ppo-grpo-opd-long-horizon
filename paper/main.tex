@@ -63,8 +63,9 @@ sampled values, learned and oracle value TD, and policy-implied actor
 coefficients. The central empirical finding is conditional: trajectory-level
 coefficients can give high policy-gradient cosine, but they can be poor local
 credit explanations in heterogeneous traces; value-style TD reduces variance
-when coverage and observability are adequate, while group or structural methods
-win when value estimates are blind or unsupported. The conclusion is not that
+when coverage and observability are adequate; group methods can win when value
+estimates are blind or unsupported, while structural methods can recover part
+of the lost local information. The conclusion is not that
 \ppo\ universally beats \grpo. Estimator choice should be made from credit
 heterogeneity, observability, support, drift, and compute cost.
 \end{abstract}
@@ -90,16 +91,21 @@ given compute budget?} We deliberately avoid centering the work on one base
 model or one training run. The target is a reusable mechanism study.
 
 \paragraph{Contributions.}
-We make three contributions. First, we formalize an
-information--reliability view of advantage estimation for long trajectories,
-including a generalized broadcast ceiling for token-invariant group context and
-a score-weighted counterpart tied to policy-gradient variance. Second, we
-provide a CPU-only finite-MDP audit suite with exact behavior-policy advantages,
-analytic occupancy-measure policy gradients, stronger critic-free baselines,
-observability controls, and calibrated heterogeneity regimes. Third, we report
-mechanism findings across estimator fidelity, phase diagrams, length and token
-cost sensitivity, tabular closed-loop training, and a tiny neural value-critic
-generalization audit.
+We make five contributions. First, we formalize an information--reliability
+view of advantage estimation for long trajectories, including a generalized
+broadcast ceiling for token-invariant group context and a score-weighted
+counterpart tied to policy-gradient variance. Second, we separate policy
+optimization, group-relative normalization, policy-implied values, and
+on-policy distillation/self-distillation into a method taxonomy that treats
+\opd/\opsd\ as complementary post-training tools rather than direct
+replacements for \ppo/\grpo. Third, we provide a CPU-only finite-MDP audit
+suite with exact behavior-policy advantages, analytic occupancy-measure policy
+gradients, stronger critic-free baselines, observability controls, and
+calibrated heterogeneity regimes. Fourth, we make estimator selection
+operational with a held-out audit-MSE plus cost rule on the phase grid. Fifth,
+we report mechanism findings across estimator fidelity, phase diagrams, length
+and token-cost sensitivity, tabular closed-loop training, and a tiny neural
+value-critic generalization audit.
 
 \paragraph{Scope discipline.}
 The paper makes a narrow claim about credit-assignment mechanisms. It does not
@@ -848,16 +854,19 @@ representative cases; the full CSV and JSON are committed in \texttt{results/}.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{deep_matrix_delta.png}
-\caption{Mean critic-minus-group behavior-policy advantage correlation by case.
-Positive values favor critic-style temporal-difference advantages.}
+\caption{Mean critic-minus-group behavior-policy advantage correlation by
+case, with 95\% across-seed confidence whiskers. Positive values favor
+critic-style temporal-difference advantages.}
 \label{fig:delta}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.86\linewidth]{deep_matrix_coverage.png}
-\caption{Critic state coverage versus estimator advantage. The group-relative
-counterexample occurs when the critic is blind and undercovered.}
+\caption{Critic state coverage versus estimator advantage. Marker color and
+shape encode critic observability; marker size scales with wait-token fraction.
+The group-relative counterexample occurs when the critic is blind and
+undercovered.}
 \label{fig:coverage}
 \end{figure}
 
@@ -873,12 +882,14 @@ group $r$; CI is a 95\% across-seed interval for delta.}
 
 \paragraph{Interpretation.}
 Within this controlled estimator-fidelity toy, the evidence supports the
-\ppo-favorable hypothesis when progress state is observable and critic coverage
-is adequate: critic-style advantages track policy-relative action credit more
-closely than response-level group scalars. The result also protects against
-overstatement. In the coverage-limited case, the confidence interval crosses zero; in
-the blind and undercovered case, group-relative terminal outcome information is
-better than a poor value table.
+state-conditioned value-TD hypothesis when progress state is observable and
+critic coverage is adequate: value-style temporal-difference advantages track
+policy-relative action credit more closely than response-level group scalars.
+\ppo\ is one implementation route for such a signal, not the object isolated by
+this experiment. The result also protects against overstatement. In the
+coverage-limited case, the confidence interval crosses zero; in the blind and
+undercovered case, group-relative terminal outcome information is better than a
+poor value table.
 
 \begin{table}[!htbp]
 \centering
@@ -886,8 +897,9 @@ better than a poor value table.
 The target gradient $g^\star$ is computed by occupancy-measure dynamic
 programming; finite differences are used only as a check. Err. is
 $\|\overline{\widehat g}-g^\star\|/\|g^\star\|$, Var. is across-batch trace
-variance, Cos. is gradient cosine with $g^\star$, and $\Delta J$ is exact
-return improvement after a matched policy-KL step.}
+variance, Cos. is gradient cosine with $g^\star$, $\Delta J_b$ is per-batch
+matched-KL improvement, Neg. is the probability of a negative per-batch update,
+and Null $|\hat A|$ is estimated absolute credit on the true null action.}
 \label{tab:policy-gradient}
 \scriptsize
 \input{generated/policy_gradient_table.tex}
@@ -922,17 +934,21 @@ prefix baselines have excellent gradient cosine with the exact policy gradient
 even though their token-level advantage correlations are modest. That is
 expected: terminal returns can be valid Monte Carlo policy-gradient
 coefficients while still being weak local credit explanations. Oracle-value TD
-is the dynamic-programming upper bound and has the lowest trace variance in
-this covered tabular setting; the cross-fitted learned-value row retains most
-of the token-credit correlation while exposing finite-sample coverage risk.
+is the dynamic-programming upper bound and has the lowest trace variance and
+lowest null-action leakage in this covered tabular setting; the cross-fitted
+learned-value row retains most of the token-credit correlation while exposing
+finite-sample coverage risk. The table reports intervals over replicated
+batches and per-batch matched-KL improvement statistics, so variance can show
+up as lower fifth-percentile improvement or higher negative-update probability
+rather than only as a mean-gradient direction.
 Table \ref{tab:policy-implied} is deliberately separate. It evaluates only the
 \vimpo-style actor coefficient. At equal reference the coefficient is zero for
-the actor term; at fixed nonzero KL distances it becomes token-varying and
-partially aligned with the current unregularized target, but this is an
+the actor term; along the chosen fixed-reference path, the nonzero-KL rows have
+nearly fixed direction while their magnitude mismatch changes. This is an
 objective-mismatched diagnostic rather than a full \vimpo\ result. The baseline
-table gives the analogous \brpo-style message: prefix and combined baselines
-can reduce score-weighted residual moments relative to a group mean, but the
-critic value baseline remains strongest in this supported toy.
+table gives the analogous \brpo-style message: prefix and combined baselines can
+reduce score-weighted residual moments relative to a group mean, but the critic
+value baseline remains strongest in this supported toy.
 
 \begin{table}[!htbp]
 \centering
@@ -956,6 +972,27 @@ non-privileged critics produce clear critic-favorable crossovers, while blind
 or low-support cells produce group-favorable and near-tie regimes. The stronger
 working claim is therefore conditional: critic benefit is predicted jointly by
 within-trajectory credit heterogeneity and held-out critic reliability.
+
+\begin{table}[!htbp]
+\centering
+\caption{Held-out estimator-selection regret on the phase grid. The
+audit-MSE+cost policy fits a scalar critic-cost penalty on half the cells. In
+each cell, alternating seeds split audit MSE estimates from held-out regret
+measurement. Regret is held-out calibrated MSE above the oracle best of group
+and critic for that cell.}
+\label{tab:selection-regret}
+\scriptsize
+\input{generated/selection_regret_table.tex}
+\end{table}
+
+\paragraph{Estimator-selection regret.}
+Table \ref{tab:selection-regret} operationalizes the selection rule rather than
+leaving it as a proposal. The rule uses diagnostic-batch MSE estimates plus a
+fitted critic-cost penalty, then selects group or critic on held-out phase-grid
+cells. This audit is intentionally small and only compares the two estimators
+available in the phase grid, but it tests the practical claim that information
+and reliability diagnostics can reduce selection regret relative to static
+always-group or always-critic policies.
 
 \begin{table}[!htbp]
 \centering
@@ -1249,14 +1286,16 @@ sequence-policy benchmark with clipped objectives, KL control, corrected
 
 \section{Conclusion}
 
-For long heterogeneous trajectories, critic-based \ppo\ is a strong candidate
-when value targets are learnable and adequately covered. \grpo\ remains
-attractive when group reward contrast is reliable and critic modeling is too
-costly or poorly observed. \vimpo-like policy-implied signals, \brpo-like
-prefix baselines, structural anchors, sampled values, and process rewards all
-occupy meaningful middle ground. The paper's central claim is therefore not
-``\ppo\ always beats \grpo,'' but a set of falsifiable boundaries for when
-token- or state-varying credit is worth its reliability and compute cost.
+For long heterogeneous trajectories, value-based temporal estimators are a
+strong candidate when value targets are learnable and adequately covered;
+critic-based \ppo\ is one implementation of that broader design choice. \grpo\
+remains attractive when group reward contrast is reliable and critic modeling
+is too costly or poorly observed. \vimpo-like policy-implied signals,
+\brpo-like prefix baselines, structural anchors, sampled values, and process
+rewards all occupy meaningful middle ground. The paper's central claim is
+therefore not ``\ppo\ always beats \grpo,'' but a set of falsifiable boundaries
+for when token- or state-varying credit is worth its reliability and compute
+cost.
 
 \appendix
 
@@ -1652,9 +1691,12 @@ verifier calls. Then estimate three quantities:
 \widehat H_{\mathrm{credit}}
 &=
 \frac{
-  \widehat{\E}[\widehat{\operatorname{Var}}(\widehat A_t\mid C_i)]
+  \widehat{\E}\!\left[
+    \widehat{\operatorname{Var}}
+    \left(\widehat A^{\mathrm{audit}}_{i,t}\mid C_i\right)
+  \right]
 }{
-  \widehat{\operatorname{Var}}(\widehat A_t)
+  \widehat{\operatorname{Var}}\!\left(\widehat A^{\mathrm{audit}}_{i,t}\right)
 },\\
 \widehat R_V
 &=
@@ -1666,7 +1708,12 @@ verifier calls. Then estimate three quantities:
 Here $\widehat A^{\mathrm{audit}}_t$ may come from exact simulation, sampled
 continuations, trusted process labels, or a small counterfactual audit. It need
 not be available for every production token; it only has to be good enough to
-rank estimator reliability on a held-out diagnostic slice.
+rank estimator reliability on a held-out diagnostic slice. If
+$\widehat A^{\mathrm{audit}}$ is estimated by sampled continuations, raw
+within-trajectory variance is upper-biased by Monte Carlo noise; repeated
+branches should be used to estimate and subtract continuation noise, or the
+reported $\widehat H_{\mathrm{credit}}$ should be labeled an upper-biased
+diagnostic.
 
 \paragraph{Decision rule.}
 A simple conservative policy is:
@@ -1674,19 +1721,28 @@ A simple conservative policy is:
 m^\star =
 \arg\min_m
 \left[
-\widehat{\mathcal I}_m
-+ \widehat{\mathcal E}_m
+\widehat{\operatorname{MSE}}_{\mathrm{audit},m}
 + \lambda^\top \widehat C_m
 \right],
 \end{equation}
-where $\widehat{\mathcal I}_m$ estimates information loss from the signal source
-and $\widehat{\mathcal E}_m$ estimates reliability error. In the toy,
-trajectory broadcasts have high $\widehat{\mathcal I}$ when
-$H_{\mathrm{credit}}$ is large; critics have high $\widehat{\mathcal E}$ when
-coverage or observability is poor; structural methods have high
-$\widehat{\mathcal E}$ when anchor support is sparse; sampled values have high
-cost when branch budgets are large. The best method is the one whose
-information gain justifies its reliability and resource cost.
+where
+\begin{equation}
+\widehat{\operatorname{MSE}}_{\mathrm{audit},m}
+=
+\widehat{\E}\!\left[
+\left(
+\widehat A^{m}_{i,t}-\widehat A^{\mathrm{audit}}_{i,t}
+\right)^2
+\right].
+\end{equation}
+This deployable rule folds information loss and reliability error into one
+held-out audit loss and then charges resources separately. In the toy,
+trajectory broadcasts have high audit MSE when $H_{\mathrm{credit}}$ is large;
+critics have high audit MSE when coverage or observability is poor; structural
+methods have high audit MSE when anchor support is sparse; sampled values have
+high cost when branch budgets are large. The best method is the one whose lower
+audit error justifies its resource cost. Table \ref{tab:selection-regret}
+reports a small held-out version of this procedure on the phase grid.
 
 \paragraph{Reporting rule.}
 Do not publish only the best final score. Publish the diagnostic batch,

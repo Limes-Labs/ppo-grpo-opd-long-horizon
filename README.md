@@ -20,9 +20,9 @@ The repository now includes estimator-fidelity audits, a broadcast-ceiling
 diagnostic for trajectory-constant estimators, structural critic-free baselines,
 an exact finite-MDP policy-gradient audit with a VIMPO-style signal and true
 null action, an exploratory reliability-gated baseline, tabular closed-loop
-training, and a tiny neural value-critic generalization audit. The exact-gradient
-audit separates estimator-gradient fidelity from policy-implied actor-coefficient
-alignment. The main
+training, a held-out estimator-selection regret audit, and a tiny neural
+value-critic generalization audit. The exact-gradient audit separates
+estimator-gradient fidelity from policy-implied actor-coefficient alignment. The main
 remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
 sequence-policy benchmark.
 
@@ -56,6 +56,9 @@ have to guess which paper is current.
   heterogeneity, critic observability, coverage, and reward contrast. The
   implementation also supports train/eval policy-shift cells, but the
   canonical paper grid keeps that axis matched.
+- `experiments/selection_regret.py` - held-out estimator-selection audit that
+  fits a cost-weighted audit-MSE rule on half the phase grid and reports regret
+  on held-out cells.
 - `experiments/policy_gradient_fidelity.py` - exact finite-MDP policy-gradient
   audit covering REINFORCE, sibling LOO, prefix/BRPO-style baselines,
   learned-value TD, oracle-value TD, VIMPO-style actor coefficients, and true
@@ -80,6 +83,8 @@ have to guess which paper is current.
   variance-reduction versus credit-assignment grid.
 - `results/credit_phase_diagram_seedset.md` - canonical broadcast-ceiling
   phase diagnostic.
+- `results/selection_regret_seedset.md` - held-out estimator-selection regret
+  audit over the phase grid.
 - `results/policy_gradient_fidelity_seed13.md` - exact-gradient/VIMPO audit
   result table used in the paper.
 - `results/anchor_coverage_audit_seedset.md` - canonical coverage sweep for
@@ -107,7 +112,10 @@ have to guess which paper is current.
 Requirements:
 
 - Python 3.10 or newer
-- No external Python packages
+- Core experiments/tests use no external Python packages
+- Full PDF rebuild additionally needs `tectonic` and Pillow for deterministic
+  public PNG figure regeneration. The build script will use `FIGURE_PYTHON` if
+  it points to a Python with Pillow.
 
 Run the smoke check:
 
@@ -209,12 +217,12 @@ Build the full LaTeX paper:
 
 The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
-`results/variance_credit_grid_seed17.json`, plus the credit-phase,
-length-imbalance, token-cost, closed-loop, and neural generalization audit JSON
-files. It also tracks the replicated policy-gradient and policy-implied
-actor-coefficient audit. It
-compiles the paper with `tectonic` and checks that the rendered PDF is at least
-30 pages.
+`results/variance_credit_grid_seed17.json`, plus the anchor-coverage,
+credit-phase, selection-regret, length-imbalance, token-cost, closed-loop,
+neural generalization, replicated policy-gradient, and policy-implied
+actor-coefficient audit JSON files. It also regenerates the public PNG figures
+from the canonical deep-matrix JSON before compiling with `tectonic`, then
+checks that the rendered PDF is at least 30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
@@ -263,15 +271,21 @@ does not secretly increase critic data.
 
 The exact policy-gradient audit now uses an analytic occupancy-measure gradient
 with finite differences only as a check (`2.0e-10` relative error in the
-canonical run). Across 12 replications, REINFORCE and sibling LOO have
-excellent exact-gradient cosine (`0.998` and `0.999`) despite modest
-token-credit correlation, showing why estimator correlation is not the whole
-optimizer story. Learned-value TD has lower gradient variance (`0.006` versus
-REINFORCE's `0.018`) and much stronger token-credit correlation (`r=0.895`);
-oracle-value TD is the dynamic-programming upper bound. VIMPO-style rows are
-reported separately as policy-implied actor-coefficient alignment: the equal
-reference coefficient is zero, and fixed-reference rows are KL-distance
-diagnostics, not full VIMPO algorithm performance.
+canonical run). The canonical run now uses 200 replications and reports
+confidence intervals, per-batch matched-KL improvement, fifth-percentile
+improvement, negative-update probability, and estimated credit leakage on the
+true null action. This is deliberately stricter than reporting only the update
+from the mean gradient: it tests whether an estimator produces useful stochastic
+policy-gradient steps batch by batch. VIMPO-style rows are reported separately
+as policy-implied actor-coefficient alignment: the equal reference coefficient
+is zero, and fixed-reference rows are KL-distance diagnostics, not full VIMPO
+algorithm performance.
+
+The estimator-selection audit makes the phase boundary operational. It fits a
+simple audit-MSE plus critic-cost rule on half the 48-cell grid, evaluates on
+held-out cells, and reports regret against the oracle choice between group and
+critic estimators. This is not yet an automatic production controller, but it
+turns the selection appendix into an executable artifact.
 
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment

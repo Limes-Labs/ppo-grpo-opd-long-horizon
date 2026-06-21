@@ -99,9 +99,15 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/credit_phase_smoke.json" \
   --output-md "$SMOKE_DIR/credit_phase_smoke.md"
 
+"$PYTHON_BIN" -m experiments.selection_regret \
+  --phase-json "$SMOKE_DIR/credit_phase_smoke.json" \
+  --output-json "$SMOKE_DIR/selection_regret_smoke.json" \
+  --output-md "$SMOKE_DIR/selection_regret_smoke.md"
+
 "$PYTHON_BIN" -m experiments.policy_gradient_fidelity \
   --seed 13 \
   --batches 8 \
+  --replications 4 \
   --groups-per-batch 5 \
   --group-size 4 \
   --horizon 4 \
@@ -238,6 +244,21 @@ for row in phase["aggregate_rows"]:
         raise SystemExit(f"phase smoke invalid broadcast ceiling in {row['cell_name']}")
     if abs(row["group_correlation"]) > row["broadcast_ceiling_correlation"] + 1e-9:
         raise SystemExit(f"group estimator exceeded broadcast ceiling in {row['cell_name']}")
+
+selection = json.loads((smoke_dir / "selection_regret_smoke.json").read_text())
+selection_metrics = selection["heldout_metrics"]
+for required in ["audit_mse_cost", "always_group", "always_critic"]:
+    if required not in selection_metrics:
+        raise SystemExit(f"selection-regret smoke missing policy {required}")
+if selection["config"]["heldout_cell_count"] <= 0:
+    raise SystemExit("selection-regret smoke did not create held-out cells")
+if selection_metrics["audit_mse_cost"]["mean_regret"] > max(
+    selection_metrics["always_group"]["mean_regret"],
+    selection_metrics["always_critic"]["mean_regret"],
+) + 1e-12:
+    raise SystemExit("selection-regret smoke rule underperformed both static policies")
+if not (0.0 <= selection_metrics["audit_mse_cost"]["selection_accuracy"] <= 1.0):
+    raise SystemExit("selection-regret smoke invalid selection accuracy")
 
 pg = json.loads((smoke_dir / "policy_gradient_smoke.json").read_text())
 pg_estimators = {row["method"]: row["metrics"] for row in pg["estimators"]}

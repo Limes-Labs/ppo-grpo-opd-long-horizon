@@ -24,6 +24,15 @@ Current artifacts:
   under matched train/evaluation dynamics.
 - `credit_phase_diagram_seedset.md` - human-readable table and reading notes
   for the same phase diagnostic.
+- `selection_regret_seedset.json` - held-out estimator-selection regret audit
+  over the phase grid.
+- `selection_regret_seedset.md` - human-readable table for the same
+  selection-regret audit.
+- `policy_gradient_fidelity_seed13.json` - exact finite-MDP policy-gradient
+  audit with 200 replications, per-batch matched-KL update diagnostics, and
+  policy-implied actor-coefficient rows.
+- `policy_gradient_fidelity_seed13.md` - human-readable table for the same
+  exact-gradient audit.
 - `anchor_coverage_audit_seedset.json` - coverage sweep for the critic-free
   anchor-action contrast estimator over repeated exact toy states.
 - `anchor_coverage_audit_seedset.md` - human-readable table for the same
@@ -51,6 +60,10 @@ Current artifacts:
   held-out-threshold neural audit.
 - `figures/deep_matrix_delta.svg` - critic-minus-group bar chart.
 - `figures/deep_matrix_coverage.svg` - critic coverage scatter plot.
+- `../public/figures/deep_matrix_delta.png` and
+  `../public/figures/deep_matrix_coverage.png` - rendered public PNGs used by
+  the LaTeX paper. Regenerate them with `scripts/render_public_figures.py` or
+  the full paper build.
 
 Regenerate them with:
 
@@ -85,6 +98,14 @@ Regenerate the broadcast-ceiling phase diagnostic with:
 python3 -m experiments.credit_phase_diagram \
   --output-json results/credit_phase_diagram_seedset.json \
   --output-md results/credit_phase_diagram_seedset.md
+```
+
+Regenerate the held-out estimator-selection audit with:
+
+```bash
+python3 -m experiments.selection_regret \
+  --output-json results/selection_regret_seedset.json \
+  --output-md results/selection_regret_seedset.md
 ```
 
 Regenerate the exact-gradient and policy-implied actor-coefficient audit with:
