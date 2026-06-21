@@ -7,6 +7,7 @@ from experiments.policy_gradient_fidelity import (
     TabularSoftmaxPolicy,
     exact_advantage,
     exact_policy_gradient,
+    finite_difference_policy_gradient,
     run_policy_gradient_audit,
     vimpo_signal,
 )
@@ -44,18 +45,30 @@ class PolicyGradientFidelityTests(unittest.TestCase):
                     )
         self.assertAlmostEqual(max_abs_signal, 0.0, places=12)
 
+    def test_analytic_gradient_matches_finite_difference_check(self) -> None:
+        config = MDPConfig(threshold=2, horizon=4)
+        policy = TabularSoftmaxPolicy(config)
+
+        exact = exact_policy_gradient(policy)
+        finite_difference = finite_difference_policy_gradient(policy)
+
+        self.assertLess(finite_difference.minus(exact).norm / exact.norm, 1e-8)
+
     def test_audit_reports_gradient_bias_variance_and_matched_kl(self) -> None:
         result = run_policy_gradient_audit(
             seed=13,
             batches=12,
             groups_per_batch=6,
             group_size=4,
+            replications=3,
             config=MDPConfig(threshold=2, horizon=4),
         )
 
         self.assertEqual(result["config"]["actions"], list(ACTIONS))
         self.assertGreater(result["exact_gradient"]["norm"], 1e-3)
         self.assertGreater(result["exact_gradient"]["base_return"], 0.0)
+        self.assertLess(result["exact_gradient"]["finite_difference_relative_error"], 1e-8)
+        self.assertEqual(result["config"]["replications"], 3)
 
         metrics = {entry["method"]: entry["metrics"] for entry in result["estimators"]}
         for required in [
@@ -63,24 +76,21 @@ class PolicyGradientFidelityTests(unittest.TestCase):
             "sibling_loo_return",
             "prefix_value_baseline",
             "brpo_combined_baseline",
-            "critic_td",
-            "vimpo_equal_ref",
-            "vimpo_stale_ref",
+            "learned_value_td",
+            "oracle_value_td",
         ]:
             self.assertIn(required, metrics)
             for key in [
-                "relative_bias_norm",
+                "relative_mean_error_norm",
+                "relative_mean_error_norm_ci95",
                 "variance_trace",
+                "variance_trace_ci95",
                 "gradient_cosine",
                 "matched_kl_improvement",
                 "advantage_correlation",
             ]:
                 self.assertTrue(math.isfinite(metrics[required][key]), (required, key))
 
-        self.assertLess(
-            metrics["critic_td"]["variance_trace"],
-            metrics["reinforce_return"]["variance_trace"],
-        )
         self.assertLess(
             metrics["prefix_value_baseline"]["variance_trace"],
             metrics["reinforce_return"]["variance_trace"],
@@ -89,15 +99,37 @@ class PolicyGradientFidelityTests(unittest.TestCase):
             metrics["brpo_combined_baseline"]["variance_trace"],
             metrics["reinforce_return"]["variance_trace"],
         )
-        self.assertAlmostEqual(metrics["vimpo_equal_ref"]["mean_gradient_norm"], 0.0, places=12)
-        self.assertEqual(metrics["vimpo_equal_ref"]["gradient_cosine"], 0.0)
+        self.assertGreater(metrics["learned_value_td"]["critic_state_hit_rate"], 0.0)
+        self.assertLess(
+            metrics["oracle_value_td"]["variance_trace"],
+            metrics["reinforce_return"]["variance_trace"],
+        )
         self.assertGreater(
             metrics["sibling_loo_return"]["matched_kl_improvement"],
             0.0,
         )
         self.assertGreater(
-            metrics["critic_td"]["matched_kl_improvement"],
+            metrics["oracle_value_td"]["matched_kl_improvement"],
             0.0,
+        )
+
+        policy_implied = {
+            entry["method"]: entry for entry in result["policy_implied_signals"]
+        }
+        self.assertIn("vimpo_actor_equal_ref", policy_implied)
+        self.assertIn("vimpo_actor_fixed_ref_far", policy_implied)
+        self.assertAlmostEqual(
+            policy_implied["vimpo_actor_equal_ref"]["metrics"]["mean_gradient_norm"],
+            0.0,
+            places=12,
+        )
+        self.assertEqual(
+            policy_implied["vimpo_actor_equal_ref"]["metrics"]["gradient_cosine"],
+            0.0,
+        )
+        self.assertGreater(
+            policy_implied["vimpo_actor_fixed_ref_far"]["reference_kl"],
+            policy_implied["vimpo_actor_fixed_ref_near"]["reference_kl"],
         )
 
         position = result["position_diagnostics"]["overall"]

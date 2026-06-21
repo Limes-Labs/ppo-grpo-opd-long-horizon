@@ -23,6 +23,7 @@ CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
 NEURAL_TABLE = ROOT / "paper/generated/neural_generalization_table.tex"
 PHASE_TABLE = ROOT / "paper/generated/credit_phase_table.tex"
 POLICY_GRADIENT_TABLE = ROOT / "paper/generated/policy_gradient_table.tex"
+POLICY_IMPLIED_TABLE = ROOT / "paper/generated/policy_implied_table.tex"
 POLICY_BASELINE_TABLE = ROOT / "paper/generated/policy_baseline_table.tex"
 MATRIX = ROOT / "results/deep_matrix_20seed.json"
 VARIANCE_CREDIT = ROOT / "results/variance_credit_grid_seed17.json"
@@ -56,16 +57,15 @@ class LatexPaperTests(unittest.TestCase):
             r"\section{Threats to Validity}",
             r"\section{Reproducibility}",
             r"\section{Limitations}",
-            r"\section{Next Research Steps}",
             r"\section{Conclusion}",
             r"\appendix",
             r"\section{Full Case Summary}",
-            r"\section{Raw Seed-Level Rows}",
-            r"\section{Raw Error and Dispersion Rows}",
+            r"\section{Benchmark Reporting Protocol}",
             r"\bibliography{references}",
         ]:
             self.assertIn(required, text)
 
+        self.assertIn(r"\author{Anonymous Authors\\Anonymous Affiliation}", text)
         self.assertIn("The Broadcast Ceiling", text)
         self.assertIn(r"\vimpo", text)
         self.assertIn(r"\brpo", text)
@@ -73,6 +73,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\DeepClearCriticCases", text)
         self.assertIn("critic-favorable", text)
         self.assertIn(r"\input{generated/policy_gradient_table.tex}", text)
+        self.assertIn(r"\input{generated/policy_implied_table.tex}", text)
         self.assertIn(r"\input{generated/policy_baseline_table.tex}", text)
         self.assertIn(r"\input{generated/variance_credit_table.tex}", text)
         self.assertIn(r"\input{generated/anchor_coverage_table.tex}", text)
@@ -93,14 +94,24 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("not independent causal evidence", text)
         self.assertIn("not a production", text)
         self.assertIn("controlled estimator-fidelity toy", text)
+        self.assertIn("Observation access", text)
         self.assertIn("anchor-action contrast", text)
         self.assertIn("exact-gradient audit", text)
         self.assertIn("closed-loop training", text)
         self.assertIn("value-critic generalization", text)
+        self.assertIn("Score-weighted broadcast ceiling", text)
+        self.assertIn("token-invariant group context", text)
         self.assertIn(r"\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)", text)
-        self.assertIn(r"\paragraph{Full clipped \ppo/\grpo\ training.}", text)
-        self.assertIn(r"\paragraph{Tiny sequence-policy benchmark.}", text)
+        self.assertIn("Benchmark Reporting Protocol", text)
+        self.assertIn("Budget matching", text)
         self.assertNotIn(r"\paragraph{Closed-loop toy training.}", text)
+        self.assertNotIn(r"\tableofcontents", text)
+        self.assertNotIn(r"\author{Limes Labs}", text)
+        self.assertNotIn("stale reference", text)
+        self.assertNotIn("stale-reference", text)
+        self.assertNotIn(r"\section{Raw Seed-Level Rows}", text)
+        self.assertNotIn(r"\section{Raw Error and Dispersion Rows}", text)
+        self.assertNotIn(r"\begin{verbatim}", text)
         self.assertNotIn(r"\mathcal{r}_t + \gamma V_\phi", text)
         self.assertNotIn(r"A^\star(s_t,a_t)", text)
         self.assertNotIn("token-level causal structure", text)
@@ -133,14 +144,6 @@ class LatexPaperTests(unittest.TestCase):
 
         self.assertIn("critic\\_budget", AXIS_TABLE.read_text())
         self.assertIn(r"\begin{longtable}", FULL_CASE_TABLE.read_text())
-        raw_seed = RAW_SEED_TABLE.read_text()
-        self.assertIn(r"\begin{longtable}", raw_seed)
-        self.assertGreaterEqual(raw_seed.count(r"\\"), 360)
-        raw_error = RAW_ERROR_TABLE.read_text()
-        self.assertIn(r"\begin{longtable}", raw_error)
-        self.assertIn("Group MSE", raw_error)
-        self.assertGreaterEqual(raw_error.count(r"\\"), 360)
-
         variance_credit = json.loads(VARIANCE_CREDIT.read_text())
         variance_table = VARIANCE_CREDIT_TABLE.read_text()
         self.assertIn("Critic TD", variance_table)
@@ -225,9 +228,11 @@ class LatexPaperTests(unittest.TestCase):
         phase_table = PHASE_TABLE.read_text()
         self.assertIn(r"$H_{\mathrm{credit}}$", phase_table)
         self.assertIn("Crossover", phase_table)
-        self.assertGreaterEqual(phase["summary"]["cell_count"], 16)
+        self.assertGreaterEqual(phase["summary"]["cell_count"], 48)
         self.assertGreaterEqual(phase["summary"]["critic_clear_cells"], 1)
         self.assertGreaterEqual(phase["summary"]["group_clear_cells"], 1)
+        self.assertLessEqual(phase["summary"]["min_credit_heterogeneity"], 0.05)
+        self.assertGreaterEqual(phase["summary"]["max_credit_heterogeneity"], 0.80)
         for row in phase["aggregate_rows"]:
             self.assertLessEqual(
                 abs(row["group_correlation"]),
@@ -236,20 +241,39 @@ class LatexPaperTests(unittest.TestCase):
 
         policy_gradient = json.loads(POLICY_GRADIENT.read_text())
         gradient_table = POLICY_GRADIENT_TABLE.read_text()
+        policy_implied_table = POLICY_IMPLIED_TABLE.read_text()
         baseline_table = POLICY_BASELINE_TABLE.read_text()
-        self.assertIn("VIMPO", gradient_table)
+        self.assertIn("Learned value TD", gradient_table)
+        self.assertIn("Oracle-value TD", gradient_table)
+        self.assertIn("VIMPO", policy_implied_table)
+        self.assertIn("not complete", policy_implied_table)
         self.assertIn("BRPO-style", gradient_table)
-        self.assertIn(r"$\pi=\pi_{\rm ref}$", gradient_table)
+        self.assertIn(r"$\pi=\pi_{\rm ref}$", policy_implied_table)
         pg_metrics = {
             entry["method"]: entry["metrics"]
             for entry in policy_gradient["estimators"]
         }
         self.assertLess(
-            pg_metrics["critic_td"]["variance_trace"],
+            pg_metrics["oracle_value_td"]["variance_trace"],
             pg_metrics["reinforce_return"]["variance_trace"],
         )
-        self.assertEqual(pg_metrics["vimpo_equal_ref"]["mean_gradient_norm"], 0.0)
-        self.assertGreater(pg_metrics["vimpo_stale_ref"]["gradient_cosine"], 0.0)
+        self.assertLess(
+            policy_gradient["exact_gradient"]["finite_difference_relative_error"],
+            1e-8,
+        )
+        self.assertEqual(policy_gradient["config"]["replications"], 12)
+        vimpo_metrics = {
+            entry["method"]: entry
+            for entry in policy_gradient["policy_implied_signals"]
+        }
+        self.assertEqual(
+            vimpo_metrics["vimpo_actor_equal_ref"]["metrics"]["mean_gradient_norm"],
+            0.0,
+        )
+        self.assertGreater(
+            vimpo_metrics["vimpo_actor_fixed_ref_far"]["reference_kl"],
+            vimpo_metrics["vimpo_actor_fixed_ref_near"]["reference_kl"],
+        )
         self.assertIn("Score-wtd. resid.", baseline_table)
         self.assertLess(
             policy_gradient["position_diagnostics"]["overall"]["critic_value"][
@@ -309,8 +333,6 @@ class LatexPaperTests(unittest.TestCase):
         self.assertTrue(manifest["checks"]["page_count_ok"])
         self.assertIn("paper/main.tex", manifest["inputs"])
         self.assertIn("results/deep_matrix_20seed.json", manifest["inputs"])
-        self.assertIn("paper/generated/raw_seed_table.tex", manifest["inputs"])
-        self.assertIn("paper/generated/raw_error_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/variance_credit_table.tex", manifest["inputs"])
         self.assertIn("results/variance_credit_grid_seed17.json", manifest["inputs"])
         self.assertIn("paper/generated/anchor_coverage_table.tex", manifest["inputs"])
@@ -321,6 +343,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/neural_generalization_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/credit_phase_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_gradient_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/policy_implied_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_baseline_table.tex", manifest["inputs"])
         self.assertIn("results/length_imbalance_audit_seedset.json", manifest["inputs"])
         self.assertIn("results/token_cost_sensitivity_20seed.json", manifest["inputs"])

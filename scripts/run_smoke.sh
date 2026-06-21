@@ -246,18 +246,29 @@ for required in [
     "sibling_loo_return",
     "prefix_value_baseline",
     "brpo_combined_baseline",
-    "critic_td",
-    "vimpo_equal_ref",
-    "vimpo_stale_ref",
+    "learned_value_td",
+    "oracle_value_td",
 ]:
     if required not in pg_estimators:
         raise SystemExit(f"policy-gradient smoke missing {required}")
-if pg_estimators["critic_td"]["variance_trace"] >= pg_estimators["reinforce_return"]["variance_trace"]:
-    raise SystemExit("policy-gradient smoke critic TD did not reduce gradient variance")
-if abs(pg_estimators["vimpo_equal_ref"]["mean_gradient_norm"]) > 1e-12:
+if pg_estimators["oracle_value_td"]["variance_trace"] >= pg_estimators["reinforce_return"]["variance_trace"]:
+    raise SystemExit("policy-gradient smoke oracle-value TD did not reduce gradient variance")
+if pg["exact_gradient"]["finite_difference_relative_error"] >= 1e-8:
+    raise SystemExit("policy-gradient smoke analytic gradient failed finite-difference check")
+pg_policy_implied = {
+    row["method"]: row for row in pg["policy_implied_signals"]
+}
+for required in [
+    "vimpo_actor_equal_ref",
+    "vimpo_actor_fixed_ref_near",
+    "vimpo_actor_fixed_ref_far",
+]:
+    if required not in pg_policy_implied:
+        raise SystemExit(f"policy-gradient smoke missing policy-implied row {required}")
+if abs(pg_policy_implied["vimpo_actor_equal_ref"]["metrics"]["mean_gradient_norm"]) > 1e-12:
     raise SystemExit("VIMPO equal-reference smoke was not zero at initialization")
-if pg_estimators["vimpo_stale_ref"]["gradient_cosine"] <= 0.0:
-    raise SystemExit("VIMPO stale-reference smoke did not produce a positive gradient cosine")
+if pg_policy_implied["vimpo_actor_fixed_ref_far"]["reference_kl"] <= pg_policy_implied["vimpo_actor_fixed_ref_near"]["reference_kl"]:
+    raise SystemExit("VIMPO fixed-reference KL sweep was not ordered")
 pg_baselines = pg["position_diagnostics"]["overall"]
 if pg_baselines["critic_value"]["residual_variance_ratio"] >= pg_baselines["group_mean"]["residual_variance_ratio"]:
     raise SystemExit("policy-gradient smoke critic baseline did not reduce residual variance")

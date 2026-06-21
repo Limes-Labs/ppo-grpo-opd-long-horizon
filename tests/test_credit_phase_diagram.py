@@ -65,7 +65,7 @@ class CreditPhaseDiagramTests(unittest.TestCase):
         result = run_phase_diagram(
             seeds=[11, 29],
             heterogeneity_levels=["low", "high"],
-            observability_levels=["full", "blind"],
+            observability_levels=["non_privileged", "blind"],
             coverage_levels=["low", "high"],
             reward_levels=["contrast"],
             drift_levels=["matched"],
@@ -85,6 +85,10 @@ class CreditPhaseDiagramTests(unittest.TestCase):
             sum(row["credit_heterogeneity"] for row in low_rows) / len(low_rows),
         )
         for row in rows:
+            self.assertIn("actor_observation_schema", row["seed_results"][0])
+            self.assertIn("critic_observation_schema", row["seed_results"][0])
+            if row["observability"] == "non_privileged":
+                self.assertFalse(row["critic_is_privileged"])
             self.assertGreaterEqual(row["credit_heterogeneity"], 0.0)
             self.assertLessEqual(row["credit_heterogeneity"], 1.0)
             self.assertGreaterEqual(row["broadcast_ceiling_correlation"], 0.0)
@@ -102,6 +106,45 @@ class CreditPhaseDiagramTests(unittest.TestCase):
                     "process_structural_or_hybrid",
                 },
             )
+
+    def test_calibrated_low_heterogeneity_and_group_size_deconfounding(self) -> None:
+        small_group = run_phase_diagram(
+            seeds=[11],
+            heterogeneity_levels=["h005", "h030"],
+            observability_levels=["non_privileged"],
+            coverage_levels=["high"],
+            reward_levels=["contrast"],
+            drift_levels=["matched"],
+            eval_groups=12,
+            group_size=3,
+        )
+        large_group = run_phase_diagram(
+            seeds=[11],
+            heterogeneity_levels=["h005", "h030"],
+            observability_levels=["non_privileged"],
+            coverage_levels=["high"],
+            reward_levels=["contrast"],
+            drift_levels=["matched"],
+            eval_groups=12,
+            group_size=6,
+        )
+
+        h005 = next(
+            row for row in small_group["aggregate_rows"] if row["heterogeneity"] == "h005"
+        )
+        self.assertLess(h005["credit_heterogeneity"], 0.20)
+        self.assertFalse(h005["critic_is_privileged"])
+
+        small_counts = {
+            row["heterogeneity"]: row["train_trajectories"]
+            for row in small_group["aggregate_rows"]
+        }
+        large_counts = {
+            row["heterogeneity"]: row["train_trajectories"]
+            for row in large_group["aggregate_rows"]
+        }
+        self.assertEqual(small_counts, large_counts)
+        self.assertEqual(set(small_counts.values()), {600})
 
     def test_cli_writes_phase_diagram_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

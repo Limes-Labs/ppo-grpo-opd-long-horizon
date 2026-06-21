@@ -8,7 +8,7 @@
     "length_imbalance_source": "results/length_imbalance_audit_seedset.json",
     "min_pages": 30,
     "neural_generalization_source": "results/neural_credit_generalization_seedset.json",
-    "page_count": 40,
+    "page_count": 30,
     "page_count_ok": true,
     "pdf_generated": true,
     "pdf_header": "%PDF",
@@ -17,9 +17,9 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-21T21:30:44.464607+00:00",
+  "generated_at_utc": "2026-06-21T22:17:12.336207+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "a1659fc8ed22eca93a9932d8fa2e8476fc3afa2d",
+  "git_commit": "5bf192139a0f97814a31a2081c2995020babcd17",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
@@ -34,17 +34,21 @@
       "bytes": 742,
       "sha256": "c6ce3225d8014d6111cb6b39a2a7a1d9f8e7d485c9f65bf01ba58713f7edcec3"
     },
+    "paper/generated/credit_phase_full_table.tex": {
+      "bytes": 3762,
+      "sha256": "6490724f9128446d2d24aa868290c9faca0226d2f30a4dc75d7b9faab516d214"
+    },
     "paper/generated/credit_phase_table.tex": {
-      "bytes": 1047,
-      "sha256": "22e165e83b227bd8ce556c5e6d45c76755adfefab811efce570de4a45f9916e0"
+      "bytes": 996,
+      "sha256": "dc4552596ecc37888cf5346f114167caaf3ea25ad6975d0c74709b8774a2d048"
     },
     "paper/generated/deep_matrix_table.tex": {
       "bytes": 756,
       "sha256": "90c2bac842d1635ae00f74f82f09d0cceb08812a38e70eb088d1e6db84b1a14c"
     },
     "paper/generated/full_case_table.tex": {
-      "bytes": 2233,
-      "sha256": "98a2121f4e1c351649301314c0ac02ee221963263ac0c82615cfb4bc0f542498"
+      "bytes": 2246,
+      "sha256": "82e0cac402d3d5bdcb4d5d1126ac92d90fe0bb4b7887c4fec6444e865e213113"
     },
     "paper/generated/length_imbalance_table.tex": {
       "bytes": 550,
@@ -55,20 +59,16 @@
       "sha256": "3bcb7de335365265558f6a5b9508fcd19ce511e4fe90d301a200136d68132ac0"
     },
     "paper/generated/policy_baseline_table.tex": {
-      "bytes": 411,
-      "sha256": "a5c29927d788bff8b3421ac2a7a3f6e4fb54b89d8cea692f802fe9c88c52ce1b"
+      "bytes": 409,
+      "sha256": "3f00ae718b102d53dc0b1d6b7153ad339b6501c393da796df5ec0250f1cc2b3b"
     },
     "paper/generated/policy_gradient_table.tex": {
-      "bytes": 1139,
-      "sha256": "1b20b5e770b141565abc5509106667e4794393f5c9e0a26bd42724670bcd454b"
+      "bytes": 1034,
+      "sha256": "5a556931f2500f3ba17b9d440aaa38150c44175da50f16b1ee750a0adb0467fe"
     },
-    "paper/generated/raw_error_table.tex": {
-      "bytes": 27672,
-      "sha256": "d11ed5dad3701ac4bb071893729f62a5c528710d7b890a1ab37b4ddee3a179bf"
-    },
-    "paper/generated/raw_seed_table.tex": {
-      "bytes": 27357,
-      "sha256": "73857bbc839b07ba19b6be23a71db4e8e920d329cc42f416893d14dd984c6a58"
+    "paper/generated/policy_implied_table.tex": {
+      "bytes": 919,
+      "sha256": "05c6a8ab057a8e64ec36617a38f0e90a295a644f94036b99847620659707caf3"
     },
     "paper/generated/result_macros.tex": {
       "bytes": 360,
@@ -83,8 +83,8 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 71721,
-      "sha256": "950f937c9dbe2897f6c515f33388c530b60c5370f5d8a1f3e00ecf28d868d99b"
+      "bytes": 77777,
+      "sha256": "fe82ba2c859ac3f2ca0edb15e93963fef2bbb2b9ef1c0d27b1ca6803ec1e7989"
     },
     "paper/references.bib": {
       "bytes": 13564,
@@ -111,8 +111,8 @@
       "sha256": "e556e6631f3df9e8ff69065f53c5f087ab9909276988dbc85e758c666bb636ff"
     },
     "results/credit_phase_diagram_seedset.json": {
-      "bytes": 169526,
-      "sha256": "52c53f8c79f0af71da9857ac7078ca0208d5c650844002c3b03c0401ea80e6ed"
+      "bytes": 395054,
+      "sha256": "42e17a7e7ed79a9341ac063588acc6c3c3bf68690222f62d315b3028ac061b42"
     },
     "results/deep_matrix_20seed.json": {
       "bytes": 231192,
@@ -127,8 +127,8 @@
       "sha256": "36643c97d1ebb4abf597eb39e78c89f79e30c817ab36f8f1eb1fcbf959ac5e64"
     },
     "results/policy_gradient_fidelity_seed13.json": {
-      "bytes": 17528,
-      "sha256": "c64131c85bfac0cecec74162f4712defba1c8de6ccd40ce7965b9166b1a3ad7a"
+      "bytes": 24017,
+      "sha256": "76eaf327d8acdb2ba5d14871c9ba2959e991de64bbc11b0ec79459dbe1ba4e52"
     },
     "results/token_cost_sensitivity_20seed.json": {
       "bytes": 111284,
@@ -141,8 +141,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 308410,
-      "sha256": "3591e57c4d06eded03d53eef493c7dbd7a23e5d64b70e4e746ef09a46579965a"
+      "bytes": 293029,
+      "sha256": "489838c244e8caaedd4de026826f5263477df14a0138dc97f8fa288ef257f5fa"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

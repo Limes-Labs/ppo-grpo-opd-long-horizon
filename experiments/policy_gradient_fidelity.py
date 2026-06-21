@@ -17,7 +17,8 @@ import random
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from statistics import fmean
+from collections import defaultdict
+from statistics import fmean, stdev
 from typing import Any, Callable, Iterable
 
 ACTIONS = ("help", "harm", "delay", "null")
@@ -157,7 +158,7 @@ class TabularSoftmaxPolicy:
         return ACTIONS[-1]
 
     def shifted_reference(self, *, help_shift: float = -0.45) -> "TabularSoftmaxPolicy":
-        """Return a deterministic stale reference with weaker helpful actions."""
+        """Return a deterministic fixed reference at a nonzero KL distance."""
 
         reference = self.copy()
         for action_logits in reference.logits.values():
@@ -236,7 +237,50 @@ def exact_start_return(policy: TabularSoftmaxPolicy) -> float:
     return exact_value(policy, score=0, remaining=policy.config.horizon)
 
 
-def exact_policy_gradient(policy: TabularSoftmaxPolicy, eps: float = 1e-5) -> Gradient:
+def exact_policy_gradient(policy: TabularSoftmaxPolicy) -> Gradient:
+    """Compute the exact finite-MDP policy gradient from occupancy measures."""
+
+    values = [0.0 for _ in policy.parameter_keys]
+    incoming: dict[tuple[int, int], float] = defaultdict(float)
+    incoming[(0, policy.config.horizon)] = 1.0
+    index = policy.parameter_index
+
+    for remaining in range(policy.config.horizon, 0, -1):
+        for score in policy.score_range():
+            incoming_mass = incoming[(score, remaining)]
+            if incoming_mass <= 1e-15:
+                continue
+            probs = policy.probabilities(score, remaining)
+            non_null_mass = 1.0 - probs["null"]
+            if non_null_mass <= 1e-12:
+                raise ValueError("null action probability is too high for occupancy solve")
+            expected_visits = incoming_mass / non_null_mass
+            for action in ACTIONS:
+                advantage = exact_advantage(policy, score, remaining, action)
+                weight = expected_visits * probs[action] * advantage
+                if abs(weight) <= 1e-15:
+                    continue
+                for candidate in ACTIONS:
+                    score_grad = (1.0 if candidate == action else 0.0) - probs[candidate]
+                    values[index[(score, remaining, candidate)]] += weight * score_grad
+            for action in NON_NULL_ACTIONS:
+                next_score, next_remaining, _ = transition(
+                    policy.config,
+                    score,
+                    remaining,
+                    action,
+                )
+                incoming[(next_score, next_remaining)] += expected_visits * probs[action]
+
+    return Gradient(tuple(values))
+
+
+def finite_difference_policy_gradient(
+    policy: TabularSoftmaxPolicy,
+    eps: float = 1e-5,
+) -> Gradient:
+    """Numerical check for the occupancy-measure gradient."""
+
     keys = policy.parameter_keys
     values: list[float] = []
     for score, remaining, action in keys:
@@ -369,6 +413,45 @@ def flatten(groups: Iterable[Iterable[Trajectory]]) -> list[Trajectory]:
     return [trajectory for group in groups for trajectory in group]
 
 
+class LearnedValueTable:
+    """Cross-fitted tabular value model for the exact-gradient audit."""
+
+    def __init__(self, trajectories: Iterable[Trajectory]):
+        by_state: dict[tuple[int, int], list[float]] = defaultdict(list)
+        by_remaining: dict[int, list[float]] = defaultdict(list)
+        all_values: list[float] = []
+
+        for trajectory in trajectories:
+            terminal_state = trajectory.steps[-1] if trajectory.steps else None
+            if terminal_state is not None:
+                by_state[(terminal_state.next_score, 0)].append(trajectory.terminal_reward)
+                by_remaining[0].append(trajectory.terminal_reward)
+                all_values.append(trajectory.terminal_reward)
+            for step in trajectory.steps:
+                by_state[(step.score, step.remaining)].append(step.return_to_go)
+                by_remaining[step.remaining].append(step.return_to_go)
+                all_values.append(step.return_to_go)
+
+        self.by_state = {key: fmean(values) for key, values in by_state.items()}
+        self.by_remaining = {key: fmean(values) for key, values in by_remaining.items()}
+        self.global_mean = fmean(all_values) if all_values else 0.0
+
+    def value(self, config: MDPConfig, score: int, remaining: int) -> float:
+        if remaining <= 0:
+            return terminal_reward(config, score)
+        key = (score, remaining)
+        if key in self.by_state:
+            return self.by_state[key]
+        if remaining in self.by_remaining:
+            return self.by_remaining[remaining]
+        return self.global_mean
+
+    def has_state(self, score: int, remaining: int) -> bool:
+        if remaining <= 0:
+            return True
+        return (score, remaining) in self.by_state
+
+
 def vimpo_signal(
     policy: TabularSoftmaxPolicy,
     reference: TabularSoftmaxPolicy,
@@ -420,6 +503,7 @@ def estimate_gradient_for_batch(
     groups: list[list[Trajectory]],
     policy: TabularSoftmaxPolicy,
     reference: TabularSoftmaxPolicy | None = None,
+    learned_critic: LearnedValueTable | None = None,
 ) -> tuple[Gradient, list[tuple[float, float]], dict[str, float]]:
     gradient_values = [0.0 for _ in policy.parameter_keys]
     estimate_target_pairs: list[tuple[float, float]] = []
@@ -441,8 +525,10 @@ def estimate_gradient_for_batch(
             group_loo[trajectory_index] = trajectory.total_return - baseline
             trajectory_index += 1
 
-    diagnostics = {"terminal_consistency_residual": 0.0}
+    diagnostics = {"terminal_consistency_residual": 0.0, "critic_state_hit_rate": 0.0}
     residuals: list[float] = []
+    critic_hits = 0
+    critic_queries = 0
     trajectory_index = 0
     for group in groups:
         for trajectory in group:
@@ -462,14 +548,26 @@ def estimate_gradient_for_batch(
                         prefix_budget_baseline(policy, step.remaining)
                         + (trajectory.total_return - group_loo[trajectory_index])
                     )
-                elif method == "critic_td":
+                elif method == "oracle_value_td":
                     estimate = target
-                elif method == "vimpo_equal_ref":
-                    if reference is None:
-                        raise ValueError("VIMPO methods require a reference policy")
-                    estimate = vimpo_signal(policy, reference, step.score, step.remaining, step.action)
-                    residuals.append(abs(estimate - target))
-                elif method == "vimpo_stale_ref":
+                elif method == "learned_value_td":
+                    if learned_critic is None:
+                        raise ValueError("learned_value_td requires a learned critic")
+                    current_value = learned_critic.value(
+                        policy.config,
+                        step.score,
+                        step.remaining,
+                    )
+                    next_value = learned_critic.value(
+                        policy.config,
+                        step.next_score,
+                        step.next_remaining,
+                    )
+                    estimate = step.reward + next_value - current_value
+                    critic_queries += 1
+                    if learned_critic.has_state(step.score, step.remaining):
+                        critic_hits += 1
+                elif method.startswith("vimpo_actor_"):
                     if reference is None:
                         raise ValueError("VIMPO methods require a reference policy")
                     estimate = vimpo_signal(policy, reference, step.score, step.remaining, step.action)
@@ -488,6 +586,8 @@ def estimate_gradient_for_batch(
             trajectory_index += 1
     if residuals:
         diagnostics["terminal_consistency_residual"] = fmean(residuals)
+    if critic_queries:
+        diagnostics["critic_state_hit_rate"] = critic_hits / critic_queries
     return Gradient(tuple(gradient_values)), estimate_target_pairs, diagnostics
 
 
@@ -593,6 +693,12 @@ def variance_trace(gradients: list[Gradient], mean: Gradient) -> float:
     return fmean(gradient.minus(mean).norm ** 2 for gradient in gradients)
 
 
+def ci95(values: list[float]) -> float:
+    if len(values) <= 1:
+        return 0.0
+    return 1.96 * stdev(values) / math.sqrt(len(values))
+
+
 def pearson(pairs: list[tuple[float, float]]) -> float:
     if not pairs:
         return 0.0
@@ -682,7 +788,7 @@ def matched_kl_improvement(policy: TabularSoftmaxPolicy, direction: Gradient) ->
     return exact_start_return(stepped_policy(policy, direction, low)) - base_return
 
 
-def gradient_metrics(
+def summarize_gradient_metrics(
     *,
     method: str,
     gradients: list[Gradient],
@@ -699,6 +805,7 @@ def gradient_metrics(
     bias_norm = mean.minus(exact_gradient_value).norm
     return {
         "mean_gradient_norm": mean.norm,
+        "relative_mean_error_norm": bias_norm / exact_norm if exact_norm > 0 else 0.0,
         "relative_bias_norm": bias_norm / exact_norm if exact_norm > 0 else 0.0,
         "variance_trace": variance_trace(gradients, mean),
         "gradient_cosine": cosine,
@@ -710,7 +817,43 @@ def gradient_metrics(
             if diagnostics
             else 0.0
         ),
+        "critic_state_hit_rate": (
+            fmean(row["critic_state_hit_rate"] for row in diagnostics)
+            if diagnostics
+            else 0.0
+        ),
     }
+
+
+def gradient_metrics(
+    *,
+    method: str,
+    gradients: list[Gradient],
+    pairs: list[tuple[float, float]],
+    exact_gradient_value: Gradient,
+    policy: TabularSoftmaxPolicy,
+    diagnostics: list[dict[str, float]],
+    replication_summaries: list[dict[str, float]],
+) -> dict[str, float]:
+    metrics = summarize_gradient_metrics(
+        method=method,
+        gradients=gradients,
+        pairs=pairs,
+        exact_gradient_value=exact_gradient_value,
+        policy=policy,
+        diagnostics=diagnostics,
+    )
+    for key in [
+        "relative_mean_error_norm",
+        "variance_trace",
+        "gradient_cosine",
+        "matched_kl_improvement",
+        "advantage_correlation",
+        "calibrated_advantage_mse",
+    ]:
+        values = [row[key] for row in replication_summaries if key in row]
+        metrics[f"{key}_ci95"] = ci95(values)
+    return metrics
 
 
 def run_policy_gradient_audit(
@@ -719,64 +862,109 @@ def run_policy_gradient_audit(
     batches: int = 180,
     groups_per_batch: int = 16,
     group_size: int = 5,
+    replications: int = 12,
     config: MDPConfig | None = None,
 ) -> dict[str, Any]:
-    if batches <= 0 or groups_per_batch <= 0 or group_size <= 1:
+    if batches <= 0 or groups_per_batch <= 0 or group_size <= 1 or replications <= 0:
         raise ValueError("expected positive batches/groups and group_size > 1")
     config = MDPConfig() if config is None else config
-    rng = random.Random(seed)
     policy = TabularSoftmaxPolicy(config)
     exact = exact_policy_gradient(policy)
+    finite_diff = finite_difference_policy_gradient(policy)
     equal_reference = policy.copy()
-    stale_reference = policy.shifted_reference()
-    methods = [
+    references = [
+        ("vimpo_actor_equal_ref", equal_reference),
+        ("vimpo_actor_fixed_ref_near", policy.shifted_reference(help_shift=-0.12)),
+        ("vimpo_actor_fixed_ref_mid", policy.shifted_reference(help_shift=-0.30)),
+        ("vimpo_actor_fixed_ref_far", policy.shifted_reference(help_shift=-0.55)),
+    ]
+    estimator_methods = [
         ("reinforce_return", None),
         ("sibling_loo_return", None),
         ("prefix_value_baseline", None),
         ("brpo_combined_baseline", None),
-        ("critic_td", None),
-        ("vimpo_equal_ref", equal_reference),
-        ("vimpo_stale_ref", stale_reference),
+        ("learned_value_td", None),
+        ("oracle_value_td", None),
     ]
+    methods = estimator_methods + references
     per_method: dict[str, dict[str, Any]] = {
-        name: {"gradients": [], "pairs": [], "diagnostics": []} for name, _ in methods
+        name: {"gradients": [], "pairs": [], "diagnostics": [], "replications": []}
+        for name, _ in methods
     }
 
     token_counts: list[int] = []
     null_counts = 0
     delay_counts = 0
     baseline_rows: list[dict[str, float | int | str]] = []
-    for _ in range(batches):
-        groups = sample_batch(
-            rng,
-            policy,
-            groups_per_batch=groups_per_batch,
-            group_size=group_size,
-        )
-        trajectories = flatten(groups)
-        token_counts.extend(len(trajectory.steps) for trajectory in trajectories)
-        null_counts += sum(
-            1 for trajectory in trajectories for step in trajectory.steps if step.action == "null"
-        )
-        delay_counts += sum(
-            1 for trajectory in trajectories for step in trajectory.steps if step.action == "delay"
-        )
-        baseline_rows.extend(baseline_diagnostic_rows(groups, policy))
-        for method, reference in methods:
-            gradient, pairs, diagnostics = estimate_gradient_for_batch(
-                method,
-                groups,
-                policy,
-                reference,
-            )
-            per_method[method]["gradients"].append(gradient)
-            per_method[method]["pairs"].extend(pairs)
-            per_method[method]["diagnostics"].append(diagnostics)
+    batches_per_replication = max(1, math.ceil(batches / replications))
+    total_batches = batches_per_replication * replications
 
-    estimators = []
-    for method, _ in methods:
-        estimators.append(
-            {
+    for replication in range(replications):
+        rng = random.Random(seed + 10_007 * replication)
+        rep_method: dict[str, dict[str, Any]] = {
+            name: {"gradients": [], "pairs": [], "diagnostics": []}
+            for name, _ in methods
+        }
+        for _ in range(batches_per_replication):
+            groups = sample_batch(
+                rng,
+                policy,
+                groups_per_batch=groups_per_batch,
+                group_size=group_size,
+            )
+            critic_groups = sample_batch(
+                rng,
+                policy,
+                groups_per_batch=groups_per_batch,
+                group_size=group_size,
+            )
+            learned_critic = LearnedValueTable(flatten(critic_groups))
+            trajectories = flatten(groups)
+            token_counts.extend(len(trajectory.steps) for trajectory in trajectories)
+            null_counts += sum(
+                1
+                for trajectory in trajectories
+                for step in trajectory.steps
+                if step.action == "null"
+            )
+            delay_counts += sum(
+                1
+                for trajectory in trajectories
+                for step in trajectory.steps
+                if step.action == "delay"
+            )
+            baseline_rows.extend(baseline_diagnostic_rows(groups, policy))
+            for method, reference in methods:
+                gradient, pairs, diagnostics = estimate_gradient_for_batch(
+                    method,
+                    groups,
+                    policy,
+                    reference,
+                    learned_critic,
+                )
+                per_method[method]["gradients"].append(gradient)
+                per_method[method]["pairs"].extend(pairs)
+                per_method[method]["diagnostics"].append(diagnostics)
+                rep_method[method]["gradients"].append(gradient)
+                rep_method[method]["pairs"].extend(pairs)
+                rep_method[method]["diagnostics"].append(diagnostics)
+
+        for method, _ in methods:
+            per_method[method]["replications"].append(
+                summarize_gradient_metrics(
+                    method=method,
+                    gradients=rep_method[method]["gradients"],
+                    pairs=rep_method[method]["pairs"],
+                    exact_gradient_value=exact,
+                    policy=policy,
+                    diagnostics=rep_method[method]["diagnostics"],
+                )
+            )
+
+    def build_rows(selected_methods: list[tuple[str, TabularSoftmaxPolicy | None]]) -> list[dict[str, Any]]:
+        rows = []
+        for method, reference in selected_methods:
+            row: dict[str, Any] = {
                 "method": method,
                 "metrics": gradient_metrics(
                     method=method,
@@ -785,16 +973,29 @@ def run_policy_gradient_audit(
                     exact_gradient_value=exact,
                     policy=policy,
                     diagnostics=per_method[method]["diagnostics"],
+                    replication_summaries=per_method[method]["replications"],
                 ),
             }
-        )
+            if reference is not None:
+                row["reference_kl"] = policy_kl(policy, reference)
+            rows.append(row)
+        return rows
+
+    estimators = build_rows(estimator_methods)
+    policy_implied_signals = build_rows(references)
+
+    finite_diff_error = finite_diff.minus(exact).norm
+    exact_norm = exact.norm
 
     return {
         "config": {
             **config.__dict__,
             "actions": list(ACTIONS),
             "seed": seed,
-            "batches": batches,
+            "batches": total_batches,
+            "requested_batches": batches,
+            "replications": replications,
+            "batches_per_replication": batches_per_replication,
             "groups_per_batch": groups_per_batch,
             "group_size": group_size,
         },
@@ -802,19 +1003,27 @@ def run_policy_gradient_audit(
             "norm": exact.norm,
             "base_return": exact_start_return(policy),
             "target_kl": config.target_kl,
+            "finite_difference_error_norm": finite_diff_error,
+            "finite_difference_relative_error": (
+                finite_diff_error / exact_norm if exact_norm > 0 else 0.0
+            ),
         },
         "sample_counts": {
-            "trajectories": batches * groups_per_batch * group_size,
+            "trajectories": total_batches * groups_per_batch * group_size,
             "mean_emitted_tokens": fmean(token_counts) if token_counts else 0.0,
             "null_token_fraction": null_counts / sum(token_counts) if token_counts else 0.0,
             "delay_token_fraction": delay_counts / sum(token_counts) if token_counts else 0.0,
         },
         "reference_diagnostics": {
             "equal_reference_kl": policy_kl(policy, equal_reference),
-            "stale_reference_kl": policy_kl(policy, stale_reference),
+            **{
+                f"{method}_kl": policy_kl(policy, reference)
+                for method, reference in references
+            },
         },
         "position_diagnostics": summarize_baseline_rows(baseline_rows),
         "estimators": estimators,
+        "policy_implied_signals": policy_implied_signals,
     }
 
 
@@ -826,9 +1035,9 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
     lines = [
         "# Policy-gradient fidelity audit",
         "",
-        "Finite MDP with exact value and numerical exact policy gradient.",
+        "Finite MDP with exact value and occupancy-measure policy gradient.",
         "",
-        "| Method | Bias/|g*| | Var trace | Cosine | KL-step dJ | Adv. r | Cal. MSE |",
+        "| Method | Mean err/|g*| | 95% CI | Var trace | Cosine | KL-step dJ | Adv. r | Cal. MSE |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in result["estimators"]:
@@ -837,7 +1046,8 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
             " | ".join(
                 [
                     f"| `{row['method']}`",
-                    fmt(metrics["relative_bias_norm"]),
+                    fmt(metrics["relative_mean_error_norm"]),
+                    fmt(metrics["relative_mean_error_norm_ci95"]),
                     fmt(metrics["variance_trace"]),
                     fmt(metrics["gradient_cosine"]),
                     fmt(metrics["matched_kl_improvement"]),
@@ -846,16 +1056,24 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
                 ]
             )
         )
+    lines.extend(["", "## Policy-implied actor coefficients", ""])
+    for row in result["policy_implied_signals"]:
+        metrics = row["metrics"]
+        lines.append(
+            f"- `{row['method']}`: ref KL {fmt(row['reference_kl'])}, "
+            f"cos {fmt(metrics['gradient_cosine'])}, "
+            f"mean err {fmt(metrics['relative_mean_error_norm'])}"
+        )
     lines.extend(
         [
             "",
             "## Diagnostics",
             "",
             f"- Exact gradient norm: {fmt(result['exact_gradient']['norm'])}",
+            f"- Finite-difference relative check error: {fmt(result['exact_gradient']['finite_difference_relative_error'])}",
             f"- Base return: {fmt(result['exact_gradient']['base_return'])}",
             f"- Mean emitted tokens: {fmt(result['sample_counts']['mean_emitted_tokens'])}",
             f"- Null token fraction: {fmt(result['sample_counts']['null_token_fraction'])}",
-            f"- Stale reference KL: {fmt(result['reference_diagnostics']['stale_reference_kl'])}",
             "",
         ]
     )
@@ -866,6 +1084,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, default=13)
     parser.add_argument("--batches", type=int, default=180)
+    parser.add_argument("--replications", type=int, default=12)
     parser.add_argument("--groups-per-batch", type=int, default=16)
     parser.add_argument("--group-size", type=int, default=5)
     parser.add_argument("--threshold", type=int, default=2)
@@ -885,6 +1104,7 @@ def main() -> None:
         batches=args.batches,
         groups_per_batch=args.groups_per_batch,
         group_size=args.group_size,
+        replications=args.replications,
         config=MDPConfig(
             threshold=args.threshold,
             horizon=args.horizon,

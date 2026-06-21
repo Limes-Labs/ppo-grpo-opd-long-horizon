@@ -33,11 +33,70 @@ from experiments.toy_credit_assignment import (
     estimator_metrics,
     flatten,
     generate_groups,
+    observation_schema,
+    critic_is_privileged,
     resolve_scenario,
 )
 
 
 DEFAULT_SEEDS = [11, 29, 47, 83, 131]
+
+HETEROGENEITY_REGIMES: dict[str, dict[str, Any]] = {
+    "h005": {
+        "target": 0.05,
+        "base": "short_dense",
+        "min_steps": 1,
+        "max_steps": 1,
+        "wait_bias_after_success": -0.45,
+        "help_bias_when_behind": 0.35,
+        "threshold_cycle": (1,),
+    },
+    "h015": {
+        "target": 0.15,
+        "base": "short_dense",
+        "min_steps": 1,
+        "max_steps": 2,
+        "wait_bias_after_success": 0.00,
+        "help_bias_when_behind": 0.20,
+        "threshold_cycle": (1,),
+    },
+    "h030": {
+        "target": 0.30,
+        "base": "short_dense",
+        "min_steps": 1,
+        "max_steps": 2,
+        "wait_bias_after_success": 0.00,
+        "help_bias_when_behind": -0.10,
+        "threshold_cycle": (1,),
+    },
+    "h050": {
+        "target": 0.50,
+        "base": "short_dense",
+        "min_steps": 2,
+        "max_steps": 2,
+        "wait_bias_after_success": 0.20,
+        "help_bias_when_behind": 0.10,
+        "threshold_cycle": (1, 2),
+    },
+    "h070": {
+        "target": 0.70,
+        "base": "short_dense",
+        "min_steps": 1,
+        "max_steps": 7,
+        "wait_bias_after_success": 0.40,
+        "help_bias_when_behind": -0.10,
+        "threshold_cycle": (1, 2, 3),
+    },
+    "h090": {
+        "target": 0.90,
+        "base": "long_wait",
+        "min_steps": 3,
+        "max_steps": 12,
+        "wait_bias_after_success": 0.45,
+        "help_bias_when_behind": -0.08,
+        "threshold_cycle": (2, 3, 4),
+    },
+}
 
 
 def variance(values: list[float]) -> float:
@@ -129,7 +188,23 @@ def scenario_for_cell(
     drift: str,
     phase: str,
 ) -> tuple[Scenario, int]:
-    if heterogeneity == "low":
+    if heterogeneity in HETEROGENEITY_REGIMES:
+        spec = HETEROGENEITY_REGIMES[heterogeneity]
+        base = resolve_scenario(str(spec["base"]))
+        scenario = replace(
+            base,
+            name=f"phase_{heterogeneity}",
+            description=(
+                "Calibrated heterogeneity-regime scenario for the broadcast "
+                f"ceiling audit (target H_credit {spec['target']})."
+            ),
+            wait_bias_after_success=float(spec["wait_bias_after_success"]),
+            help_bias_when_behind=float(spec["help_bias_when_behind"]),
+            threshold_cycle=tuple(spec["threshold_cycle"]),
+            min_steps=int(spec["min_steps"]),
+        )
+        max_steps = int(spec["max_steps"])
+    elif heterogeneity == "low":
         base = resolve_scenario("short_dense")
         scenario = replace(
             base,
@@ -167,7 +242,7 @@ def scenario_for_cell(
     else:
         raise ValueError(f"unknown reward level {reward!r}")
 
-    if observability not in {"full", "coarse", "blind"}:
+    if observability not in {"full", "non_privileged", "coarse", "blind"}:
         raise ValueError(f"unknown observability level {observability!r}")
     scenario = replace(scenario, critic_observation=observability)
 
@@ -188,11 +263,11 @@ def scenario_for_cell(
     return scenario, max_steps
 
 
-def coverage_to_train_groups(level: str) -> int:
+def coverage_to_train_trajectories(level: str) -> int:
     if level == "low":
-        return 1
+        return 5
     if level == "high":
-        return 120
+        return 600
     raise ValueError(f"unknown coverage level {level!r}")
 
 
@@ -234,13 +309,13 @@ def run_cell(
         phase="eval",
     )
     max_steps = max(train_max_steps, eval_max_steps)
-    train_groups = coverage_to_train_groups(coverage)
+    train_trajectories_budget = coverage_to_train_trajectories(coverage)
 
     train_rng = random.Random(seed)
     train_groups_data = generate_groups(
         train_rng,
-        group_count=train_groups,
-        group_size=group_size,
+        group_count=train_trajectories_budget,
+        group_size=1,
         max_steps=max_steps,
         scenario=train_scenario,
     )
@@ -286,8 +361,11 @@ def run_cell(
     )
     return {
         "seed": seed,
-        "train_groups": train_groups,
+        "train_trajectories": len(train_trajectories),
         "eval_tokens": len(steps),
+        "actor_observation_schema": observation_schema("actor"),
+        "critic_observation_schema": observation_schema(eval_scenario.critic_observation),
+        "critic_is_privileged": critic_is_privileged(eval_scenario.critic_observation),
         "group_correlation": group["pearson_correlation"],
         "critic_correlation": critic_metrics["pearson_correlation"],
         "critic_minus_group_correlation": (
@@ -330,6 +408,10 @@ def aggregate_cell(
     return {
         "cell_name": "_".join([heterogeneity, observability, coverage, reward, drift]),
         "heterogeneity": heterogeneity,
+        "target_credit_heterogeneity": HETEROGENEITY_REGIMES.get(
+            heterogeneity,
+            {"target": None},
+        )["target"],
         "observability": observability,
         "coverage": coverage,
         "reward": reward,
@@ -344,6 +426,8 @@ def aggregate_cell(
         "critic_exact_state_rate": fmean(
             row["critic_exact_state_rate"] for row in seed_results
         ),
+        "critic_is_privileged": any(row["critic_is_privileged"] for row in seed_results),
+        "train_trajectories": fmean(row["train_trajectories"] for row in seed_results),
         "wait_token_fraction": fmean(row["wait_token_fraction"] for row in seed_results),
         "success_rate": fmean(row["success_rate"] for row in seed_results),
         "evidence_by_ci95": evidence,
@@ -363,11 +447,11 @@ def run_phase_diagram(
     group_size: int = 5,
 ) -> dict[str, Any]:
     seeds = seeds or DEFAULT_SEEDS
-    heterogeneity_levels = heterogeneity_levels or ["low", "high"]
-    observability_levels = observability_levels or ["full", "blind"]
+    heterogeneity_levels = heterogeneity_levels or ["h005", "h015", "h030", "h050", "h070", "h090"]
+    observability_levels = observability_levels or ["non_privileged", "blind"]
     coverage_levels = coverage_levels or ["low", "high"]
     reward_levels = reward_levels or ["contrast", "sparse"]
-    drift_levels = drift_levels or ["matched", "stale"]
+    drift_levels = drift_levels or ["matched"]
 
     aggregate_rows: list[dict[str, Any]] = []
     for heterogeneity in heterogeneity_levels:
@@ -432,6 +516,12 @@ def run_phase_diagram(
             "mean_critic_minus_group_correlation": fmean(
                 row["critic_minus_group_correlation"] for row in aggregate_rows
             ),
+            "min_credit_heterogeneity": min(
+                row["credit_heterogeneity"] for row in aggregate_rows
+            ),
+            "max_credit_heterogeneity": max(
+                row["credit_heterogeneity"] for row in aggregate_rows
+            ),
         },
         "aggregate_rows": aggregate_rows,
     }
@@ -455,17 +545,23 @@ def build_markdown_report(result: dict[str, Any]) -> str:
         "",
         f"- Seeds: {result['summary']['seed_count']}",
         f"- Cells: {result['summary']['cell_count']}",
+        f"- H_credit range: {fmt(result['summary']['min_credit_heterogeneity'])} to {fmt(result['summary']['max_credit_heterogeneity'])}",
         f"- Clear critic cells: {result['summary']['critic_clear_cells']}",
         f"- Clear group cells: {result['summary']['group_clear_cells']}",
         f"- Near ties: {result['summary']['near_tie_cells']}",
         "",
-        "| Cell | H_credit | Ceiling | Group r | Critic r | Delta r | CI | Read | Mechanism |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+        "| Cell | Target H | H_credit | Ceiling | Group r | Critic r | Delta r | CI | Read | Mechanism |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
     ]
     for row in result["aggregate_rows"]:
         lines.append(
-            "| {cell} | {h} | {ceil} | {group} | {critic} | {delta} | +/- {ci} | {read} | {mech} |".format(
+            "| {cell} | {target} | {h} | {ceil} | {group} | {critic} | {delta} | +/- {ci} | {read} | {mech} |".format(
                 cell=row["cell_name"],
+                target=(
+                    "na"
+                    if row["target_credit_heterogeneity"] is None
+                    else fmt(row["target_credit_heterogeneity"])
+                ),
                 h=fmt(row["credit_heterogeneity"]),
                 ceil=fmt(row["broadcast_ceiling_correlation"]),
                 group=fmt(row["group_correlation"]),
@@ -503,11 +599,11 @@ def int_comma_list(value: str) -> list[int]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seeds", default=",".join(str(seed) for seed in DEFAULT_SEEDS))
-    parser.add_argument("--heterogeneity-levels", default="low,high")
-    parser.add_argument("--observability-levels", default="full,blind")
+    parser.add_argument("--heterogeneity-levels", default="h005,h015,h030,h050,h070,h090")
+    parser.add_argument("--observability-levels", default="non_privileged,blind")
     parser.add_argument("--coverage-levels", default="low,high")
     parser.add_argument("--reward-levels", default="contrast,sparse")
-    parser.add_argument("--drift-levels", default="matched,stale")
+    parser.add_argument("--drift-levels", default="matched")
     parser.add_argument("--eval-groups", type=int, default=24)
     parser.add_argument("--group-size", type=int, default=5)
     parser.add_argument(
