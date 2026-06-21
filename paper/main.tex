@@ -10,7 +10,6 @@
 \usepackage{array}
 \usepackage{ragged2e}
 \usepackage{tabularx}
-\usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -118,7 +117,7 @@ mechanism under discussion, and a method can be mechanistically promising while
 still losing under a particular compute budget, implementation, reward model,
 or data mixture.
 
-\paragraph{Paper organization.}
+\paragraph{Organization.}
 Section 2 defines the estimand and method families. Section 3 reviews related
 work. Section 4 gives compute and information costs. Section 5 proves the
 information--reliability decomposition and the broadcast ceiling.
@@ -459,8 +458,8 @@ trajectory graphs. For dense distillation, it includes teacher or
 privileged-context compute, dense logits, trajectory length inflation, and
 truncation handling.
 
-The near-term reporting scorecard for this workstream is the reward change
-reported beside its resource vector, not a literal scalar objective:
+For benchmark reports, reward change should be reported beside its resource
+vector rather than treated as a context-free scalar:
 \begin{equation}
 \Delta \mathrm{reward}
 \quad\text{given}\quad
@@ -748,8 +747,11 @@ per-token costs $c \in \{0, 0.01, 0.02, 0.05\}$, including the
 no-explicit-length-penalty case $c=0$.
 
 The phase-diagram audit uses the same environment but sweeps
-credit heterogeneity, critic observability, critic coverage, reward contrast,
-and policy drift. For each cell it reports $H_{\mathrm{credit}}$, the implied
+credit heterogeneity, critic observability, critic coverage, and reward
+contrast under a matched train/evaluation setting. The implementation can also
+run train/eval policy-shift cells, but the canonical paper grid keeps that axis
+fixed so the coverage and observability effects are isolated. For each cell it
+reports $H_{\mathrm{credit}}$, the implied
 trajectory-broadcast ceiling, group correlation, critic reliability, and a
 crossover reading. This replaces a winner-count-only narrative with a
 method-selection diagnostic.
@@ -935,9 +937,10 @@ critic value baseline remains strongest in this supported toy.
 \begin{table}[!htbp]
 \centering
 \caption{Broadcast-ceiling phase diagnostic over credit heterogeneity,
-observability, critic coverage, reward contrast, and policy drift. The ceiling
-is $\sqrt{1-H_{\mathrm{credit}}}$, the best possible absolute correlation for a
-token-invariant broadcast estimator under the reported token weighting.}
+observability, critic coverage, and reward contrast under matched
+train/evaluation dynamics. The ceiling is $\sqrt{1-H_{\mathrm{credit}}}$, the
+best possible absolute correlation for a token-invariant broadcast estimator
+under the reported token weighting.}
 \label{tab:credit-phase}
 \scriptsize
 \input{generated/credit_phase_table.tex}
@@ -1244,7 +1247,6 @@ algorithm. A stronger external-validity claim requires a controlled
 sequence-policy benchmark with clipped objectives, KL control, corrected
 \grpo-family variants, process rewards, and matched rollout budgets.
 
-\clearpage
 \section{Conclusion}
 
 For long heterogeneous trajectories, critic-based \ppo\ is a strong candidate
@@ -1484,46 +1486,31 @@ with privileged state can be scientifically useful, but it should be labeled as
 such and compared separately from actor--critic training with the same
 observation.
 
-\section{Case Design}
+\section{Case Design and Artifact Mapping}
 
 The 18 fixed cases are grouped by axis. Horizon cases increase trace length and
 delay-action exposure. Group-size cases vary the number of completions used for
-within-prompt normalization. Critic-budget cases vary how much data the value
-table sees before evaluation. Observability cases degrade the state available to
-the critic. Sparse-reward cases make terminal success harder. The
+within-prompt normalization while keeping critic replay fixed at 840 training
+trajectories for every group-size row. Critic-budget cases vary how much data
+the value table sees before evaluation. Observability cases degrade the state
+available to the critic. Sparse-reward cases make terminal success harder. The
 counterexample combines blindness and low coverage.
 
-\begin{table}[h]
-\centering
-\caption{Axis-level summary generated from the canonical matrix.}
-\small
-\input{generated/axis_summary_table.tex}
-\end{table}
+The submission PDF reports selected rows and aggregate readings, while complete
+tables live in the repository artifacts. This split is intentional. The PDF
+should carry the mechanism argument, not raw run logs; the repository should
+carry enough machine-readable detail for independent inspection. The canonical
+deep matrix is stored as \path{results/deep_matrix_20seed.json} and
+\path{results/deep_matrix_20seed.csv}. The complete phase grid is stored as
+\path{results/credit_phase_diagram_seedset.json}. The policy-gradient audit,
+closed-loop audit, neural generalization audit, and robustness sweeps each have
+matching JSON and Markdown summaries under \path{results/}.
 
-\section{Full Aggregate Phase Grid}
-
-Table \ref{tab:credit-phase-full} reports the complete 48-cell aggregate phase
-grid used in Section 8. These are seed-aggregated cells, not raw per-seed
-records. The table is included because it is part of the method-selection
-claim: the paper should show not only favorable critic cases, but also the
-near-tie and group-favorable regimes that define the boundary.
-
-\begingroup
-\scriptsize
-\setlength{\tabcolsep}{2pt}
-\input{generated/credit_phase_full_table.tex}
-\endgroup
-
-\section{Full Case Summary}
-
-Table \ref{tab:full-case-summary} gives the full 18-case summary. It is
-generated from the canonical matrix JSON rather than hand copied.
-
-\begingroup
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\input{generated/full_case_table.tex}
-\endgroup
+The result artifacts are generated, not hand edited. The build script reads the
+JSON files, regenerates the LaTeX tables used in the paper, compiles the PDF,
+and writes a manifest with SHA-256 hashes and page-count checks. This makes the
+paper auditable while avoiding pages of ledger-style tables in the main
+artifact.
 
 \section{Benchmark Reporting Protocol}
 
@@ -1556,7 +1543,7 @@ length. Final score alone is not enough because a method can improve a short
 task while failing the mechanism required for long traces.
 
 \paragraph{Decision rule.}
-A public claim that one family is better should require at least three checks:
+A claim that one family is better should require at least three checks:
 the mean effect favors the method, the confidence interval excludes practical
 near-ties, and an adversarial or counterexample regime is reported. This paper's
 toy result follows that rule: it highlights the critic-favorable mean pattern,
@@ -1564,12 +1551,152 @@ the near tie under tiny critic budget, and the group-favorable blind
 undercovered case. A larger benchmark should preserve the same discipline.
 
 \paragraph{Audit package.}
-The public release should include raw per-seed rows, aggregate tables, plotting
-scripts, exact commands in repository documentation, environment notes, and a
-short statement of non-claims. The non-claims matter. For this workstream, the honest claim is that
+The artifact package should include raw per-seed rows, aggregate tables,
+plotting scripts, exact commands in repository documentation, environment
+notes, and a short statement of non-claims. The non-claims matter. For this
+line of work, the honest claim is that
 critic-style temporal information can dominate in observable long traces, while
 group-relative normalization remains strong when reward contrast is reliable
 and value modeling is weak. That is a research program, not a slogan.
+
+\section{Minimal Sequence-Policy Benchmark Specification}
+
+The next external-validity step should be small enough to run repeatedly and
+large enough to remove the main weakness of the current paper: table-lookup
+state. A useful benchmark can encode the same finite-MDP family as token
+sequences and train a tiny autoregressive policy. Each prompt specifies a
+threshold, horizon, and optional hidden distractor. The policy emits action
+tokens from a small vocabulary such as \texttt{help}, \texttt{harm},
+\texttt{wait}, and \texttt{stop}; the environment then appends an observation
+token containing remaining horizon and a compressed progress observation. The
+verifier returns a terminal success bit and optional process labels for selected
+prefixes.
+
+\paragraph{Policy and value models.}
+The minimal model should be a one- or two-layer transformer with shared token
+embeddings and separate policy and value heads. The value head should be tested
+in three access modes: actor-history only, actor-history plus explicit
+environment state, and deliberately blinded history. The first mode is the fair
+non-privileged comparison. The second mode is centralized training with richer
+state and must be reported separately. The third mode is the critic-failure
+control.
+
+\paragraph{Training arms.}
+At equal generated-token budgets, compare at least five arms:
+\begin{enumerate}[leftmargin=*]
+\item response-level sibling leave-one-out or simplified \grpo;
+\item actor--critic TD or GAE with the non-privileged value head;
+\item sampled Monte Carlo values from prefix branching;
+\item a \vimpo-style policy-implied actor coefficient evaluated inside a
+matched KL-regularized objective if implemented as a full update;
+\item an anchor or prefix baseline when repeated states or intermediate
+verifier calls exist.
+\end{enumerate}
+The experiment should include corrected \grpo-family variants only after the
+simple sibling baseline is stable. Otherwise optimizer differences will obscure
+the credit mechanism.
+
+\paragraph{Budget matching.}
+Every arm should report generated tokens, verifier calls, reference-policy
+scoring calls, value-model forward/backward passes, sampled branches,
+wall-clock time, and peak memory. A critic method should not be called better
+if it wins only by silently using more environment interaction. A group method
+should not be called cheaper if it spends many discarded completions to obtain
+reward contrast.
+
+\paragraph{Measurements.}
+Because the environment remains finite, the benchmark can still compute exact
+or high-precision behavior-policy advantages for sampled prefixes. Report
+token-credit Pearson correlation, calibrated MSE, gradient cosine with the
+exact finite-MDP gradient when available, matched-KL one-step improvement,
+learning curves over at least five seeds, final return, success rate, length,
+delay-token fraction, and estimator-selection regret. The key result would be
+whether the phase boundary observed in the tabular audit survives neural
+function approximation and closed-loop policy learning.
+
+\paragraph{Required ablations.}
+The benchmark should include ablations that can falsify the paper's mechanism
+claim. First, remove delay actions while holding terminal reward sparsity fixed;
+trajectory broadcasts should become more competitive because within-trajectory
+credit heterogeneity is lower. Second, keep delay actions but hide progress
+from the value head; the critic should lose reliability even though the task is
+unchanged. Third, increase sibling group size while holding critic replay fixed;
+this isolates group contrast from value-model coverage. Fourth, add a cheap
+prefix verifier at one or two intermediate budgets; prefix baselines should
+reduce score-weighted residual variance even if they do not become the best
+token-credit estimator. Fifth, run a high-branch sampled-value arm on a small
+subset of prefixes; this provides a critic-free estimate of the value signal
+that can calibrate whether the learned critic is underfitting or whether the
+state information itself is insufficient.
+
+\paragraph{Acceptance criteria.}
+A neural follow-up should be considered supportive only if it passes both an
+optimizer test and an estimator test. The optimizer test asks whether the method
+improves return under matched generated-token and verifier budgets. The
+estimator test asks whether the credit signal aligns with exact or audited
+behavior-policy advantages on held-out prefixes. A method that wins the
+optimizer test but fails the estimator test may still be useful, but it is not
+evidence for the credit-assignment mechanism claimed here. Conversely, a method
+that wins the estimator test but loses the optimizer test identifies an
+engineering or cost bottleneck rather than disproving the mechanism.
+
+\section{Estimator-Selection Procedure}
+
+The paper's practical recommendation can be written as an explicit audit
+procedure rather than a slogan. Given a candidate task distribution, collect a
+small diagnostic batch before launching a large post-training run. For each
+trajectory, store token indices, prompt identity, terminal reward, length,
+available process labels, value predictions, group statistics, and any prefix
+verifier calls. Then estimate three quantities:
+\begin{align}
+\widehat H_{\mathrm{credit}}
+&=
+\frac{
+  \widehat{\E}[\widehat{\operatorname{Var}}(\widehat A_t\mid C_i)]
+}{
+  \widehat{\operatorname{Var}}(\widehat A_t)
+},\\
+\widehat R_V
+&=
+\operatorname{Corr}(\widehat A^V_t,\widehat A^{\mathrm{audit}}_t),\\
+\widehat C_m
+&=
+(\mathrm{tokens}_m,\mathrm{verifier}_m,\mathrm{memory}_m,\mathrm{time}_m).
+\end{align}
+Here $\widehat A^{\mathrm{audit}}_t$ may come from exact simulation, sampled
+continuations, trusted process labels, or a small counterfactual audit. It need
+not be available for every production token; it only has to be good enough to
+rank estimator reliability on a held-out diagnostic slice.
+
+\paragraph{Decision rule.}
+A simple conservative policy is:
+\begin{equation}
+m^\star =
+\arg\min_m
+\left[
+\widehat{\mathcal I}_m
++ \widehat{\mathcal E}_m
++ \lambda^\top \widehat C_m
+\right],
+\end{equation}
+where $\widehat{\mathcal I}_m$ estimates information loss from the signal source
+and $\widehat{\mathcal E}_m$ estimates reliability error. In the toy,
+trajectory broadcasts have high $\widehat{\mathcal I}$ when
+$H_{\mathrm{credit}}$ is large; critics have high $\widehat{\mathcal E}$ when
+coverage or observability is poor; structural methods have high
+$\widehat{\mathcal E}$ when anchor support is sparse; sampled values have high
+cost when branch budgets are large. The best method is the one whose
+information gain justifies its reliability and resource cost.
+
+\paragraph{Reporting rule.}
+Do not publish only the best final score. Publish the diagnostic batch,
+estimator-selection rule, all negative controls, and at least one counterexample
+regime. If a critic wins, show that it is not using privileged information
+unless that is the intended setting. If a group method wins, show that reward
+dispersion and group comparability are sufficient. If a policy-implied method
+wins, specify the reference policy, KL target, and whether the reported update
+is a full algorithmic objective or only an actor-coefficient diagnostic. This
+is the difference between a leaderboard claim and a reusable scientific result.
 
 \bibliographystyle{plainnat}
 \bibliography{references}

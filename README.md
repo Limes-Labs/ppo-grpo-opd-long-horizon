@@ -53,7 +53,9 @@ have to guess which paper is current.
 - `experiments/variance_credit_grid.py` - estimator grid separating variance
   reduction mechanisms from step-level credit assignment.
 - `experiments/credit_phase_diagram.py` - factorial diagnostic over credit
-  heterogeneity, critic observability, coverage, reward contrast, and drift.
+  heterogeneity, critic observability, coverage, and reward contrast. The
+  implementation also supports train/eval policy-shift cells, but the
+  canonical paper grid keeps that axis matched.
 - `experiments/policy_gradient_fidelity.py` - exact finite-MDP policy-gradient
   audit covering REINFORCE, sibling LOO, prefix/BRPO-style baselines,
   learned-value TD, oracle-value TD, VIMPO-style actor coefficients, and true
@@ -222,9 +224,11 @@ credit-assignment mechanism, not model quality.
 
 The canonical 20-seed matrix runs 18 fixed regimes. The critic-style estimator
 wins by mean exact behavior-policy advantage correlation in 17 regimes, but one of those is a
-near tie whose 95% confidence interval crosses zero. The more careful reading is
-16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable
-counterexample where the critic is blind and undercovered:
+near tie whose 95% confidence interval crosses zero. The more careful reading
+is 16 clear critic-favorable cases, 1 near tie, and 1 clear group-favorable
+counterexample where the critic is blind and undercovered. For the group-size
+axis, critic replay is fixed at 840 training trajectories in every row so
+larger sibling groups do not also give the critic more data.
 
 | Regime | Winner | Group r | Critic r |
 | --- | --- | ---: | ---: |
@@ -247,8 +251,9 @@ The canonical PDF is rendered from LaTeX at
 `public/paper_manifest.json`.
 
 The broadcast-ceiling phase diagnostic is the main boundary result. Across 48
-cells over calibrated credit heterogeneity, critic observability, coverage, and
-reward contrast, realized `H_credit` spans `0.000` to `0.880`. The grid finds
+matched train/evaluation cells over calibrated credit heterogeneity, critic
+observability, coverage, and reward contrast, realized `H_credit` spans `0.000`
+to `0.880`. The grid finds
 11 clear critic-favorable cells, 3 clear group-favorable cells, and 34 near
 ties. The useful rule is conditional: token-invariant broadcast estimators hit
 a ceiling as within-trajectory credit heterogeneity rises, but critics only
@@ -319,8 +324,10 @@ calls, delays, retries, and compaction. In that regime:
   reward variation, but terminal response-level group normalization can blur
   token credit in long heterogeneous rollouts.
 - VIMPO-like policy-implied signals and BRPO-style prefix baselines show that
-  critic-free does not have to mean trajectory-only. Their reliability depends
-  on reference consistency, prefix verifier quality, and the training stage.
+  critic-free does not have to mean trajectory-only. The current VIMPO audit is
+  an actor-coefficient alignment diagnostic, not a full VIMPO algorithm result;
+  reliability depends on reference consistency, prefix verifier quality, and
+  the training stage.
 
 The first experiments here are designed to make those claims falsifiable before
 moving to real language-model training.

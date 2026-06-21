@@ -17,26 +17,18 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-21T22:17:12.336207+00:00",
+  "generated_at_utc": "2026-06-21T22:45:47.154130+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "5bf192139a0f97814a31a2081c2995020babcd17",
+  "git_commit": "9bc16513ef7ea6021928b469ce4b1f4440b096ca",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
       "bytes": 593,
       "sha256": "21e943309c7abb54d8fcb60eb9f1fccb164976bd3c127231727bfa6767a6734b"
     },
-    "paper/generated/axis_summary_table.tex": {
-      "bytes": 571,
-      "sha256": "ef0fbd3f37860b05695906bc2347950dd698305d5110706f9cb4905f67469ee2"
-    },
     "paper/generated/closed_loop_training_table.tex": {
       "bytes": 742,
       "sha256": "c6ce3225d8014d6111cb6b39a2a7a1d9f8e7d485c9f65bf01ba58713f7edcec3"
-    },
-    "paper/generated/credit_phase_full_table.tex": {
-      "bytes": 3762,
-      "sha256": "6490724f9128446d2d24aa868290c9faca0226d2f30a4dc75d7b9faab516d214"
     },
     "paper/generated/credit_phase_table.tex": {
       "bytes": 996,
@@ -45,10 +37,6 @@
     "paper/generated/deep_matrix_table.tex": {
       "bytes": 756,
       "sha256": "90c2bac842d1635ae00f74f82f09d0cceb08812a38e70eb088d1e6db84b1a14c"
-    },
-    "paper/generated/full_case_table.tex": {
-      "bytes": 2246,
-      "sha256": "82e0cac402d3d5bdcb4d5d1126ac92d90fe0bb4b7887c4fec6444e865e213113"
     },
     "paper/generated/length_imbalance_table.tex": {
       "bytes": 550,
@@ -67,12 +55,12 @@
       "sha256": "5a556931f2500f3ba17b9d440aaa38150c44175da50f16b1ee750a0adb0467fe"
     },
     "paper/generated/policy_implied_table.tex": {
-      "bytes": 919,
-      "sha256": "05c6a8ab057a8e64ec36617a38f0e90a295a644f94036b99847620659707caf3"
+      "bytes": 938,
+      "sha256": "529ed14b28d0ec690958c19d67ca0b43960c9c9554611a830ed5d848b76275be"
     },
     "paper/generated/result_macros.tex": {
       "bytes": 360,
-      "sha256": "4a58f8948b27039be11ab3b986f80cff37b691591847fdb8420e8434d442aee3"
+      "sha256": "fd8efcb238d49bd11ae712526736c0c9778b646544abf3a9338553305c5efd83"
     },
     "paper/generated/token_cost_table.tex": {
       "bytes": 729,
@@ -83,20 +71,20 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 77777,
-      "sha256": "fe82ba2c859ac3f2ca0edb15e93963fef2bbb2b9ef1c0d27b1ca6803ec1e7989"
+      "bytes": 85417,
+      "sha256": "d91353ae1a14426bc1c7239f9efc3210333d16d2df208f4f8ced092b37d7faf4"
     },
     "paper/references.bib": {
       "bytes": 13564,
       "sha256": "e6330e152331da155bddc195d7dbbe4a563244d63694121cc9d42b7d97d15b37"
     },
     "public/figures/deep_matrix_coverage.png": {
-      "bytes": 26739,
-      "sha256": "421e358548118b00be8d341fe89fd17056bebfd32674b1a3fb4c372fb60013d9"
+      "bytes": 77166,
+      "sha256": "fd3d6e0df52bd238a855850343df3c82a4e1684faae02c8a8bfef9203bfcbb8b"
     },
     "public/figures/deep_matrix_delta.png": {
-      "bytes": 79640,
-      "sha256": "378245b4caf4cb459bbeb07a0cc6ccb23f959a756e1358044326dc6e7e4752b6"
+      "bytes": 130295,
+      "sha256": "c93aa4a815ecba9182e840cbe4a9f3196e722dc1136c94e8d9db6e2f86a4669e"
     },
     "results/anchor_coverage_audit_seedset.json": {
       "bytes": 25140,
@@ -115,8 +103,8 @@
       "sha256": "42e17a7e7ed79a9341ac063588acc6c3c3bf68690222f62d315b3028ac061b42"
     },
     "results/deep_matrix_20seed.json": {
-      "bytes": 231192,
-      "sha256": "9effd3b0fc704b019e601749cb1708a074520efdec1d0c7240a3079580af7c5e"
+      "bytes": 261084,
+      "sha256": "4d7fcdd71020f0f6d17a851dab4f21728a8ccc6bf27876478b1fcfc815a3de0d"
     },
     "results/length_imbalance_audit_seedset.json": {
       "bytes": 284699,
@@ -141,8 +129,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 293029,
-      "sha256": "489838c244e8caaedd4de026826f5263477df14a0138dc97f8fa288ef257f5fa"
+      "bytes": 358874,
+      "sha256": "8a8f5502f56b02c5b43df3b3bc9f13bb0c74ae3fa77712d6009f429cdebdc9ce"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

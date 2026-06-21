@@ -79,6 +79,7 @@ DEFAULT_DEEP_CASES: list[dict[str, Any]] = [
         "axis": "group_size",
         "scenario_name": "long_wait",
         "train_groups": 140,
+        "train_group_size": 6,
         "eval_groups": 32,
         "group_size": 2,
         "max_steps": 12,
@@ -88,6 +89,7 @@ DEFAULT_DEEP_CASES: list[dict[str, Any]] = [
         "axis": "group_size",
         "scenario_name": "long_wait",
         "train_groups": 140,
+        "train_group_size": 6,
         "eval_groups": 32,
         "group_size": 4,
         "max_steps": 12,
@@ -97,6 +99,7 @@ DEFAULT_DEEP_CASES: list[dict[str, Any]] = [
         "axis": "group_size",
         "scenario_name": "long_wait",
         "train_groups": 140,
+        "train_group_size": 6,
         "eval_groups": 32,
         "group_size": 8,
         "max_steps": 12,
@@ -106,6 +109,7 @@ DEFAULT_DEEP_CASES: list[dict[str, Any]] = [
         "axis": "group_size",
         "scenario_name": "long_wait",
         "train_groups": 140,
+        "train_group_size": 6,
         "eval_groups": 32,
         "group_size": 12,
         "max_steps": 12,
@@ -235,6 +239,7 @@ def _case_seed_result(seed: int, case: dict[str, Any]) -> dict[str, Any]:
         train_groups=case["train_groups"],
         eval_groups=case["eval_groups"],
         group_size=case["group_size"],
+        train_group_size=case.get("train_group_size"),
         max_steps=case["max_steps"],
     )
     group = result["metrics"]["group_relative"]
@@ -260,6 +265,8 @@ def _case_seed_result(seed: int, case: dict[str, Any]) -> dict[str, Any]:
         "critic_exact_state_rate": result["sample_counts"][
             "critic_exact_state_rate"
         ],
+        "train_trajectories": result["sample_counts"]["train_trajectories"],
+        "critic_is_privileged": result["config"]["critic_is_privileged"],
     }
 
 
@@ -278,6 +285,7 @@ def run_deep_matrix(
         group_corrs = [row["group_correlation"] for row in seed_results]
         critic_corrs = [row["critic_correlation"] for row in seed_results]
         hit_rates = [row["critic_exact_state_rate"] for row in seed_results]
+        train_trajectories = [row["train_trajectories"] for row in seed_results]
         wait_rates = [row["wait_token_fraction"] for row in seed_results]
         success_rates = [row["success_rate"] for row in seed_results]
         zero_rates = [row["zero_variance_group_fraction"] for row in seed_results]
@@ -295,6 +303,7 @@ def run_deep_matrix(
                 "train_groups": case["train_groups"],
                 "eval_groups": case["eval_groups"],
                 "group_size": case["group_size"],
+                "train_group_size": case.get("train_group_size", case["group_size"]),
                 "max_steps": case["max_steps"],
                 "seed_results": seed_results,
                 "mean_group_correlation": group_mean,
@@ -306,6 +315,10 @@ def run_deep_matrix(
                 "mean_critic_minus_group_calibrated_mse": mse_delta_mean,
                 "ci95_critic_minus_group_calibrated_mse": mse_delta_ci,
                 "mean_critic_exact_state_rate": fmean(hit_rates),
+                "mean_train_trajectories": fmean(train_trajectories),
+                "critic_is_privileged": any(
+                    row["critic_is_privileged"] for row in seed_results
+                ),
                 "mean_wait_token_fraction": fmean(wait_rates),
                 "mean_success_rate": fmean(success_rates),
                 "mean_zero_variance_group_fraction": fmean(zero_rates),
@@ -387,6 +400,8 @@ def build_deep_markdown_report(result: dict[str, Any]) -> str:
         f"{result['seed_count']} seeds and {result['case_count']} fixed cases.",
         "Positive delta means the critic-style TD estimator has higher oracle",
         "advantage correlation than the group-relative estimator.",
+        "For group-size rows, critic replay is fixed at 840 training trajectories",
+        "while only evaluation sibling group size changes.",
         "",
         "## Summary",
         "",
