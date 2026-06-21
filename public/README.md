@@ -2,7 +2,8 @@
 
 This directory intentionally tracks one public paper PDF:
 
-- `trajectory_rewards_are_not_token_credit.pdf` - canonical full LaTeX paper.
+- `trajectory_rewards_are_not_token_credit.pdf` - canonical full LaTeX paper,
+  currently titled "The Broadcast Ceiling."
 - `paper_manifest.json` - SHA-256 manifest and page-count check for that PDF.
 - `figures/` - generated figures used by the paper.
 

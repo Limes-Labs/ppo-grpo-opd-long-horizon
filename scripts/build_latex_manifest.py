@@ -70,6 +70,8 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("paper/generated/closed_loop_training_table.tex"),
         Path("paper/generated/neural_generalization_table.tex"),
         Path("paper/generated/credit_phase_table.tex"),
+        Path("paper/generated/policy_gradient_table.tex"),
+        Path("paper/generated/policy_baseline_table.tex"),
         Path("results/deep_matrix_20seed.json"),
         Path("results/variance_credit_grid_seed17.json"),
         Path("results/anchor_coverage_audit_seedset.json"),
@@ -79,6 +81,7 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
         Path("results/closed_loop_credit_training_low_coverage_10seed.json"),
         Path("results/neural_credit_generalization_seedset.json"),
         Path("results/credit_phase_diagram_seedset.json"),
+        Path("results/policy_gradient_fidelity_seed13.json"),
         Path("public/figures/deep_matrix_delta.png"),
         Path("public/figures/deep_matrix_coverage.png"),
     ]
@@ -119,6 +122,7 @@ def build_manifest(repo: Path, output_pdf: Path, min_pages: int) -> dict[str, An
             "closed_loop_low_coverage_source": "results/closed_loop_credit_training_low_coverage_10seed.json",
             "neural_generalization_source": "results/neural_credit_generalization_seedset.json",
             "credit_phase_source": "results/credit_phase_diagram_seedset.json",
+            "policy_gradient_source": "results/policy_gradient_fidelity_seed13.json",
         },
     }
 

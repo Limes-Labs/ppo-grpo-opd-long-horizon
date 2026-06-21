@@ -10,6 +10,8 @@ Use `limes-autoresearch` as the run ledger and promotion gate:
 - add a research-question spec for "long-horizon credit assignment"
 - run toy ablations over group size, horizon length, reward sparsity, and value
   model data
+- replay the exact policy-gradient audit with VIMPO-style reference drift and
+  BRPO-style prefix baselines
 - replay structural critic-free baselines such as anchor-action contrast under
   explicit state-action coverage thresholds
 - store JSON artifacts and result cards
@@ -20,7 +22,8 @@ Use `limes-autoresearch` as the run ledger and promotion gate:
 Use `limes-nanogpt` for the first neural policy experiments:
 
 - port the toy dynamics into a tiny sequence policy
-- compare response-level GRPO advantages with PPO/value-model advantages under
+- compare response-level GRPO advantages, PPO/value-model advantages,
+  VIMPO-style policy-implied signals, and BRPO-style prefix baselines under
   identical token budgets
 - add OPD/OPSD-inspired distillation only after the RL baselines are measured
 - report memory and generated-token cost, not only final reward
@@ -52,7 +55,7 @@ Use Parameter Golf for efficiency pressure:
    public report.
 2. Replay toy ablations and the neural generalization audit through
    AutoResearch configs.
-3. Port one tiny PPO-vs-GRPO comparison into `limes-nanogpt`.
+3. Port one tiny estimator-regime comparison into `limes-nanogpt`.
 4. Draft one EuroBench long-horizon task schema with process labels.
 5. Publish a result card with limitations and at least one negative finding.
 
@@ -65,8 +68,9 @@ The next scientific goal is a phase diagram, not a single winner.
    data budget. Keep exact behavior-policy advantages so estimator quality is measurable.
 2. **Tiny neural phase:** extend the current held-out-threshold value-critic
    audit into `limes-nanogpt` with actual learned sequence policies,
-   PPO-style value heads, and GRPO-style group objectives under identical
-   generated-token budgets.
+   PPO-style value heads, GRPO-style group objectives, VIMPO-style reference
+   signals, and BRPO-style prefix baselines under identical generated-token
+   budgets.
 3. **Distillation phase:** add OPD/OPSD-style teacher signals only after PPO and
    GRPO baselines are stable. Charge teacher/self-teacher compute explicitly.
 4. **Benchmark phase:** use EuroBench tasks with verifiable subgoals, tool

@@ -1,27 +1,28 @@
-# Trajectory Rewards Are Not Token Credit
+# The Broadcast Ceiling
 
 This is a public Limes Labs research workstream on long-horizon post-training
 methods for language-model agents and reasoning systems. The focus is the method
 question, not a single base model:
 
-> For variable-length, multi-step, tool-heavy trajectories, when does a
-> critic/value-model PPO setup recover useful token/state-level credit that a
-> group-relative GRPO setup discards or blurs?
+> For variable-length, multi-step, tool-heavy trajectories, which information
+> source can produce reliable token/state-level credit under a given compute
+> budget?
 
 This is a hypothesis to test, not a settled claim. GRPO has clear practical
 advantages: it removes a learned critic, reduces memory pressure, and has worked
 well in verifier-heavy reasoning settings. PPO has its own costs: critic
 training can be unstable, reward/process supervision can be wrong, and
-trajectory storage is expensive. OPD and OPSD belong in the comparison as
-complementary on-policy distillation/self-distillation tools, not as direct
-drop-in replacements for policy optimization.
+trajectory storage is expensive. VIMPO-like policy-implied values, BRPO-style
+prefix baselines, structural anchor methods, sampled values, and process rewards
+all occupy meaningful middle ground.
 
 The repository now includes estimator-fidelity audits, a broadcast-ceiling
 diagnostic for trajectory-constant estimators, structural critic-free baselines,
-an exploratory coverage-gated credit estimator, tabular closed-loop training,
-and a tiny neural value-critic generalization audit. The main remaining upgrade
-toward a stronger ML paper is a nanoGPT-scale or transformer sequence-policy
-benchmark.
+an exact finite-MDP policy-gradient audit with a VIMPO-style signal and true
+null action, an exploratory reliability-gated baseline, tabular closed-loop
+training, and a tiny neural value-critic generalization audit. The main
+remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
+sequence-policy benchmark.
 
 ## Canonical Paper
 
@@ -51,6 +52,9 @@ have to guess which paper is current.
   reduction mechanisms from step-level credit assignment.
 - `experiments/credit_phase_diagram.py` - factorial diagnostic over credit
   heterogeneity, critic observability, coverage, reward contrast, and drift.
+- `experiments/policy_gradient_fidelity.py` - exact finite-MDP policy-gradient
+  audit covering REINFORCE, sibling LOO, prefix/BRPO-style baselines, critic TD,
+  a VIMPO-style policy-implied signal, and true null-action leakage.
 - `experiments/anchor_coverage_audit.py` - coverage sweep for the critic-free
   anchor-action contrast baseline.
 - `experiments/length_imbalance_audit.py` - audit of group-relative estimators
@@ -58,12 +62,12 @@ have to guess which paper is current.
 - `experiments/token_cost_sensitivity.py` - reward-shaping robustness check
   over token costs, including the zero-cost case.
 - `experiments/closed_loop_credit_training.py` - tabular closed-loop training
-  audit plus the exploratory coverage-gated credit estimator.
+  audit plus the exploratory reliability-gated baseline.
 - `experiments/neural_credit_generalization.py` - tiny dependency-free neural
   value-critic audit trained on thresholds 1 and 3 and evaluated on held-out
   threshold 2.
 - `autoresearch/` - Limes AutoResearch spec/config for ledgered replay of the
-  coverage-gated closed-loop proposal.
+  reliability-gated closed-loop proposal.
 - `results/toy_sweep_seed11.md` - committed sweep report for the current draft.
 - `results/deep_matrix_20seed.md` - canonical multi-seed result table used in
   the paper.
@@ -71,6 +75,8 @@ have to guess which paper is current.
   variance-reduction versus credit-assignment grid.
 - `results/credit_phase_diagram_seedset.md` - canonical broadcast-ceiling
   phase diagnostic.
+- `results/policy_gradient_fidelity_seed13.md` - exact-gradient/VIMPO audit
+  result table used in the paper.
 - `results/anchor_coverage_audit_seedset.md` - canonical coverage sweep for
   anchor-action contrast.
 - `results/length_imbalance_audit_seedset.md` - canonical length-imbalance
@@ -80,7 +86,7 @@ have to guess which paper is current.
 - `results/closed_loop_credit_training_10seed.md` - closed-loop tabular policy
   training audit under the default replay budget.
 - `results/closed_loop_credit_training_low_coverage_10seed.md` - low-coverage
-  stress run for coverage-gated credit.
+  stress run for the reliability-gated baseline.
 - `results/neural_credit_generalization_seedset.md` - tiny neural
   held-out-threshold audit showing value-critic generalization.
 - `public/trajectory_rewards_are_not_token_credit.pdf` - canonical LaTeX-built
@@ -176,6 +182,10 @@ python3 -m experiments.closed_loop_credit_training \
 python3 -m experiments.neural_credit_generalization \
   --output-json results/neural_credit_generalization_seedset.json \
   --output-md results/neural_credit_generalization_seedset.md
+
+python3 -m experiments.policy_gradient_fidelity \
+  --output-json results/policy_gradient_fidelity_seed13.json \
+  --output-md results/policy_gradient_fidelity_seed13.md
 ```
 
 Run the Limes AutoResearch hook from this repository root:
@@ -240,6 +250,15 @@ trajectory-constant estimators hit a ceiling as within-trajectory credit
 heterogeneity rises, but critics only exploit that opening when held-out critic
 reliability is high enough.
 
+The exact policy-gradient audit is the main new v1 result. In the finite MDP,
+REINFORCE and sibling LOO have excellent exact-gradient cosine (`0.994` and
+`0.998`) despite modest token-credit correlation, showing why estimator
+correlation is not the whole optimizer story. Critic TD has much lower gradient
+variance (`0.003` versus REINFORCE's `0.022`). A VIMPO-style signal is exactly
+zero when `pi_theta == pi_ref`, then becomes partially aligned but biased under
+a stale reference (`cos=0.661`). The audit also separates `delay` from a true
+`null` action whose exact advantage is zero.
+
 The variance-credit grid adds the missing mechanism decomposition. In the
 canonical long-wait run, a global baseline reduces the REINFORCE second moment
 without creating within-trajectory credit variation. A critic-free
@@ -266,8 +285,8 @@ correlation is `+0.552` over 20 seeds.
 
 The closed-loop audit trains a tabular softmax policy under matched generated
 token budgets. In the default 10-seed run, group total return reaches final
-mean return `0.785`, critic TD reaches `0.810`, and coverage-gated credit
-reaches `0.809`. In the low-coverage stress run, coverage-gated credit uses
+mean return `0.785`, critic TD reaches `0.810`, and the reliability-gated
+baseline reaches `0.809`. In the low-coverage stress run, that baseline uses
 critic TD on about `64%` of final-batch steps and beats group total by `+0.008`
 return, but critic TD remains slightly higher. Treat this as a candidate design
 pattern, not a solved algorithm.
@@ -290,9 +309,9 @@ calls, delays, retries, and compaction. In that regime:
 - GRPO can be memory-efficient and effective when groups contain informative
   reward variation, but terminal response-level group normalization can blur
   token credit in long heterogeneous rollouts.
-- OPD and OPSD can provide dense distillation signals on student/on-policy
-  trajectories. They are different objectives from reward optimization, although
-  they can still compete as practical post-training recipes.
+- VIMPO-like policy-implied signals and BRPO-style prefix baselines show that
+  critic-free does not have to mean trajectory-only. Their reliability depends
+  on reference consistency, prefix verifier quality, and the training stage.
 
 The first experiments here are designed to make those claims falsifiable before
 moving to real language-model training.
@@ -306,7 +325,13 @@ Primary and near-primary sources covered in the first outline include:
   <https://arxiv.org/abs/2402.03300>
 - DeepSeek-R1 and GRPO RL: DeepSeek-AI, 2025,
   <https://arxiv.org/abs/2501.12948>
+- VIMPO policy-implied values: Kang et al., 2026,
+  <https://arxiv.org/abs/2606.20008>
+- AnytimeReasoner / BRPO: Qi et al., 2025,
+  <https://arxiv.org/abs/2505.13438>
 - OPSD: Zhao et al., 2026, <https://arxiv.org/abs/2601.18734>
+- d-OPSD for diffusion LLMs: Luo et al., 2026,
+  <https://arxiv.org/abs/2606.18195>
 - R1-Zero-like GRPO analysis / Dr. GRPO: Liu et al., 2025,
   <https://arxiv.org/abs/2503.20783>
 - DAPO: Yu et al., 2025, <https://arxiv.org/abs/2503.14476>
@@ -327,6 +352,10 @@ Primary and near-primary sources covered in the first outline include:
   <https://arxiv.org/abs/2606.05885>
 - 2026 credit-assignment survey: Zhang, 2026,
   <https://arxiv.org/abs/2604.09459>
+- AReaL asynchronous RL system: Fu et al., 2025,
+  <https://arxiv.org/abs/2505.24298>
+- Straggler-aware group sizing: Khan et al., 2026,
+  <https://arxiv.org/abs/2606.02218>
 - GLM-5.2 as a vendor case study for critic-based PPO returning in compacted
   long-horizon agentic RL: Z.ai, 2026, <https://z.ai/blog/glm-5.2>
 - Variance-reduction and step-credit references added in the LaTeX paper:
@@ -336,8 +365,9 @@ Primary and near-primary sources covered in the first outline include:
 
 ## Non-Claims
 
-This repository does not claim that PPO is always better than GRPO, that OPD is
-inferior to RL, or that the toy experiment predicts frontier-model behavior. The
-current claim is narrower: critic-style estimators are promising when temporal
-state information is learnable; group-relative methods are attractive when group
-reward contrast is reliable and value modeling is weak or too expensive.
+This repository does not claim that PPO is always better than GRPO, that
+critic-free methods are trajectory-only, or that the toy experiment predicts
+frontier-model behavior. The current claim is narrower: token/state-varying
+estimators are promising when their information source is reliable;
+group-relative methods are attractive when group reward contrast is reliable and
+value modeling is weak or too expensive.

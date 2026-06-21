@@ -1,7 +1,7 @@
 [project]
 name = "ppo-grpo-opd-long-horizon"
 version = "0.1.0"
-description = "Trajectory-reward versus token-credit experiments for PPO, GRPO, OPD/OPSD, and long-horizon post-training."
+description = "Broadcast-ceiling and exact-gradient audits for long-horizon RL advantage estimators."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
