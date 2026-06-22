@@ -54,6 +54,10 @@ Current artifacts:
   stress run for the coverage-gated credit proposal.
 - `closed_loop_credit_training_low_coverage_10seed.md` - human-readable table
   for the same low-coverage run.
+- `sequence_policy_training_seedset.json` - short-budget autoregressive MLP
+  sequence-policy training audit under matched rollout budgets.
+- `sequence_policy_training_seedset.md` - human-readable table for the same
+  sequence-policy audit.
 - `neural_credit_generalization_seedset.json` - tiny neural value-critic audit
   trained on thresholds 1 and 3 and evaluated on held-out threshold 2.
 - `neural_credit_generalization_seedset.md` - human-readable table for the same
@@ -151,9 +155,13 @@ python3 -m experiments.closed_loop_credit_training \
   --output-md results/closed_loop_credit_training_low_coverage_10seed.md
 ```
 
-Regenerate the tiny neural generalization audit with:
+Regenerate the tiny neural audits with:
 
 ```bash
+python3 -m experiments.sequence_policy_training \
+  --output-json results/sequence_policy_training_seedset.json \
+  --output-md results/sequence_policy_training_seedset.md
+
 python3 -m experiments.neural_credit_generalization \
   --output-json results/neural_credit_generalization_seedset.json \
   --output-md results/neural_credit_generalization_seedset.md

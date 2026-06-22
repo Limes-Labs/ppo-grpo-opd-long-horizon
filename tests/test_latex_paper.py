@@ -17,6 +17,7 @@ LENGTH_IMBALANCE_TABLE = ROOT / "paper/generated/length_imbalance_table.tex"
 TOKEN_COST_TABLE = ROOT / "paper/generated/token_cost_table.tex"
 CLOSED_LOOP_TABLE = ROOT / "paper/generated/closed_loop_training_table.tex"
 NEURAL_TABLE = ROOT / "paper/generated/neural_generalization_table.tex"
+SEQUENCE_POLICY_TABLE = ROOT / "paper/generated/sequence_policy_table.tex"
 PHASE_TABLE = ROOT / "paper/generated/credit_phase_table.tex"
 POLICY_GRADIENT_TABLE = ROOT / "paper/generated/policy_gradient_table.tex"
 POLICY_IMPLIED_TABLE = ROOT / "paper/generated/policy_implied_table.tex"
@@ -30,6 +31,7 @@ TOKEN_COST = ROOT / "results/token_cost_sensitivity_20seed.json"
 CLOSED_LOOP = ROOT / "results/closed_loop_credit_training_10seed.json"
 CLOSED_LOOP_LOW = ROOT / "results/closed_loop_credit_training_low_coverage_10seed.json"
 NEURAL = ROOT / "results/neural_credit_generalization_seedset.json"
+SEQUENCE_POLICY = ROOT / "results/sequence_policy_training_seedset.json"
 PHASE = ROOT / "results/credit_phase_diagram_seedset.json"
 POLICY_GRADIENT = ROOT / "results/policy_gradient_fidelity_seed13.json"
 SELECTION_REGRET = ROOT / "results/selection_regret_seedset.json"
@@ -78,6 +80,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn(r"\input{generated/length_imbalance_table.tex}", text)
         self.assertIn(r"\input{generated/token_cost_table.tex}", text)
         self.assertIn(r"\input{generated/closed_loop_training_table.tex}", text)
+        self.assertIn(r"\input{generated/sequence_policy_table.tex}", text)
         self.assertIn(r"\input{generated/neural_generalization_table.tex}", text)
         self.assertIn(r"\input{generated/credit_phase_table.tex}", text)
         self.assertIn(r"\input{generated/selection_regret_table.tex}", text)
@@ -164,6 +167,7 @@ class LatexPaperTests(unittest.TestCase):
                     "deep_matrix_table.tex",
                     "length_imbalance_table.tex",
                     "neural_generalization_table.tex",
+                    "sequence_policy_table.tex",
                     "policy_baseline_table.tex",
                     "policy_gradient_table.tex",
                     "policy_implied_table.tex",
@@ -252,6 +256,20 @@ class LatexPaperTests(unittest.TestCase):
         self.assertGreater(
             neural["aggregate"]["estimators"]["neural_critic_td"]["pearson_correlation"],
             neural["aggregate"]["estimators"]["group_relative"]["pearson_correlation"] + 0.30,
+        )
+
+        sequence = json.loads(SEQUENCE_POLICY.read_text())
+        sequence_table = SEQUENCE_POLICY_TABLE.read_text()
+        sequence_methods = {row["method"]: row for row in sequence["method_summaries"]}
+        self.assertIn("Neural TD", sequence_table)
+        self.assertEqual(sequence["config"]["policy_family"], "autoregressive_mlp")
+        self.assertGreater(
+            sequence_methods["neural_value_td"]["final_return"],
+            sequence_methods["group_broadcast"]["final_return"],
+        )
+        self.assertLess(
+            sequence_methods["neural_value_td"]["final_wait_fraction"],
+            sequence_methods["group_broadcast"]["final_wait_fraction"],
         )
 
         phase = json.loads(PHASE.read_text())
@@ -399,6 +417,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("paper/generated/token_cost_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/closed_loop_training_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/neural_generalization_table.tex", manifest["inputs"])
+        self.assertIn("paper/generated/sequence_policy_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/credit_phase_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_gradient_table.tex", manifest["inputs"])
         self.assertIn("paper/generated/policy_implied_table.tex", manifest["inputs"])
@@ -414,6 +433,7 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("results/closed_loop_credit_training_10seed.json", manifest["inputs"])
         self.assertIn("results/closed_loop_credit_training_low_coverage_10seed.json", manifest["inputs"])
         self.assertIn("results/neural_credit_generalization_seedset.json", manifest["inputs"])
+        self.assertIn("results/sequence_policy_training_seedset.json", manifest["inputs"])
         self.assertIn("results/credit_phase_diagram_seedset.json", manifest["inputs"])
         self.assertIn("results/policy_gradient_fidelity_seed13.json", manifest["inputs"])
         self.assertIn("results/selection_regret_seedset.json", manifest["inputs"])

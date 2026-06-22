@@ -21,7 +21,8 @@ Use `limes-autoresearch` as the run ledger and promotion gate:
 
 Use `limes-nanogpt` for the first neural policy experiments:
 
-- port the toy dynamics into a tiny sequence policy
+- replicate the repo's tiny autoregressive sequence-policy audit in a
+  nanoGPT-style policy
 - compare response-level GRPO advantages, PPO/value-model advantages,
   VIMPO-style policy-implied signals, and BRPO-style prefix baselines under
   identical token budgets
@@ -53,8 +54,8 @@ Use Parameter Golf for efficiency pressure:
 
 1. Keep `paper/main.tex` and the canonical PDF as the source of truth for the
    public report.
-2. Replay toy ablations and the neural generalization audit through
-   AutoResearch configs.
+2. Replay toy ablations, the sequence-policy audit, and the neural
+   generalization audit through AutoResearch configs.
 3. Port one tiny estimator-regime comparison into `limes-nanogpt`.
 4. Draft one EuroBench long-horizon task schema with process labels.
 5. Publish a result card with limitations and at least one negative finding.
@@ -67,7 +68,8 @@ The next scientific goal is a phase diagram, not a single winner.
    group size, critic state coverage, structural-anchor coverage, and critic
    data budget. Keep exact behavior-policy advantages so estimator quality is measurable.
 2. **Tiny neural phase:** extend the current held-out-threshold value-critic
-   audit into `limes-nanogpt` with actual learned sequence policies,
+   audit and the tiny autoregressive sequence-policy audit into `limes-nanogpt`
+   with transformer sequence policies,
    PPO-style value heads, GRPO-style group objectives, VIMPO-style reference
    signals, and BRPO-style prefix baselines under identical generated-token
    budgets.
