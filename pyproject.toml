@@ -1,5 +1,5 @@
 [project]
-name = "ppo-grpo-opd-long-horizon"
+name = "the-broadcast-ceiling"
 version = "0.1.0"
 description = "Broadcast-ceiling and exact-gradient audits for long-horizon RL advantage estimators."
 readme = "README.md"
