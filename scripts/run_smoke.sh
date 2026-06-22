@@ -87,6 +87,21 @@ SMOKE_DIR="${SMOKE_DIR:-$(mktemp -d)}"
   --output-json "$SMOKE_DIR/neural_credit_smoke.json" \
   --output-md "$SMOKE_DIR/neural_credit_smoke.md"
 
+"$PYTHON_BIN" -m experiments.sequence_policy_training \
+  --seeds 11 29 \
+  --train-iterations 6 \
+  --groups-per-iteration 8 \
+  --group-size 3 \
+  --max-steps 8 \
+  --eval-groups 24 \
+  --eval-every 6 \
+  --policy-hidden-size 6 \
+  --critic-hidden-size 6 \
+  --critic-epochs 3 \
+  --max-critic-examples 300 \
+  --output-json "$SMOKE_DIR/sequence_policy_smoke.json" \
+  --output-md "$SMOKE_DIR/sequence_policy_smoke.md"
+
 "$PYTHON_BIN" -m experiments.credit_phase_diagram \
   --seeds 11,29 \
   --heterogeneity-levels low,high \
@@ -231,6 +246,18 @@ if neural_td["pearson_correlation"] <= neural_group["pearson_correlation"] + 0.2
     raise SystemExit("neural critic did not beat group broadcast in held-out smoke")
 if neural_td["within_trajectory_variance"] <= 1e-4:
     raise SystemExit("neural critic did not create step-level variation")
+
+sequence = json.loads((smoke_dir / "sequence_policy_smoke.json").read_text())
+sequence_methods = {row["method"]: row for row in sequence["method_summaries"]}
+for required in ["group_broadcast", "neural_value_td"]:
+    if required not in sequence_methods:
+        raise SystemExit(f"sequence-policy smoke missing method {required}")
+if sequence["config"]["policy_family"] != "autoregressive_mlp":
+    raise SystemExit("sequence-policy smoke did not use the autoregressive MLP policy")
+if sequence_methods["neural_value_td"]["final_return"] <= sequence_methods["group_broadcast"]["final_return"]:
+    raise SystemExit("sequence-policy smoke neural TD did not improve final return")
+if sequence_methods["neural_value_td"]["final_wait_fraction"] >= sequence_methods["group_broadcast"]["final_wait_fraction"]:
+    raise SystemExit("sequence-policy smoke neural TD did not reduce wait fraction")
 
 phase = json.loads((smoke_dir / "credit_phase_smoke.json").read_text())
 if phase["summary"]["critic_clear_cells"] < 1:

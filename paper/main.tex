@@ -60,12 +60,13 @@ term, proving a broadcast ceiling for any method whose coefficient is
 token-invariant under the available group context. CPU-only finite-MDP audits
 then compare group-relative broadcasts, prefix and structural baselines,
 sampled values, learned and oracle value TD, and policy-implied actor
-coefficients. The central empirical finding is conditional: trajectory-level
-coefficients can give high policy-gradient cosine, but they can be poor local
-credit explanations in heterogeneous traces; value-style TD reduces variance
-when coverage and observability are adequate; group methods can win when value
-estimates are blind or unsupported, while structural methods can recover part
-of the lost local information. The conclusion is not that
+coefficients, with downstream checks including tabular and tiny autoregressive
+sequence-policy training. The central empirical finding is conditional:
+trajectory-level coefficients can give high policy-gradient cosine, but they
+can be poor local credit explanations in heterogeneous traces; value-style TD
+reduces variance when coverage and observability are adequate; group methods
+can win when value estimates are blind or unsupported, while structural methods
+can recover part of the lost local information. The conclusion is not that
 \ppo\ universally beats \grpo. Estimator choice should be made from credit
 heterogeneity, observability, support, drift, and compute cost.
 \end{abstract}
@@ -104,8 +105,9 @@ gradients, stronger critic-free baselines, observability controls, and
 calibrated heterogeneity regimes. Fourth, we make estimator selection
 operational with a held-out audit-MSE plus cost rule on the phase grid. Fifth,
 we report mechanism findings across estimator fidelity, phase diagrams, length
-and token-cost sensitivity, tabular closed-loop training, and a tiny neural
-value-critic generalization audit.
+and token-cost sensitivity, tabular closed-loop training, a short-budget
+autoregressive sequence-policy audit, and a tiny neural value-critic
+generalization audit.
 
 \paragraph{Scope discipline.}
 The paper makes a narrow claim about credit-assignment mechanisms. It does not
@@ -764,12 +766,21 @@ method-selection diagnostic.
 
 The closed-loop training audit uses the same toy dynamics but trains a tabular
 softmax policy with policy-gradient updates under matched generated-token
-budgets. This is still not full \ppo\ or production \grpo: there is no neural
-policy, KL controller, minibatch optimizer, or clipped surrogate. It does test
+budgets. This is still not full \ppo\ or production \grpo: there is no
+transformer policy, KL controller, minibatch optimizer, or clipped surrogate.
+It does test
 whether estimator-fidelity differences survive one downstream optimization
 loop. The compared signals are group total return, group return per token,
 critic TD from a replay value table, and the exploratory reliability-gated
 baseline.
+
+The sequence-policy audit uses the same long-wait dynamics but replaces the
+tabular actor with a shared one-hidden-layer autoregressive MLP policy over
+action tokens. The policy conditions on the prompt and prefix-derived sequence
+state, and it is trained under a short matched rollout budget. This experiment
+does not make the paper a transformer benchmark; it checks whether the
+tabular closed-loop pattern survives shared neural policy parameters before
+larger nanoGPT-style work.
 
 The neural generalization audit keeps the policy fixed and replaces the tabular
 critic with a one-hidden-layer value network trained by SGD on thresholds 1 and
@@ -779,8 +790,8 @@ therefore asks whether a small value model can interpolate enough structure to
 recover token-level temporal credit.
 
 The behavior-policy-alignment matrix remains an estimator-fidelity experiment
-under controlled dynamics. The closed-loop audit is a downstream tabular-policy
-stress test, not a production \ppo-vs-\grpo\ benchmark.
+under controlled dynamics. The closed-loop and sequence-policy audits are
+downstream stress tests, not a production \ppo-vs-\grpo\ benchmark.
 
 \paragraph{Exact policy-gradient audit.}
 Because the MDP is finite, the exact-gradient variant computes the expected
@@ -832,12 +843,12 @@ reports both the mean-win count and the more cautious confidence-interval
 reading.
 
 \paragraph{Why not a full closed-loop \ppo/\grpo\ benchmark?}
-The closed-loop audit below is intentionally tabular and unclipped. A full
+The closed-loop audits below are intentionally small and unclipped. A full
 \ppo/\grpo\ benchmark would mix estimator fidelity with optimizer settings,
-clipping schedules, policy parameterization, exploration, and KL control. This
-paper therefore asks the behavior-policy credit question first, then uses a small
-downstream policy-training audit as a sanity check rather than as final
-production evidence.
+clipping schedules, transformer policy parameterization, exploration, and KL
+control. This paper therefore asks the behavior-policy credit question first,
+then uses small downstream policy-training audits as sanity checks rather than
+as final production evidence.
 
 \section{Results}
 
@@ -934,8 +945,9 @@ prefix baselines have excellent gradient cosine with the exact policy gradient
 even though their token-level advantage correlations are modest. That is
 expected: terminal returns can be valid Monte Carlo policy-gradient
 coefficients while still being weak local credit explanations. Oracle-value TD
-is the dynamic-programming upper bound and has the lowest trace variance and
-lowest null-action leakage in this covered tabular setting; the cross-fitted
+is the dynamic-programming upper bound. Value-TD estimators assign zero credit
+to the recognized null self-loop by construction; oracle-value TD additionally
+has the lowest gradient variance in this covered tabular setting. The cross-fitted
 learned-value row retains most of the token-credit correlation while exposing
 finite-sample coverage risk. The table reports intervals over replicated
 batches and per-batch matched-KL improvement statistics, so variance can show
@@ -1116,6 +1128,30 @@ critic benefit while making critic use explicit and auditable.
 
 \begin{table}[!htbp]
 \centering
+\caption{Short-budget autoregressive sequence-policy training audit. A shared
+one-hidden-layer MLP policy samples action tokens from prompt and
+prefix-derived sequence state. Both methods use the same rollout budget; only
+the token credit signal differs.}
+\label{tab:sequence-policy}
+\scriptsize
+\input{generated/sequence_policy_table.tex}
+\end{table}
+
+\paragraph{Sequence-policy training.}
+Table \ref{tab:sequence-policy} is the smallest neural-policy downstream check.
+It is not a transformer experiment: the actor is a tiny autoregressive MLP, and
+there is no clipped surrogate or KL controller. Under a short matched rollout
+budget, group broadcast improves mean return from 0.171 to 0.811, while neural
+value TD reaches 0.839 and reduces the final wait-token fraction from 0.044 to
+0.004. This is a modest sample-efficiency result rather than a decisive
+algorithm ranking. Its value is that the direction survives shared policy
+parameters: the critic-style signal changes learned sequence behavior, not only
+exact-state table entries. With longer budgets the toy becomes easy enough that
+both policies approach saturation, so the experiment should be read as a
+small-budget mechanism check.
+
+\begin{table}[!htbp]
+\centering
 \caption{Tiny neural value-critic generalization audit. The value critic is
 trained on thresholds 1 and 3, then evaluated on held-out threshold 2. Exact
 tabular state lookup cannot match the evaluation threshold, so the TD signal
@@ -1275,14 +1311,16 @@ without becoming a run ledger.
 
 \section{Limitations}
 
-The toy environment has a finite known state and a tabular critic. Real
-post-training adds neural approximation, KL controllers, reward-model errors,
-tool failures, distributed rollout systems, stale policies, optimizer details,
-and data contamination risks. The \grpo\ baseline is intentionally simple, and
-the \vimpo\ audit reports actor-coefficient alignment rather than a full
-algorithm. A stronger external-validity claim requires a controlled
-sequence-policy benchmark with clipped objectives, KL control, corrected
-\grpo-family variants, process rewards, and matched rollout budgets.
+The toy environment has a finite known state. Most audits use tabular
+estimators; the added neural components are tiny one-hidden-layer models, not
+language models. Real post-training adds transformer function approximation, KL
+controllers, reward-model errors, tool failures, distributed rollout systems,
+stale policies, optimizer details, and data contamination risks. The \grpo\
+baseline is intentionally simple, and the \vimpo\ audit reports
+actor-coefficient alignment rather than a full algorithm. A stronger
+external-validity claim requires a controlled transformer sequence-policy
+benchmark with clipped objectives, KL control, corrected \grpo-family variants,
+process rewards, and matched rollout budgets.
 
 \section{Conclusion}
 
@@ -1542,8 +1580,9 @@ carry enough machine-readable detail for independent inspection. The canonical
 deep matrix is stored as \path{results/deep_matrix_20seed.json} and
 \path{results/deep_matrix_20seed.csv}. The complete phase grid is stored as
 \path{results/credit_phase_diagram_seedset.json}. The policy-gradient audit,
-closed-loop audit, neural generalization audit, and robustness sweeps each have
-matching JSON and Markdown summaries under \path{results/}.
+closed-loop audit, sequence-policy audit, neural generalization audit, and
+robustness sweeps each have matching JSON and Markdown summaries under
+\path{results/}.
 
 The result artifacts are generated, not hand edited. The build script reads the
 JSON files, regenerates the LaTeX tables used in the paper, compiles the PDF,
@@ -1598,12 +1637,14 @@ critic-style temporal information can dominate in observable long traces, while
 group-relative normalization remains strong when reward contrast is reliable
 and value modeling is weak. That is a research program, not a slogan.
 
-\section{Minimal Sequence-Policy Benchmark Specification}
+\section{Minimal Transformer Sequence-Policy Benchmark Specification}
 
 The next external-validity step should be small enough to run repeatedly and
-large enough to remove the main weakness of the current paper: table-lookup
-state. A useful benchmark can encode the same finite-MDP family as token
-sequences and train a tiny autoregressive policy. Each prompt specifies a
+large enough to remove the main remaining weakness of the current paper: no
+transformer-style token model with PPO/GRPO optimizer details. The small
+autoregressive MLP audit above checks shared policy parameters, but a stronger
+benchmark should encode the same finite-MDP family as token sequences and train
+a tiny transformer policy. Each prompt specifies a
 threshold, horizon, and optional hidden distractor. The policy emits action
 tokens from a small vocabulary such as \texttt{help}, \texttt{harm},
 \texttt{wait}, and \texttt{stop}; the environment then appends an observation
@@ -1612,7 +1653,7 @@ verifier returns a terminal success bit and optional process labels for selected
 prefixes.
 
 \paragraph{Policy and value models.}
-The minimal model should be a one- or two-layer transformer with shared token
+The stronger model should be a one- or two-layer transformer with shared token
 embeddings and separate policy and value heads. The value head should be tested
 in three access modes: actor-history only, actor-history plus explicit
 environment state, and deliberately blinded history. The first mode is the fair

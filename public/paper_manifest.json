@@ -15,12 +15,13 @@
     "policy_gradient_source": "results/policy_gradient_fidelity_seed13.json",
     "result_source": "results/deep_matrix_20seed.json",
     "selection_regret_source": "results/selection_regret_seedset.json",
+    "sequence_policy_source": "results/sequence_policy_training_seedset.json",
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-22T11:39:54.774818+00:00",
+  "generated_at_utc": "2026-06-22T12:21:11.112702+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "50475d1c9a5e51b56f23ffe82863005d1c79d3f6",
+  "git_commit": "e8b5abc191bd04a007d3da94ead6f36cf98bbb1c",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
@@ -67,6 +68,10 @@
       "bytes": 472,
       "sha256": "5f85daab52d272440a89659d2262588dc87c03e6a68bcfaed2dd2f6d78dc8a40"
     },
+    "paper/generated/sequence_policy_table.tex": {
+      "bytes": 506,
+      "sha256": "1909fb06df170e4f30b3b2dadd9c025c8e9a7bd0aea60800bd38181cc6e7642c"
+    },
     "paper/generated/token_cost_table.tex": {
       "bytes": 729,
       "sha256": "c6ac710d65f96b2dc317d6942c37031d6131a262eea1cd82e11249cff5ff10d9"
@@ -76,8 +81,8 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 88235,
-      "sha256": "7da61db2312274b6c87e53e74594bd5196b92b261c4b19e01d504ea6d79f9b66"
+      "bytes": 90497,
+      "sha256": "e8c183eb744f4030849184e2b839b3cc5a656209dba1256b045e54da2d05afa3"
     },
     "paper/references.bib": {
       "bytes": 13564,
@@ -127,6 +132,10 @@
       "bytes": 11396,
       "sha256": "54ee4e48dc6e1e65e05a9796dd324961ae3736c07522701eb4a7ebeaf0e8dc62"
     },
+    "results/sequence_policy_training_seedset.json": {
+      "bytes": 47627,
+      "sha256": "9626c4f7f8a63be2ed864bdaf6148ffef46fecddf72bfff108988458d71746aa"
+    },
     "results/token_cost_sensitivity_20seed.json": {
       "bytes": 111284,
       "sha256": "7b1803ee0bc281e76f00f470cd4a36f2100570858e5690fc2df81b46b91d1119"
@@ -138,8 +147,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 306169,
-      "sha256": "963449cf4268be9581cf839fdad55be296b240e278cb382a42e27386e72c0353"
+      "bytes": 310173,
+      "sha256": "bf96caaf105c7fa631adbb563ba46ebbd9ead9275ad08fec94023b31436fcbf4"
     }
   },
   "tex_engine": "Tectonic 0.16.9"

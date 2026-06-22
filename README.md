@@ -20,11 +20,12 @@ The repository now includes estimator-fidelity audits, a broadcast-ceiling
 diagnostic for trajectory-constant estimators, structural critic-free baselines,
 an exact finite-MDP policy-gradient audit with a VIMPO-style signal and true
 null action, an exploratory reliability-gated baseline, tabular closed-loop
-training, a held-out estimator-selection regret audit, and a tiny neural
-value-critic generalization audit. The exact-gradient audit separates
+training, a short-budget autoregressive sequence-policy audit, a held-out
+estimator-selection regret audit, and a tiny neural value-critic generalization
+audit. The exact-gradient audit separates
 estimator-gradient fidelity from policy-implied actor-coefficient alignment. The main
 remaining upgrade toward a stronger ML paper is a nanoGPT-scale or transformer
-sequence-policy benchmark.
+benchmark with clipped objectives and KL control.
 
 ## Canonical Paper
 
@@ -71,6 +72,8 @@ have to guess which paper is current.
   over token costs, including the zero-cost case.
 - `experiments/closed_loop_credit_training.py` - tabular closed-loop training
   audit plus the exploratory reliability-gated baseline.
+- `experiments/sequence_policy_training.py` - dependency-free autoregressive
+  MLP sequence-policy training audit under short matched rollout budgets.
 - `experiments/neural_credit_generalization.py` - tiny dependency-free neural
   value-critic audit trained on thresholds 1 and 3 and evaluated on held-out
   threshold 2.
@@ -97,6 +100,8 @@ have to guess which paper is current.
   training audit under the default replay budget.
 - `results/closed_loop_credit_training_low_coverage_10seed.md` - low-coverage
   stress run for the reliability-gated baseline.
+- `results/sequence_policy_training_seedset.md` - short-budget autoregressive
+  sequence-policy training audit.
 - `results/neural_credit_generalization_seedset.md` - tiny neural
   held-out-threshold audit showing value-critic generalization.
 - `public/trajectory_rewards_are_not_token_credit.pdf` - canonical LaTeX-built
@@ -192,6 +197,10 @@ python3 -m experiments.closed_loop_credit_training \
   --output-json results/closed_loop_credit_training_10seed.json \
   --output-md results/closed_loop_credit_training_10seed.md
 
+python3 -m experiments.sequence_policy_training \
+  --output-json results/sequence_policy_training_seedset.json \
+  --output-md results/sequence_policy_training_seedset.md
+
 python3 -m experiments.neural_credit_generalization \
   --output-json results/neural_credit_generalization_seedset.json \
   --output-md results/neural_credit_generalization_seedset.md
@@ -219,10 +228,10 @@ The LaTeX build regenerates the result macros and appendix tables from
 `results/deep_matrix_20seed.json` and
 `results/variance_credit_grid_seed17.json`, plus the anchor-coverage,
 credit-phase, selection-regret, length-imbalance, token-cost, closed-loop,
-neural generalization, replicated policy-gradient, and policy-implied
-actor-coefficient audit JSON files. It also regenerates the public PNG figures
-from the canonical deep-matrix JSON before compiling with `tectonic`, then
-checks that the rendered PDF is at least 30 pages.
+sequence-policy, neural generalization, replicated policy-gradient, and
+policy-implied actor-coefficient audit JSON files. It also regenerates the
+public PNG figures from the canonical deep-matrix JSON before compiling with
+`tectonic`, then checks that the rendered PDF is at least 30 pages.
 
 The output JSON records correlation, calibrated MSE, sign accuracy, and leakage
 metrics for both estimators. The toy is deliberately synthetic: it tests a
@@ -318,6 +327,13 @@ baseline reaches `0.809`. In the low-coverage stress run, that baseline uses
 critic TD on about `64%` of final-batch steps and beats group total by `+0.008`
 return, but critic TD remains slightly higher. Treat this as a candidate design
 pattern, not a solved algorithm.
+
+The short-budget sequence-policy audit trains a shared one-hidden-layer
+autoregressive MLP policy over action tokens. In the canonical 10-seed run,
+group broadcast reaches final mean return `0.811`, while neural value TD reaches
+`0.839` and reduces final wait-token fraction from `0.044` to `0.004`. This is
+not a transformer benchmark; it is a check that the credit effect survives
+shared policy parameters.
 
 The tiny neural generalization audit trains a one-hidden-layer value critic on
 thresholds `1` and `3`, then evaluates on held-out threshold `2`. Exact tabular
