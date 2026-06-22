@@ -40,6 +40,7 @@ SELECTION_REGRET = ROOT / "results/selection_regret_seedset.json"
 class LatexPaperTests(unittest.TestCase):
     def test_latex_source_has_real_paper_structure(self) -> None:
         text = TEX.read_text()
+        normalized_text = re.sub(r"\s+", " ", text)
 
         for required in [
             r"\documentclass[11pt]{article}",
@@ -101,6 +102,11 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("exact-gradient audit", text)
         self.assertIn("closed-loop training", text)
         self.assertIn("value-critic generalization", text)
+        self.assertIn("environment-interaction budgets are matched", normalized_text)
+        self.assertIn(
+            "not total compute: the neural TD arm additionally trains a critic",
+            normalized_text,
+        )
         self.assertIn("Score-weighted broadcast ceiling", text)
         self.assertIn("token-invariant group context", text)
         self.assertIn(r"\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)", text)
@@ -262,6 +268,8 @@ class LatexPaperTests(unittest.TestCase):
         sequence_table = SEQUENCE_POLICY_TABLE.read_text()
         sequence_methods = {row["method"]: row for row in sequence["method_summaries"]}
         self.assertIn("Neural TD", sequence_table)
+        self.assertIn("10 paired seeds", sequence_table)
+        self.assertIn(r"95\% paired CI [0.007, 0.050]", sequence_table)
         self.assertEqual(sequence["config"]["policy_family"], "autoregressive_mlp")
         self.assertGreater(
             sequence_methods["neural_value_td"]["final_return"],

@@ -13,6 +13,8 @@ LLM-scale transformer benchmark.
 
 Summary:
 - Policy family: autoregressive_mlp
+- 10 paired seeds
 - Neural minus group final return: 0.028
+- Neural minus group final return 95% paired CI: [0.007, 0.050]
 - Neural minus group success: 0.028
 - Neural minus group wait fraction: -0.040

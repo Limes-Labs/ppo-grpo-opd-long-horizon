@@ -1148,7 +1148,8 @@ algorithm ranking. Its value is that the direction survives shared policy
 parameters: the critic-style signal changes learned sequence behavior, not only
 exact-state table entries. With longer budgets the toy becomes easy enough that
 both policies approach saturation, so the experiment should be read as a
-small-budget mechanism check.
+small-budget mechanism check. In this audit, environment-interaction budgets
+are matched, not total compute: the neural TD arm additionally trains a critic.
 
 \begin{table}[!htbp]
 \centering

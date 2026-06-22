@@ -46,6 +46,8 @@ class SequencePolicyTrainingTests(unittest.TestCase):
             summaries["neural_value_td"]["final_wait_fraction"],
             summaries["group_broadcast"]["final_wait_fraction"],
         )
+        self.assertEqual(result["summary"]["paired_seed_count"], 3)
+        self.assertEqual(len(result["summary"]["neural_minus_group_return_ci95"]), 2)
 
     def test_sequence_policy_audit_is_deterministic(self) -> None:
         config = SequencePolicyConfig(
@@ -118,11 +120,15 @@ class SequencePolicyTrainingTests(unittest.TestCase):
 
             self.assertIn("neural_minus_group_return=", completed.stdout)
             payload = json.loads(output_json.read_text())
+            self.assertEqual(payload["summary"]["paired_seed_count"], 2)
             self.assertIn(
                 "neural_value_td",
                 {row["method"] for row in payload["method_summaries"]},
             )
-            self.assertIn("Sequence-Policy Training Audit", output_md.read_text())
+            markdown = output_md.read_text()
+            self.assertIn("Sequence-Policy Training Audit", markdown)
+            self.assertIn("paired seeds", markdown)
+            self.assertIn("95% paired CI", markdown)
 
 
 if __name__ == "__main__":

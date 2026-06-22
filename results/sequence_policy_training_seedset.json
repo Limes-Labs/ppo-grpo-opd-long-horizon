@@ -1528,8 +1528,13 @@
   ],
   "summary": {
     "best_by_final_return": "neural_value_td",
-    "neural_minus_group_return": 0.02833333333333321,
+    "neural_minus_group_return": 0.02833333333333331,
     "neural_minus_group_success": 0.02833333333333332,
-    "neural_minus_group_wait_fraction": -0.04025101328020688
+    "neural_minus_group_wait_fraction": -0.04025101328020688,
+    "paired_seed_count": 10,
+    "neural_minus_group_return_ci95": [
+      0.006529466705810148,
+      0.05013719996085647
+    ]
   }
 }

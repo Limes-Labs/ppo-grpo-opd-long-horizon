@@ -27,7 +27,7 @@ import random
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from statistics import fmean
+from statistics import fmean, stdev
 from typing import Any, Iterable
 
 from experiments.closed_loop_credit_training import (
@@ -49,6 +49,39 @@ from experiments.toy_credit_assignment import (
 
 
 DEFAULT_METHODS = ["group_broadcast", "neural_value_td"]
+
+T_CRITICAL_975 = {
+    1: 12.706204736432095,
+    2: 4.302652729749464,
+    3: 3.182446305284263,
+    4: 2.7764451051977987,
+    5: 2.570581835636314,
+    6: 2.4469118511449692,
+    7: 2.3646242510102993,
+    8: 2.306004135204166,
+    9: 2.2621571627409915,
+    10: 2.2281388519649385,
+    11: 2.200985160091638,
+    12: 2.178812829663418,
+    13: 2.160368656461013,
+    14: 2.1447866879169273,
+    15: 2.131449545559323,
+    16: 2.1199052992210112,
+    17: 2.1098155778331806,
+    18: 2.10092204024096,
+    19: 2.093024054408263,
+    20: 2.0859634472658364,
+    21: 2.079613844727662,
+    22: 2.0738730679040147,
+    23: 2.0686576104190406,
+    24: 2.0638985616280205,
+    25: 2.059538552753294,
+    26: 2.055529438642871,
+    27: 2.0518305164802833,
+    28: 2.048407141795244,
+    29: 2.045229642132703,
+    30: 2.042272456301238,
+}
 
 
 @dataclass(frozen=True)
@@ -407,6 +440,37 @@ def summarize_method(method: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def t_critical_975(df: int) -> float:
+    if df <= 0:
+        raise ValueError("df must be positive")
+    if df in T_CRITICAL_975:
+        return T_CRITICAL_975[df]
+    return 1.959963984540054
+
+
+def paired_final_return_ci(
+    runs: list[dict[str, Any]],
+    numerator_method: str,
+    denominator_method: str,
+) -> tuple[int, float, float, float]:
+    by_seed: dict[int, dict[str, float]] = {}
+    for run in runs:
+        seed = int(run["seed"])
+        by_seed.setdefault(seed, {})[run["method"]] = float(run["final_eval"]["mean_return"])
+
+    deltas = []
+    for seed, methods_by_seed in sorted(by_seed.items()):
+        if numerator_method not in methods_by_seed or denominator_method not in methods_by_seed:
+            raise ValueError(f"unpaired sequence-policy seed: {seed}")
+        deltas.append(methods_by_seed[numerator_method] - methods_by_seed[denominator_method])
+
+    if len(deltas) < 2:
+        raise ValueError("paired CI requires at least two paired seeds")
+    paired_mean = fmean(deltas)
+    half_width = t_critical_975(len(deltas) - 1) * stdev(deltas) / math.sqrt(len(deltas))
+    return len(deltas), paired_mean, paired_mean - half_width, paired_mean + half_width
+
+
 def run_sequence_policy_audit(
     *,
     seeds: list[int] | None = None,
@@ -434,6 +498,11 @@ def run_sequence_policy_audit(
     group = next(row for row in summaries if row["method"] == "group_broadcast")
     neural = next(row for row in summaries if row["method"] == "neural_value_td")
     best = max(summaries, key=lambda row: row["final_return"])
+    paired_n, paired_delta, paired_low, paired_high = paired_final_return_ci(
+        runs,
+        numerator_method="neural_value_td",
+        denominator_method="group_broadcast",
+    )
     return {
         "config": {
             **config.__dict__,
@@ -446,7 +515,9 @@ def run_sequence_policy_audit(
         "runs": runs,
         "summary": {
             "best_by_final_return": best["method"],
-            "neural_minus_group_return": neural["final_return"] - group["final_return"],
+            "paired_seed_count": paired_n,
+            "neural_minus_group_return": paired_delta,
+            "neural_minus_group_return_ci95": [paired_low, paired_high],
             "neural_minus_group_success": (
                 neural["final_success"] - group["final_success"]
             ),
@@ -499,7 +570,11 @@ def write_markdown(result: dict[str, Any], path: Path) -> None:
             "",
             "Summary:",
             f"- Policy family: {result['config']['policy_family']}",
+            f"- {result['summary']['paired_seed_count']} paired seeds",
             f"- Neural minus group final return: {fmt(result['summary']['neural_minus_group_return'])}",
+            "- Neural minus group final return 95% paired CI: "
+            f"[{fmt(result['summary']['neural_minus_group_return_ci95'][0])}, "
+            f"{fmt(result['summary']['neural_minus_group_return_ci95'][1])}]",
             f"- Neural minus group success: {fmt(result['summary']['neural_minus_group_success'])}",
             f"- Neural minus group wait fraction: {fmt(result['summary']['neural_minus_group_wait_fraction'])}",
             "",
