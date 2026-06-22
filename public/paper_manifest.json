@@ -18,9 +18,9 @@
     "token_cost_source": "results/token_cost_sensitivity_20seed.json",
     "variance_credit_source": "results/variance_credit_grid_seed17.json"
   },
-  "generated_at_utc": "2026-06-21T23:54:17.272831+00:00",
+  "generated_at_utc": "2026-06-22T11:39:54.774818+00:00",
   "generator": "scripts/build_latex_paper.sh",
-  "git_commit": "c847cb5cbcd03033deac622497dfa8b040b91d5b",
+  "git_commit": "50475d1c9a5e51b56f23ffe82863005d1c79d3f6",
   "git_context_note": "The manifest records content hashes and the source commit visible at generation time. It intentionally omits dirty-worktree status because generated artifacts are committed together with the manifest; rebuild from a clean checkout to refresh provenance.",
   "inputs": {
     "paper/generated/anchor_coverage_table.tex": {
@@ -76,8 +76,8 @@
       "sha256": "da56ba03a9e260884f0628866f3c0e41dbf4906e45d5587723959f5d4bf442bc"
     },
     "paper/main.tex": {
-      "bytes": 88243,
-      "sha256": "057d2cd7c98bf71b357e5db9fe6c85cf8d785248625b0738bcce3f834fea68f6"
+      "bytes": 88235,
+      "sha256": "7da61db2312274b6c87e53e74594bd5196b92b261c4b19e01d504ea6d79f9b66"
     },
     "paper/references.bib": {
       "bytes": 13564,
@@ -138,8 +138,8 @@
   },
   "outputs": {
     "public/trajectory_rewards_are_not_token_credit.pdf": {
-      "bytes": 306229,
-      "sha256": "13aa7188d2a1d0de1a83eb1c8978b79d25ff56ccbc94cfb798c20f4ff5803aa9"
+      "bytes": 306169,
+      "sha256": "963449cf4268be9581cf839fdad55be296b240e278cb382a42e27386e72c0353"
     }
   },
   "tex_engine": "Tectonic 0.16.9"
