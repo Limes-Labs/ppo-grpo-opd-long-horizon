@@ -63,7 +63,7 @@ class LatexPaperTests(unittest.TestCase):
         ]:
             self.assertIn(required, text)
 
-        self.assertIn(r"\author{Anonymous Authors\\Anonymous Affiliation}", text)
+        self.assertIn(r"\author{Francesco Giannicola\\Limes Labs}", text)
         self.assertIn("The Broadcast Ceiling", text)
         self.assertIn(r"\vimpo", text)
         self.assertIn(r"\brpo", text)
@@ -105,7 +105,8 @@ class LatexPaperTests(unittest.TestCase):
         self.assertIn("Budget matching", text)
         self.assertNotIn(r"\paragraph{Closed-loop toy training.}", text)
         self.assertNotIn(r"\tableofcontents", text)
-        self.assertNotIn(r"\author{Limes Labs}", text)
+        self.assertNotIn("Anonymous Authors", text)
+        self.assertNotIn("Anonymous Affiliation", text)
         self.assertNotIn("stale reference", text)
         self.assertNotIn("stale-reference", text)
         self.assertNotIn(r"\section{Raw Seed-Level Rows}", text)
