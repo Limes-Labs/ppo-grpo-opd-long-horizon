@@ -1,5 +1,7 @@
 # The Broadcast Ceiling
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20970205.svg)](https://doi.org/10.5281/zenodo.20970205)
+
 This is a public Limes Labs research workstream on long-horizon post-training
 methods for language-model agents and reasoning systems. The focus is the method
 question, not a single base model:
@@ -39,6 +41,18 @@ There is one paper manuscript and one tracked public PDF:
 
 Older noncanonical manuscript/report artifacts were removed so readers do not
 have to guess which paper is current.
+
+## Public Release and Archives
+
+The public `v0.1.0` artifact package is archived in two canonical places:
+
+| Archive | Link |
+| --- | --- |
+| GitHub release | [The Broadcast Ceiling v0.1.0](https://github.com/Limes-Labs/the-broadcast-ceiling/releases/tag/v0.1.0) |
+| Zenodo record | [10.5281/zenodo.20970205](https://doi.org/10.5281/zenodo.20970205) |
+
+Zenodo also provides the concept DOI for all versions:
+[10.5281/zenodo.20970204](https://doi.org/10.5281/zenodo.20970204).
 
 ## What Is Here
 
